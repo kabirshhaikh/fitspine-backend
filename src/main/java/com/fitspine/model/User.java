@@ -54,8 +54,10 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "wearable_type")
     private WearableType wearableType;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
