@@ -54,10 +54,8 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "wearable_type")
     private WearableType wearableType;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
@@ -67,15 +65,16 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserSurgery> userSurgeryList = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserDiscIssue> userDiscIssueList = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
-
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
 }
