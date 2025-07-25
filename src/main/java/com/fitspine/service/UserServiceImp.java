@@ -3,6 +3,7 @@ package com.fitspine.service;
 import com.fitspine.dto.UserInjuryDto;
 import com.fitspine.dto.UserRegisterDto;
 import com.fitspine.dto.UserResponseDto;
+import com.fitspine.exception.UserAlreadyExistsException;
 import com.fitspine.helper.UserHelper;
 import com.fitspine.model.User;
 import com.fitspine.model.UserDiscIssue;
@@ -38,6 +39,10 @@ public class UserServiceImp implements UserService {
 
     @Override
     public UserResponseDto registerUser(UserRegisterDto dto) {
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            throw new UserAlreadyExistsException("User already exists with email: " + dto.getEmail());
+        }
+
         User user = User.builder()
                 .fullName(dto.getFullName())
                 .email(dto.getEmail())
