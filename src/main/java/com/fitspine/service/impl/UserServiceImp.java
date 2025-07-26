@@ -1,6 +1,5 @@
-package com.fitspine.service;
+package com.fitspine.service.impl;
 
-import com.fitspine.dto.UserInjuryDto;
 import com.fitspine.dto.UserRegisterDto;
 import com.fitspine.dto.UserResponseDto;
 import com.fitspine.exception.UserAlreadyExistsException;
@@ -13,6 +12,7 @@ import com.fitspine.repository.UserDiscIssueRepository;
 import com.fitspine.repository.UserInjuryRepository;
 import com.fitspine.repository.UserRepository;
 import com.fitspine.repository.UserSurgeryRepository;
+import com.fitspine.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
