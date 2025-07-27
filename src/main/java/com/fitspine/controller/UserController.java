@@ -21,8 +21,6 @@ public class UserController {
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserResponseDto> registerUser(@ModelAttribute @Valid UserRegisterDto userRegisterDto) {
-        System.out.print("user data from postman: " +userRegisterDto);
-        log.debug("Request: ", userRegisterDto);
         UserResponseDto userResponse = userService.registerUser(userRegisterDto);
         return ResponseEntity.ok(userResponse);
     }
