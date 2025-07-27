@@ -2,12 +2,14 @@ package com.fitspine.helper;
 
 import com.fitspine.dto.UserDiscIssueDto;
 import com.fitspine.dto.UserInjuryDto;
+import com.fitspine.dto.UserRegisterDto;
 import com.fitspine.dto.UserSurgeryDto;
 import com.fitspine.model.User;
 import com.fitspine.model.UserDiscIssue;
 import com.fitspine.model.UserInjury;
 import com.fitspine.model.UserSurgery;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,4 +100,7 @@ public class UserHelper {
         return list;
     }
 
+    public String returnProfilePictureFileName(Long id, UserRegisterDto dto) {
+        return "profile-pictures/" + id + "/" + dto.getProfilePicture().getOriginalFilename();
+    }
 }

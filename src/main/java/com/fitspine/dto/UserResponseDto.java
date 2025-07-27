@@ -15,6 +15,7 @@ public class UserResponseDto {
     private String email;
     private Integer age;
     private Gender gender;
+    private String profilePicture;
     private Boolean isResearchOpt;
     private Boolean isWearableConnected;
     private WearableType wearableType;

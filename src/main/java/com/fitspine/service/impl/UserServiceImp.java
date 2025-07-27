@@ -12,13 +12,16 @@ import com.fitspine.repository.UserDiscIssueRepository;
 import com.fitspine.repository.UserInjuryRepository;
 import com.fitspine.repository.UserRepository;
 import com.fitspine.repository.UserSurgeryRepository;
+import com.fitspine.service.S3Service;
 import com.fitspine.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class UserServiceImp implements UserService {
     private final UserRepository userRepository;
@@ -27,14 +30,16 @@ public class UserServiceImp implements UserService {
     private final UserDiscIssueRepository userDiscIssueRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserHelper userHelper;
+    private final S3Service s3Service;
 
-    public UserServiceImp(UserRepository userRepository, UserInjuryRepository userInjuryRepository, UserSurgeryRepository userSurgeryRepository, UserDiscIssueRepository userDiscIssueRepository, PasswordEncoder passwordEncoder, UserHelper userHelper) {
+    public UserServiceImp(UserRepository userRepository, UserInjuryRepository userInjuryRepository, UserSurgeryRepository userSurgeryRepository, UserDiscIssueRepository userDiscIssueRepository, PasswordEncoder passwordEncoder, UserHelper userHelper, S3Service s3Service) {
         this.userRepository = userRepository;
         this.userInjuryRepository = userInjuryRepository;
         this.userSurgeryRepository = userSurgeryRepository;
         this.userDiscIssueRepository = userDiscIssueRepository;
         this.passwordEncoder = passwordEncoder;
         this.userHelper = userHelper;
+        this.s3Service = s3Service;
     }
 
     @Override
@@ -56,6 +61,13 @@ public class UserServiceImp implements UserService {
 
         User savedUser = userRepository.save(user);
 
+        if (dto.getProfilePicture() != null && !dto.getProfilePicture().isEmpty()) {
+            String fileName = userHelper.returnProfilePictureFileName(savedUser.getId(), dto);
+            String path = s3Service.uploadFile(dto.getProfilePicture(), fileName);
+            savedUser.setProfilePicture(path);
+            userRepository.save(savedUser);
+        }
+
         List<UserInjury> userInjuryList = new ArrayList<>();
         if (dto.getUserInjuries() != null) {
             userInjuryList = userHelper.returnUserInjuryList(dto.getUserInjuries(), savedUser);
@@ -74,6 +86,10 @@ public class UserServiceImp implements UserService {
             userDiscIssueRepository.saveAll(userDiscIssueList);
         }
 
+        String preSignedProfilePictureUrl = null;
+        if (savedUser.getProfilePicture() != null) {
+            preSignedProfilePictureUrl = s3Service.generatePreSignedUrl(savedUser.getProfilePicture());
+        }
 
         return UserResponseDto.builder()
                 .id(savedUser.getId())
@@ -81,6 +97,7 @@ public class UserServiceImp implements UserService {
                 .email(savedUser.getEmail())
                 .age(savedUser.getAge())
                 .gender(savedUser.getGender())
+                .profilePicture(preSignedProfilePictureUrl)
                 .isResearchOpt(savedUser.getIsResearchOpt())
                 .isWearableConnected(savedUser.getIsWearableConnected())
                 .wearableType(savedUser.getWearableType())

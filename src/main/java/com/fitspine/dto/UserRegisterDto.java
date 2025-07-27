@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class UserRegisterDto {
     @NotNull(message = "Gender is required")
     private Gender gender;
 
-    private String profilePicture;
+    private MultipartFile profilePicture;
 
     @NotNull(message = "Surgery history is required")
     private Boolean surgeryHistory;
