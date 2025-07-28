@@ -16,6 +16,7 @@ import com.fitspine.repository.UserRepository;
 import com.fitspine.repository.UserSurgeryRepository;
 import com.fitspine.service.S3Service;
 import com.fitspine.service.UserService;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,7 @@ public class UserServiceImp implements UserService {
         this.s3Service = s3Service;
     }
 
+    @Transactional
     @Override
     public UserResponseDto registerUser(UserRegisterDto dto) {
         //Check if email already exists:
@@ -114,6 +116,7 @@ public class UserServiceImp implements UserService {
                 .build();
     }
 
+    @Transactional
     @Override
     public UserResponseDto updateUser(Long id, UserUpdateDto dto) {
         //Find existing User:
@@ -190,7 +193,8 @@ public class UserServiceImp implements UserService {
         //Return response:
         return UserResponseDto.builder()
                 .id(existingUser.getId())
-
+                .fullName(existingUser.getFullName())
+                .email(existingUser.getEmail())
                 .age(existingUser.getAge())
                 .gender(existingUser.getGender())
                 .profilePicture(preSignedProfilePictureUrl)
