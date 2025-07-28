@@ -2,6 +2,7 @@ package com.fitspine.controller;
 
 import com.fitspine.dto.UserRegisterDto;
 import com.fitspine.dto.UserResponseDto;
+import com.fitspine.dto.UserUpdateDto;
 import com.fitspine.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -23,5 +24,11 @@ public class UserController {
     public ResponseEntity<UserResponseDto> registerUser(@ModelAttribute @Valid UserRegisterDto userRegisterDto) {
         UserResponseDto userResponse = userService.registerUser(userRegisterDto);
         return ResponseEntity.ok(userResponse);
+    }
+
+    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long id, @ModelAttribute UserUpdateDto userUpdateDto) {
+        UserResponseDto userResponseDto = userService.updateUser(id, userUpdateDto);
+        return ResponseEntity.ok(userResponseDto);
     }
 }

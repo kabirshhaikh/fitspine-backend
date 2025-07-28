@@ -100,7 +100,7 @@ public class UserHelper {
         return list;
     }
 
-    public String returnProfilePictureFileName(Long id, UserRegisterDto dto) {
-        return "profile-pictures/" + id + "/" + dto.getProfilePicture().getOriginalFilename();
+    public String returnProfilePictureFileName(Long id, String fileName) {
+        return "profile-pictures/" + id + "/" + fileName;
     }
 }
