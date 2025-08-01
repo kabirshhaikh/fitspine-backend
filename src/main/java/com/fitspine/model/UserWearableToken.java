@@ -27,6 +27,9 @@ public class UserWearableToken {
     @Column(name = "refresh_token", nullable = false)
     private String refreshToken;
 
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
