@@ -40,7 +40,7 @@ public class FitbitServiceImpl implements WearableService {
 
     private final UserRepository userRepository;
 
-    private static final String SCOPE = "activity sleep heartrate";
+    private static final String SCOPE = "activity sleep heartrate weight respiratory_rate";
 
     private final RestTemplate restTemplate = new RestTemplate();
 
