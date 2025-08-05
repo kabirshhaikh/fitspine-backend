@@ -3,6 +3,7 @@ package com.fitspine.service.impl;
 import com.fitspine.dto.UserRegisterDto;
 import com.fitspine.dto.UserResponseDto;
 import com.fitspine.dto.UserUpdateDto;
+import com.fitspine.enums.Role;
 import com.fitspine.exception.UserAlreadyExistsException;
 import com.fitspine.exception.UserNotFoundException;
 import com.fitspine.helper.UserHelper;
@@ -64,6 +65,7 @@ public class UserServiceImp implements UserService {
                 .surgeryHistory(false)
                 .isResearchOpt(true)
                 .isWearableConnected(false)
+                .role(Role.USER)
                 .build();
 
         User savedUser = userRepository.save(user);
@@ -110,6 +112,7 @@ public class UserServiceImp implements UserService {
                 .isResearchOpt(savedUser.getIsResearchOpt())
                 .isWearableConnected(savedUser.getIsWearableConnected())
                 .wearableType(savedUser.getWearableType())
+                .role(savedUser.getRole())
                 .userInjuries(userHelper.returnMappedUserInjuryListDto(userInjuryList))
                 .userSurgeries(userHelper.returnMappedUserSurgeryListDto(userSurgeryList))
                 .userDiscIssues(userHelper.returnMappedUserDiscIssueDto(userDiscIssueList))

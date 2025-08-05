@@ -1,6 +1,7 @@
 package com.fitspine.model;
 
 import com.fitspine.enums.Gender;
+import com.fitspine.enums.Role;
 import com.fitspine.enums.WearableType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -60,6 +61,10 @@ public class User {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private Role role;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserInjury> userInjuryList = new ArrayList<>();

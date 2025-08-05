@@ -1,6 +1,7 @@
 package com.fitspine.dto;
 
 import com.fitspine.enums.Gender;
+import com.fitspine.enums.Role;
 import com.fitspine.enums.WearableType;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class UserResponseDto {
     private Boolean isResearchOpt;
     private Boolean isWearableConnected;
     private WearableType wearableType;
+    private Role role;
 
     private List<UserInjuryDto> userInjuries;
     private List<UserSurgeryDto> userSurgeries;
