@@ -8,6 +8,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -60,13 +61,8 @@ public class JwtService {
         return extractAllClaims(token).getExpiration().before(new Date());
     }
 
-    public boolean isTokenValid(String token, User user) {
+    public boolean isTokenValid(String token, UserDetails userDetails) {
         String email = extractEmail(token);
-        if (email.equals(user.getEmail()) && !isTokenExpired(token)) {
-            return true;
-        } else {
-            return false;
-        }
+        return email.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
-
 }
