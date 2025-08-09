@@ -1,13 +1,13 @@
 package com.fitspine.controller;
 
-import com.fitspine.dto.UserRegisterDto;
-import com.fitspine.dto.UserResponseDto;
-import com.fitspine.dto.UserUpdateDto;
+import com.fitspine.dto.*;
+import com.fitspine.service.JwtService;
 import com.fitspine.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/user")
 public class UserController {
     private final UserService userService;
+
 
     public UserController(UserService userService) {
         this.userService = userService;
@@ -24,6 +25,12 @@ public class UserController {
     public ResponseEntity<UserResponseDto> registerUser(@ModelAttribute @Valid UserRegisterDto userRegisterDto) {
         UserResponseDto userResponse = userService.registerUser(userRegisterDto);
         return ResponseEntity.ok(userResponse);
+    }
+
+    @PostMapping(value = "/login")
+    public ResponseEntity<LoginResponseDto> loginUser(@RequestBody @Valid LoginRequestDto request) {
+        LoginResponseDto response = userService.loginUser(request);
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

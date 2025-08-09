@@ -1,8 +1,6 @@
 package com.fitspine.service.impl;
 
-import com.fitspine.dto.UserRegisterDto;
-import com.fitspine.dto.UserResponseDto;
-import com.fitspine.dto.UserUpdateDto;
+import com.fitspine.dto.*;
 import com.fitspine.enums.Role;
 import com.fitspine.exception.UserAlreadyExistsException;
 import com.fitspine.exception.UserNotFoundException;
@@ -15,8 +13,11 @@ import com.fitspine.repository.UserDiscIssueRepository;
 import com.fitspine.repository.UserInjuryRepository;
 import com.fitspine.repository.UserRepository;
 import com.fitspine.repository.UserSurgeryRepository;
+import com.fitspine.service.JwtService;
 import com.fitspine.service.S3Service;
 import com.fitspine.service.UserService;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,8 +37,10 @@ public class UserServiceImp implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserHelper userHelper;
     private final S3Service s3Service;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
-    public UserServiceImp(UserRepository userRepository, UserInjuryRepository userInjuryRepository, UserSurgeryRepository userSurgeryRepository, UserDiscIssueRepository userDiscIssueRepository, PasswordEncoder passwordEncoder, UserHelper userHelper, S3Service s3Service) {
+    public UserServiceImp(UserRepository userRepository, UserInjuryRepository userInjuryRepository, UserSurgeryRepository userSurgeryRepository, UserDiscIssueRepository userDiscIssueRepository, PasswordEncoder passwordEncoder, UserHelper userHelper, S3Service s3Service, JwtService jwtService, AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.userInjuryRepository = userInjuryRepository;
         this.userSurgeryRepository = userSurgeryRepository;
@@ -45,6 +48,33 @@ public class UserServiceImp implements UserService {
         this.passwordEncoder = passwordEncoder;
         this.userHelper = userHelper;
         this.s3Service = s3Service;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+    }
+
+
+    @Override
+    public LoginResponseDto loginUser(LoginRequestDto request) {
+        var auth = new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
+        authenticationManager.authenticate(auth);
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + request.getEmail()));
+
+        String token = jwtService.generateToken(user);
+
+        String preSignedUrl = null;
+
+        if (user.getProfilePicture() != null) {
+            preSignedUrl = s3Service.generatePreSignedUrl(user.getProfilePicture());
+        }
+
+        return LoginResponseDto.builder()
+                .profilePicture(preSignedUrl)
+                .token(token)
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .build();
     }
 
     @Transactional
