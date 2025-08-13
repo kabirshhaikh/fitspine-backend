@@ -39,11 +39,6 @@ public class UserRegisterDto {
     @NotNull(message = "Research Opt is required")
     private Boolean isResearchOpt;
 
-    @NotNull(message = "Wearable type is required")
-    private Boolean isWearableConnected;
-
-    private WearableType wearableType;
-
     private List<UserInjuryDto> userInjuries;
 
     private List<UserSurgeryDto> userSurgeries;

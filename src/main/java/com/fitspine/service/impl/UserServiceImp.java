@@ -93,7 +93,7 @@ public class UserServiceImp implements UserService {
                 .age(dto.getAge())
                 .gender(dto.getGender())
                 .surgeryHistory(false)
-                .isResearchOpt(true)
+                .isResearchOpt(false)
                 .isWearableConnected(false)
                 .role(Role.USER)
                 .build();
