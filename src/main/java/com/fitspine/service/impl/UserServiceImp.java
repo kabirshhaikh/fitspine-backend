@@ -92,8 +92,8 @@ public class UserServiceImp implements UserService {
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .age(dto.getAge())
                 .gender(dto.getGender())
-                .surgeryHistory(false)
-                .isResearchOpt(false)
+                .surgeryHistory(dto.getSurgeryHistory())
+                .isResearchOpt(dto.getIsResearchOpt())
                 .isWearableConnected(false)
                 .role(Role.USER)
                 .build();
