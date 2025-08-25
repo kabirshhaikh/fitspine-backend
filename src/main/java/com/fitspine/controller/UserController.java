@@ -8,7 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -37,5 +41,13 @@ public class UserController {
     public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long id, @ModelAttribute UserUpdateDto userUpdateDto) {
         UserResponseDto userResponseDto = userService.updateUser(id, userUpdateDto);
         return ResponseEntity.ok(userResponseDto);
+    }
+
+    @GetMapping(value = "/me")
+    public ResponseEntity<UserProfileDto> userProfile() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        UserProfileDto userProfile = userService.userProfile(email);
+        return ResponseEntity.ok(userProfile);
     }
 }

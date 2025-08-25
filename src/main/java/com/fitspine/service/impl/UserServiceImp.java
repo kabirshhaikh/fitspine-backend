@@ -240,4 +240,52 @@ public class UserServiceImp implements UserService {
                 .userDiscIssues(userHelper.returnMappedUserDiscIssueDto(userDiscIssues))
                 .build();
     }
+
+
+    @Transactional(readOnly = true)
+    @Override
+    public UserProfileDto userProfile(String email) {
+
+        //Validate to check that correct user is asking for their data:
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        Long id = user.getId();
+
+        //Find user disc issues:
+        List<UserDiscIssue> discIssues = userDiscIssueRepository.findAllByUserId(id);
+
+        //Find user injuries:
+        List<UserInjury> injuries = userInjuryRepository.findAllByUserId(id);
+
+        //Find user surgeries:
+        List<UserSurgery> surgeries = userSurgeryRepository.findAllByUserId(id);
+
+        //Map issues to dtos:
+        List<UserDiscIssueDto> userDiscIssuesDto = userHelper.returnMappedUserDiscIssueDto(discIssues);
+        List<UserInjuryDto> userInjuriesDto = userHelper.returnMappedUserInjuryListDto(injuries);
+        List<UserSurgeryDto> userSurgeriesDto = userHelper.returnMappedUserSurgeryListDto(surgeries);
+
+        //Get pre-signed url of profile picture if exists:
+        String preSignedProfilePictureUrl = null;
+        if (user.getProfilePicture() != null) {
+            preSignedProfilePictureUrl = s3Service.generatePreSignedUrl(user.getProfilePicture());
+        }
+
+        //Return profile dto of user:
+        return UserProfileDto.builder()
+                .id(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .age(user.getAge())
+                .gender(user.getGender())
+                .profilePicture(preSignedProfilePictureUrl)
+                .surgeryHistory(user.getSurgeryHistory())
+                .isResearchOpt(user.getIsResearchOpt())
+                .isWearableConnected(user.getIsWearableConnected())
+                .wearableType(user.getWearableType())
+                .userSurgeries(userSurgeriesDto)
+                .userInjuries(userInjuriesDto)
+                .userDiscIssues(userDiscIssuesDto)
+                .build();
+    }
 }

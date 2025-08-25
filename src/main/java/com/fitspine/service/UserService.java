@@ -8,4 +8,6 @@ public interface UserService {
     UserResponseDto updateUser(Long id, UserUpdateDto userUpdateDto);
 
     LoginResponseDto loginUser(LoginRequestDto request);
+
+    UserProfileDto userProfile(String email);
 }
