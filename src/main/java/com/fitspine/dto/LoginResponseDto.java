@@ -10,4 +10,5 @@ public class LoginResponseDto {
     private String fullName;
     private String email;
     private String profilePicture;
+    private Long id;
 }

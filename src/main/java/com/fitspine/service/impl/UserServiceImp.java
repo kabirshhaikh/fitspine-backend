@@ -74,6 +74,7 @@ public class UserServiceImp implements UserService {
                 .token(token)
                 .email(user.getEmail())
                 .fullName(user.getFullName())
+                .id(user.getId())
                 .build();
     }
 
