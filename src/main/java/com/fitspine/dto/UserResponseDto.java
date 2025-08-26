@@ -18,6 +18,7 @@ public class UserResponseDto {
     private Gender gender;
     private String profilePicture;
     private Boolean isResearchOpt;
+    private Boolean surgeryHistory;
     private Boolean isWearableConnected;
     private WearableType wearableType;
     private Role role;

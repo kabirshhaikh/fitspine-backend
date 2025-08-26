@@ -16,6 +16,7 @@ import com.fitspine.repository.UserSurgeryRepository;
 import com.fitspine.service.JwtService;
 import com.fitspine.service.S3Service;
 import com.fitspine.service.UserService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +26,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -152,9 +152,12 @@ public class UserServiceImp implements UserService {
 
     @Transactional
     @Override
-    public UserResponseDto updateUser(Long id, UserUpdateDto dto) {
-        //Find existing User:
-        User existingUser = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+    public UserResponseDto updateUser(UserUpdateDto dto, String email) {
+        //Extract user using email and check if the authorized user is requesting the update endpoint:
+        User existingUser = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        //Extract id to send to helper functions:
+        Long id = existingUser.getId();
 
         //First update the profile picture: (check if existing user and userRegisterDto has profilePicture)
         //If yes then delete the current profile picture from db and aws and then upload a new one and save it for user.
@@ -231,10 +234,12 @@ public class UserServiceImp implements UserService {
                 .email(existingUser.getEmail())
                 .age(existingUser.getAge())
                 .gender(existingUser.getGender())
+                .surgeryHistory(existingUser.getSurgeryHistory())
                 .profilePicture(preSignedProfilePictureUrl)
                 .isResearchOpt(existingUser.getIsResearchOpt())
                 .isWearableConnected(existingUser.getIsWearableConnected())
                 .wearableType(existingUser.getWearableType())
+                .role(existingUser.getRole())
                 .userInjuries(userHelper.returnMappedUserInjuryListDto(userInjuries))
                 .userSurgeries(userHelper.returnMappedUserSurgeryListDto(userSurgeries))
                 .userDiscIssues(userHelper.returnMappedUserDiscIssueDto(userDiscIssues))

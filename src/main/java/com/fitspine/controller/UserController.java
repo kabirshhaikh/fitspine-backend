@@ -37,9 +37,11 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long id, @ModelAttribute UserUpdateDto userUpdateDto) {
-        UserResponseDto userResponseDto = userService.updateUser(id, userUpdateDto);
+    @PatchMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserResponseDto> updateUser(@ModelAttribute UserUpdateDto userUpdateDto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        UserResponseDto userResponseDto = userService.updateUser(userUpdateDto, email);
         return ResponseEntity.ok(userResponseDto);
     }
 

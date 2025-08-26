@@ -5,7 +5,7 @@ import com.fitspine.dto.*;
 public interface UserService {
     UserResponseDto registerUser(UserRegisterDto userRegisterDto);
 
-    UserResponseDto updateUser(Long id, UserUpdateDto userUpdateDto);
+    UserResponseDto updateUser(UserUpdateDto userUpdateDto, String email);
 
     LoginResponseDto loginUser(LoginRequestDto request);
 
