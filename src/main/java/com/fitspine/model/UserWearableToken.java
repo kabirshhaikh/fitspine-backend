@@ -6,9 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.LineNumberInputStream;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,17 +19,32 @@ public class UserWearableToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "access_token", nullable = false)
+    @Column(name = "access_token", nullable = false, columnDefinition = "TEXT")
     private String accessToken;
 
-    @Column(name = "refresh_token", nullable = false)
+    @Column(name = "refresh_token", nullable = false, columnDefinition = "TEXT")
     private String refreshToken;
 
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
+    @Column(name = "provider", nullable = false)
+    private String provider;
+
+    @Column(name = "token_type")
+    private String tokenType;
+
+    @Column(name = "scope", columnDefinition = "TEXT")
+    private String scope;
+
+    @Column(name = "revoked", nullable = false)
+    private boolean revoked = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @ManyToOne()
     @JoinColumn(name = "user_id", nullable = false)
@@ -40,5 +53,13 @@ public class UserWearableToken {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+
 }
