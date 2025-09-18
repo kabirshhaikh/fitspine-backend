@@ -53,7 +53,9 @@ public class FitbitServiceImpl implements WearableService {
 
 
     @Override
-    public String buildAuthUrl(Long userId) {
+    public String buildAuthUrl(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email:" + email));
+        Long userId = user.getId();
         return UriComponentsBuilder.fromHttpUrl(authUrl)
                 .queryParam("client_id", clientId)
                 .queryParam("response_type", "code")
@@ -64,7 +66,7 @@ public class FitbitServiceImpl implements WearableService {
     }
 
     @Override
-    public void exchangeCodeForToken(String code, Long userId) {
+    public void exchangeCodeForToken(String code, String email) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -81,7 +83,7 @@ public class FitbitServiceImpl implements WearableService {
         ResponseEntity<String> response = restTemplate.postForEntity(tokenUri, request, String.class);
 
         try {
-            User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found with id:" + userId));
+            User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email:" + email));
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
             String accessToken = jsonNode.get("access_token").asText();
             String refreshToken = jsonNode.get("refresh_token").asText();
@@ -98,5 +100,8 @@ public class FitbitServiceImpl implements WearableService {
         }
     }
 
-
+    @Override
+    public String getProvider() {
+        return "FITBIT";
+    }
 }
