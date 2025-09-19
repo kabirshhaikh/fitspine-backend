@@ -31,7 +31,7 @@ public class FitbitServiceImpl implements WearableService {
     private String redirectUri;
 
     @Value("${FITBIT_AUTHORIZATION_URI}")
-    private String authUrl;
+    private String fitBitAuthUrl;
 
     @Value("${FITBIT_ACCESS_REFRESH_URI}")
     private String tokenUri;
@@ -56,7 +56,7 @@ public class FitbitServiceImpl implements WearableService {
     public String buildAuthUrl(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email:" + email));
         Long userId = user.getId();
-        return UriComponentsBuilder.fromHttpUrl(authUrl)
+        return UriComponentsBuilder.fromHttpUrl(fitBitAuthUrl)
                 .queryParam("client_id", clientId)
                 .queryParam("response_type", "code")
                 .queryParam("scope", SCOPE)
