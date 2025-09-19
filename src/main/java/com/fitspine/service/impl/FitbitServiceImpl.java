@@ -66,7 +66,7 @@ public class FitbitServiceImpl implements WearableService {
     }
 
     @Override
-    public void exchangeCodeForToken(String code, String email) {
+    public void exchangeCodeForToken(String code, Long userId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBasicAuth(clientId, clientSecret);
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -83,16 +83,22 @@ public class FitbitServiceImpl implements WearableService {
         ResponseEntity<String> response = restTemplate.postForEntity(tokenUri, request, String.class);
 
         try {
-            User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email:" + email));
+            User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found with id:" + userId));
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
             String accessToken = jsonNode.get("access_token").asText();
             String refreshToken = jsonNode.get("refresh_token").asText();
             int expiresIn = jsonNode.get("expires_in").asInt();
+            String tokenType = jsonNode.get("token_type").asText();
+            String scope = jsonNode.get("scope").asText();
 
             UserWearableToken token = new UserWearableToken();
             token.setUser(user);
             token.setAccessToken(accessToken);
             token.setRefreshToken(refreshToken);
+            token.setProvider("FITBIT");
+            token.setScope(SCOPE);
+            token.setTokenType(tokenType);
+            token.setScope(scope);
             token.setExpiresAt(LocalDateTime.now().plusSeconds(expiresIn));
             userWearableTokenRepository.save(token);
         } catch (Exception e) {
