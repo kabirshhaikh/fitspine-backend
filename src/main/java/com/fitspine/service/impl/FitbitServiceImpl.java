@@ -2,6 +2,7 @@ package com.fitspine.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fitspine.exception.TokenRefreshException;
 import com.fitspine.exception.UserNotFoundException;
 import com.fitspine.model.User;
 import com.fitspine.model.UserWearableToken;
@@ -18,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class FitbitServiceImpl implements WearableService {
@@ -42,13 +44,15 @@ public class FitbitServiceImpl implements WearableService {
 
     private static final String SCOPE = "activity sleep heartrate weight respiratory_rate";
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
-    public FitbitServiceImpl(UserWearableTokenRepository userWearableTokenRepository, UserRepository userRepository) {
+    public FitbitServiceImpl(UserWearableTokenRepository userWearableTokenRepository, UserRepository userRepository, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.userWearableTokenRepository = userWearableTokenRepository;
         this.userRepository = userRepository;
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
     }
 
 
@@ -91,18 +95,19 @@ public class FitbitServiceImpl implements WearableService {
             String tokenType = jsonNode.get("token_type").asText();
             String scope = jsonNode.get("scope").asText();
 
-            UserWearableToken token = new UserWearableToken();
+            Optional<UserWearableToken> existingToken = userWearableTokenRepository.findByUserIdAndProvider(userId, getProvider());
+
+            UserWearableToken token = existingToken.orElseGet(UserWearableToken::new);
             token.setUser(user);
             token.setAccessToken(accessToken);
             token.setRefreshToken(refreshToken);
-            token.setProvider("FITBIT");
-            token.setScope(SCOPE);
+            token.setProvider(getProvider());
             token.setTokenType(tokenType);
             token.setScope(scope);
             token.setExpiresAt(LocalDateTime.now().plusSeconds(expiresIn));
             userWearableTokenRepository.save(token);
         } catch (Exception e) {
-            throw new RuntimeException("Error parsing fitbit token response", e);
+            throw new TokenRefreshException("Error parsing fitbit token response", e);
         }
     }
 
