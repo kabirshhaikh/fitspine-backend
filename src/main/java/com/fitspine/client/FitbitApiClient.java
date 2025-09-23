@@ -47,14 +47,14 @@ public class FitbitApiClient {
     }
 
     //Get daily steps:
-    public JsonNode getDailySteps(Long userId, String clientId, String clientSecret, String date) {
+    public JsonNode getSteps(Long userId, String clientId, String clientSecret, String date) {
         String accessToken = tokenManager.getValidToken(userId, PROVIDER, clientId, clientSecret);
         String url = "https://api.fitbit.com/1/user/-/activities/date/" + date + ".json";
         return getFitBitData(url, accessToken);
     }
 
     //Get sleep data:
-    public JsonNode getSleepData(Long userId, String clientId, String clientSecret, String date) {
+    public JsonNode getSleep(Long userId, String clientId, String clientSecret, String date) {
         String accessToken = tokenManager.getValidToken(userId, PROVIDER, clientId, clientSecret);
         String url = "https://api.fitbit.com/1.2/user/-/sleep/date/" + date + ".json";
         return getFitBitData(url, accessToken);
