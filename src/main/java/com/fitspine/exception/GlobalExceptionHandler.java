@@ -65,6 +65,22 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(FitbitClientApiException.class)
+    public ResponseEntity<ApiError> handleFitbitClientApiException(
+            FitbitClientApiException ex,
+            HttpServletRequest request) {
+
+        ApiError error = new ApiError(
+                LocalDateTime.now(),
+                HttpStatus.BAD_GATEWAY.value(),
+                "FITBIT_API_ERROR",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.BAD_GATEWAY);
+    }
+
     //Generic exceptions:
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAllExceptions(Exception exception, HttpServletRequest request) {
