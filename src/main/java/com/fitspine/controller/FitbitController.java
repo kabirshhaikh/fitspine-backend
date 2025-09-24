@@ -1,7 +1,7 @@
 package com.fitspine.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fitspine.service.impl.FitbitApiClientService;
+import com.fitspine.service.FitbitApiClientService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

@@ -1,4 +1,4 @@
-package com.fitspine.service.impl;
+package com.fitspine.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fitspine.client.FitbitApiClient;
