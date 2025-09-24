@@ -30,10 +30,10 @@ public class FitbitActivitiesHeartLog {
     private LocalDate logDate;
 
     @Column(name = "date_time")
-    private LocalDateTime dateTime;
+    private LocalDate dateTime;
 
     @Lob
-    @Column(name = "raw_json")
+    @Column(name = "raw_json", columnDefinition = "LONGTEXT")
     private String rawJson;
 
     @OneToMany(mappedBy = "fitbitActivitiesHeartLog", cascade = CascadeType.ALL, orphanRemoval = true)
