@@ -47,7 +47,7 @@ public class FitbitApiClient {
     }
 
     //Get daily steps:
-    public JsonNode getSteps(Long userId, String clientId, String clientSecret, String date) {
+    public JsonNode getActivity(Long userId, String clientId, String clientSecret, String date) {
         String accessToken = tokenManager.getValidToken(userId, PROVIDER, clientId, clientSecret);
         String url = "https://api.fitbit.com/1/user/-/activities/date/" + date + ".json";
         return getFitBitData(url, accessToken);

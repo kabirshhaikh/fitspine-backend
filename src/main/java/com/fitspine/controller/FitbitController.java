@@ -21,13 +21,13 @@ public class FitbitController {
         this.fitbitApiClientService = fitbitApiClientService;
     }
 
-    @GetMapping("/steps")
-    public ResponseEntity<JsonNode> getSteps() {
+    @GetMapping("/activity")
+    public ResponseEntity<JsonNode> getActivity() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
 
         String date = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-        return ResponseEntity.ok(fitbitApiClientService.getSteps(email, date));
+        return ResponseEntity.ok(fitbitApiClientService.getActivity(email, date));
     }
 
     @GetMapping("/sleep")

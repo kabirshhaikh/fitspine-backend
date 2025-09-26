@@ -79,10 +79,10 @@ public class FitbitApiClientService {
     }
 
     @Transactional
-    public JsonNode getSteps(String email, String date) {
+    public JsonNode getActivity(String email, String date) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User with email: " + email + " not found"));
         log.info("Fetching Fitbit steps for user {} on date {}", user.getId(), date);
-        JsonNode root = fitbitApiClient.getSteps(user.getId(), clientId, clientSecret, date);
+        JsonNode root = fitbitApiClient.getActivity(user.getId(), clientId, clientSecret, date);
 
         JsonNode activities = root.get("activities");
         JsonNode summary = root.get("summary");
@@ -93,77 +93,101 @@ public class FitbitApiClientService {
             return root;
         }
 
+        LocalDate logDate = LocalDate.parse(date);
+
         //Save Activities:
         if (activities != null && activities.isArray()) {
             for (JsonNode activity : activities) {
+                Long logId = activity.has("logId") ? activity.get("logId").asLong() : null;
+
+                if (logId != null && fitbitActivitiesLogRepository.existsByUserAndLogId(user, logId)) {
+                    log.info("Skipping duplicate activity log {} for user {}", logId, user.getId());
+                    continue;
+                }
+
                 FitbitActivitiesLog activitiesLog = new FitbitActivitiesLog();
                 activitiesLog.setUser(user);
                 activitiesLog.setProvider(fitbitService.getProvider());
-                activitiesLog.setLogDate(LocalDate.parse(date));
-                activitiesLog.setLogId(activity.get("logId").asLong());
-                activitiesLog.setActivityId(activity.get("activityId").asInt());
-                activitiesLog.setActivityParentId(activity.get("activityParentId").asInt());
-                activitiesLog.setActivityParentName(activity.get("activityParentName").asText());
-                activitiesLog.setName(activity.get("name").asText());
-                activitiesLog.setDescription(activity.get("description").asText());
-                activitiesLog.setCalories(activity.get("calories").asInt());
-                activitiesLog.setDistance(activity.get("distance").asDouble());
-                activitiesLog.setSteps(activity.get("steps").asInt());
-                activitiesLog.setDuration(activity.get("duration").asLong());
-                OffsetDateTime lastModified = OffsetDateTime.parse(activity.get("lastModified").asText(), DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-                activitiesLog.setLastModified(lastModified.toLocalDateTime());
-                activitiesLog.setStartTime(LocalTime.parse(activity.get("startTime").asText()));
-                activitiesLog.setFavourite(activity.get("isFavorite").asBoolean());
-                activitiesLog.setHasActiveZoneMinutes(activity.get("hasActiveZoneMinutes").asBoolean());
-                activitiesLog.setStartDate(LocalDate.parse(activity.get("startDate").asText()));
-                activitiesLog.setHasStartTime(activity.get("hasStartTime").asBoolean());
+                activitiesLog.setLogDate(logDate);
+                activitiesLog.setLogId(logId);
+                activitiesLog.setActivityId(activity.has("activityId") ? activity.get("activityId").asInt() : null);
+                activitiesLog.setActivityParentId(activity.has("activityParentId") ? activity.get("activityParentId").asInt() : null);
+                activitiesLog.setActivityParentName(activity.has("activityParentName") ? activity.get("activityParentName").asText() : null);
+                activitiesLog.setName(activity.has("name") ? activity.get("name").asText() : null);
+                activitiesLog.setDescription(activity.has("description") ? activity.get("description").asText() : null);
+                activitiesLog.setCalories(activity.has("calories") ? activity.get("calories").asInt() : null);
+                activitiesLog.setDistance(activity.has("distance") ? activity.get("distance").asDouble() : null);
+                activitiesLog.setSteps(activity.has("steps") ? activity.get("steps").asInt() : null);
+                activitiesLog.setDuration(activity.has("duration") ? activity.get("duration").asLong() : null);
+
+                if (activity.has("lastModified")) {
+                    OffsetDateTime lastModified = OffsetDateTime.parse
+                            (activity.get("lastModified").asText(), DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                    activitiesLog.setLastModified(lastModified.toLocalDateTime());
+                }
+
+                activitiesLog.setStartTime(activity.has("startTime") ? LocalTime.parse(activity.get("startTime").asText()) : null);
+                activitiesLog.setFavourite(activity.has("isFavorite") ? activity.get("isFavorite").asBoolean() : null);
+                activitiesLog.setHasActiveZoneMinutes(activity.has("hasActiveZoneMinutes") ? activity.get("hasActiveZoneMinutes").asBoolean() : null);
+                activitiesLog.setStartDate(activity.has("startDate") ? LocalDate.parse(activity.get("startDate").asText()) : null);
+                activitiesLog.setHasStartTime(activity.has("hasStartTime") ? activity.get("hasStartTime").asBoolean() : null);
                 fitbitActivitiesLogRepository.save(activitiesLog);
             }
         }
 
         //Save Goals:
         if (goals != null && goals.isObject()) {
-            FitbitActivityGoalsLog goalsLog = new FitbitActivityGoalsLog();
-            goalsLog.setUser(user);
-            goalsLog.setProvider(fitbitService.getProvider());
-            goalsLog.setLogDate(LocalDate.parse(date));
-            goalsLog.setCaloriesOut(goals.get("caloriesOut").asInt());
-            goalsLog.setSteps(goals.get("steps").asInt());
-            goalsLog.setDistance(goals.get("distance").asDouble());
-            goalsLog.setFloors(goals.get("floors").asInt());
-            goalsLog.setActiveMinutes(goals.get("activeMinutes").asInt());
+            if (!fitbitActivityGoalsLogRepository.existsByUserAndLogDate(user, logDate)) {
+                FitbitActivityGoalsLog goalsLog = new FitbitActivityGoalsLog();
+                goalsLog.setUser(user);
+                goalsLog.setProvider(fitbitService.getProvider());
+                goalsLog.setLogDate(logDate);
+                goalsLog.setCaloriesOut(goals.has("caloriesOut") ? goals.get("caloriesOut").asInt() : null);
+                goalsLog.setSteps(goals.has("steps") ? goals.get("steps").asInt() : null);
+                goalsLog.setDistance(goals.has("distance") ? goals.get("distance").asDouble() : null);
+                goalsLog.setFloors(goals.has("floors") ? goals.get("floors").asInt() : null);
+                goalsLog.setActiveMinutes(goals.has("activeMinutes") ? goals.get("activeMinutes").asInt() : null);
 
-            fitbitActivityGoalsLogRepository.save(goalsLog);
+                fitbitActivityGoalsLogRepository.save(goalsLog);
+            } else {
+                log.info("Skipping duplicate goals log for user {} on date {}", user.getId(), logDate);
+
+            }
         }
 
         //Save Summary and distances:
         if (summary != null && summary.isObject()) {
-            FitbitActivitySummariesLog summariesLog = new FitbitActivitySummariesLog();
-            summariesLog.setUser(user);
-            summariesLog.setProvider(fitbitService.getProvider());
-            summariesLog.setLogDate(LocalDate.parse(date));
-            summariesLog.setCaloriesOut(summary.get("caloriesOut").asInt());
-            summariesLog.setActivityCalories(summary.get("activityCalories").asInt());
-            summariesLog.setCaloriesBmr(summary.get("caloriesBMR").asInt());
-            summariesLog.setActiveScore(summary.get("activeScore").asInt());
-            summariesLog.setSteps(summary.get("steps").asInt());
-            summariesLog.setSedentaryMinutes(summary.get("sedentaryMinutes").asInt());
-            summariesLog.setLightlyActiveMinutes(summary.get("lightlyActiveMinutes").asInt());
-            summariesLog.setFairlyActiveMinutes(summary.get("fairlyActiveMinutes").asInt());
-            summariesLog.setVeryActiveMinutes(summary.get("veryActiveMinutes").asInt());
-            summariesLog.setMarginalCalories(summary.get("marginalCalories").asInt());
-            summariesLog.setRawJson(summary.toString());
-            FitbitActivitySummariesLog savedSummary = fitbitActivitySummariesLogRepository.save(summariesLog);
+            if (!fitbitActivitySummariesLogRepository.existsByUserAndLogDate(user, logDate)) {
+                FitbitActivitySummariesLog summariesLog = new FitbitActivitySummariesLog();
+                summariesLog.setUser(user);
+                summariesLog.setProvider(fitbitService.getProvider());
+                summariesLog.setLogDate(logDate);
+                summariesLog.setCaloriesOut(summary.has("caloriesOut") ? summary.get("caloriesOut").asInt() : null);
+                summariesLog.setActivityCalories(summary.has("activityCalories") ? summary.get("activityCalories").asInt() : null);
+                summariesLog.setCaloriesBmr(summary.has("caloriesBMR") ? summary.get("caloriesBMR").asInt() : null);
+                summariesLog.setActiveScore(summary.has("activeScore") ? summary.get("activeScore").asInt() : null);
+                summariesLog.setSteps(summary.has("steps") ? summary.get("steps").asInt() : null);
+                summariesLog.setSedentaryMinutes(summary.has("sedentaryMinutes") ? summary.get("sedentaryMinutes").asInt() : null);
+                summariesLog.setLightlyActiveMinutes(summary.has("lightlyActiveMinutes") ? summary.get("lightlyActiveMinutes").asInt() : null);
+                summariesLog.setFairlyActiveMinutes(summary.has("fairlyActiveMinutes") ? summary.get("fairlyActiveMinutes").asInt() : null);
+                summariesLog.setVeryActiveMinutes(summary.has("veryActiveMinutes") ? summary.get("veryActiveMinutes").asInt() : null);
+                summariesLog.setMarginalCalories(summary.has("marginalCalories") ? summary.get("marginalCalories").asInt() : null);
+                summariesLog.setRawJson(summary.toString());
+                FitbitActivitySummariesLog savedSummary = fitbitActivitySummariesLogRepository.save(summariesLog);
 
-            JsonNode distances = summary.get("distances");
-            if (distances != null && distances.isArray()) {
-                for (JsonNode d : distances) {
-                    FitbitActivitySummariesDistancesLog distancesLog = new FitbitActivitySummariesDistancesLog();
-                    distancesLog.setFitbitActivitySummariesLog(savedSummary);
-                    distancesLog.setActivity(d.get("activity").asText());
-                    distancesLog.setDistance(d.get("distance").asDouble());
-                    fitbitActivitySummariesDistancesLogRepository.save(distancesLog);
+                JsonNode distances = summary.get("distances");
+                if (distances != null && distances.isArray()) {
+                    for (JsonNode d : distances) {
+                        FitbitActivitySummariesDistancesLog distancesLog = new FitbitActivitySummariesDistancesLog();
+                        distancesLog.setFitbitActivitySummariesLog(savedSummary);
+                        distancesLog.setActivity(d.has("activity") ? d.get("activity").asText() : null);
+                        distancesLog.setDistance(d.has("distance") ? d.get("distance").asDouble() : null);
+                        fitbitActivitySummariesDistancesLogRepository.save(distancesLog);
+                    }
                 }
+            } else {
+                log.info("Skipping duplicate summary log for user {} on date {}", user.getId(), logDate);
+
             }
         }
 
@@ -292,36 +316,49 @@ public class FitbitApiClientService {
         }
 
         JsonNode heartEntry = activitiesHeartArray.get(0);
-        LocalDate dateTime = LocalDate.parse(heartEntry.get("dateTime").asText());
+
+        LocalDate logDate = heartEntry.has("dateTime")
+                ? LocalDate.parse(heartEntry.get("dateTime").asText())
+                : LocalDate.parse(date);
+
         JsonNode valueArray = heartEntry.get("value");
-        int restingHeartRate = valueArray.get("restingHeartRate").asInt();
-        JsonNode heartRateZonesArray = valueArray.get("heartRateZones");
+
+        Integer restingHeartRate = (valueArray != null && valueArray.has("restingHeartRate"))
+                ? valueArray.get("restingHeartRate").asInt()
+                : null;
+
+        JsonNode heartRateZonesArray = (valueArray != null) ? valueArray.get("heartRateZones") : null;
+
+        if (fitbitActivitiesHeartLogRepository.existsByUserAndDateTime(user, logDate)) {
+            log.info("Skipping duplicate heart log for user {} on date {}", user.getId(), logDate);
+            return root;
+        }
 
         //Save heart log:
         FitbitActivitiesHeartLog activitiesHeartLog = new FitbitActivitiesHeartLog();
         activitiesHeartLog.setUser(user);
-        activitiesHeartLog.setLogDate(LocalDate.now());
+        activitiesHeartLog.setLogDate(logDate);
         activitiesHeartLog.setProvider(fitbitService.getProvider());
-        activitiesHeartLog.setDateTime(dateTime);
+        activitiesHeartLog.setDateTime(logDate);
         activitiesHeartLog.setRawJson(root.toString());
-        fitbitActivitiesHeartLogRepository.save(activitiesHeartLog);
+        FitbitActivitiesHeartLog savedHeartLog = fitbitActivitiesHeartLogRepository.save(activitiesHeartLog);
 
         //Save value log:
         FitbitActivitiesHeartValueLog valueLog = new FitbitActivitiesHeartValueLog();
-        valueLog.setFitbitActivitiesHeartLog(activitiesHeartLog);
+        valueLog.setFitbitActivitiesHeartLog(savedHeartLog);
         valueLog.setRestingHeartRate(restingHeartRate);
-        fitbitActivitiesHeartValueLogRepository.save(valueLog);
+        FitbitActivitiesHeartValueLog savedValueLog = fitbitActivitiesHeartValueLogRepository.save(valueLog);
 
         //Save heart zones:
         if (heartRateZonesArray != null && heartRateZonesArray.isArray()) {
             for (JsonNode zone : heartRateZonesArray) {
                 FitbitActivitiesHeartValueHeartRateZonesLog zonesLog = new FitbitActivitiesHeartValueHeartRateZonesLog();
-                zonesLog.setFitbitActivitiesHeartValuesLog(valueLog);
-                zonesLog.setName(zone.get("name").asText());
-                zonesLog.setMin(zone.get("min").asInt());
-                zonesLog.setMax(zone.get("max").asInt());
-                zonesLog.setMinutes(zone.get("minutes").asInt());
-                zonesLog.setCaloriesOut(zone.get("caloriesOut").asDouble());
+                zonesLog.setFitbitActivitiesHeartValuesLog(savedValueLog);
+                zonesLog.setName(zone.has("name") ? zone.get("name").asText() : null);
+                zonesLog.setMin(zone.has("min") ? zone.get("min").asInt() : null);
+                zonesLog.setMax(zone.has("max") ? zone.get("max").asInt() : null);
+                zonesLog.setMinutes(zone.has("minutes") ? zone.get("minutes").asInt() : null);
+                zonesLog.setCaloriesOut(zone.has("caloriesOut") ? zone.get("caloriesOut").asDouble() : null);
                 fitbitActivitiesHeartValueHeartRateZonesLogRepository.save(zonesLog);
             }
         }
