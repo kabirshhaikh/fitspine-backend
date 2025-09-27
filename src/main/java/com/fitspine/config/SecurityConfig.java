@@ -34,7 +34,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Disable CSRF for Postman testing
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/user/register", "/api/user/login", "/api/wearable/**", "/oauth/callback").permitAll()
+                        .requestMatchers("/api/user/register", "/api/user/login", "/api/wearable/**", "/oauth/callback", "/api/manual-daily-log").permitAll()
                         .anyRequest().authenticated() // Protect all others
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

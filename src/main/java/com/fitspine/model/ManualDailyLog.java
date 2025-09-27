@@ -66,6 +66,7 @@ public class ManualDailyLog {
     private String notes;
 
     @OneToMany(mappedBy = "manualDailyLog", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     List<ManualDailyPainLocationLog> manualDailyPainLocationLogs = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
