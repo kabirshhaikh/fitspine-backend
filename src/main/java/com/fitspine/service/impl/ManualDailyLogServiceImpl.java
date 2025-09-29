@@ -1,7 +1,11 @@
 package com.fitspine.service.impl;
 
 import com.fitspine.dto.ManualDailyLogInputDto;
+import com.fitspine.dto.ManualDailyLogPatchDto;
 import com.fitspine.dto.ManualDailyLogResponseDto;
+import com.fitspine.enums.PainLocation;
+import com.fitspine.exception.ResourceNotFoundException;
+import com.fitspine.exception.UserMismatchException;
 import com.fitspine.exception.UserNotFoundException;
 import com.fitspine.model.ManualDailyLog;
 import com.fitspine.model.ManualDailyPainLocationLog;
@@ -12,6 +16,10 @@ import com.fitspine.repository.UserRepository;
 import com.fitspine.service.ManualDailyLogService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Service
 public class ManualDailyLogServiceImpl implements ManualDailyLogService {
@@ -89,8 +97,105 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
                 .build();
     }
 
+    @Transactional
     @Override
-    public void updateDailyLog(String email) {
-        //TODO
+    public ManualDailyLogResponseDto updateDailyLog(String email, ManualDailyLogPatchDto dto, Long id) {
+        //Get authenticated user:
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        //Get log:
+        ManualDailyLog log = manualDailyLogRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Manual daily log with id:" + id + " not found"));
+
+        //Check ownership:
+        if (!log.getUser().getId().equals(user.getId())) {
+            throw new UserMismatchException("You are not authorized to update this log");
+        }
+
+        //Update:
+        if (dto.getPainLevel() != null) {
+            log.setPainLevel(dto.getPainLevel());
+        }
+
+        if (dto.getFlareUpToday() != null) {
+            log.setFlareUpToday(dto.getFlareUpToday());
+        }
+
+        if (dto.getNumbnessTingling() != null) {
+            log.setNumbnessTingling(dto.getNumbnessTingling());
+        }
+
+        if (dto.getSittingTime() != null) {
+            log.setSittingTime(dto.getSittingTime());
+        }
+
+        if (dto.getStandingTime() != null) {
+            log.setStandingTime(dto.getStandingTime());
+        }
+
+        if (dto.getStretchingDone() != null) {
+            log.setStretchingDone(dto.getStretchingDone());
+        }
+
+        if (dto.getMorningStiffness() != null) {
+            log.setMorningStiffness(dto.getMorningStiffness());
+        }
+
+        if (dto.getStressLevel() != null) {
+            log.setStressLevel(dto.getStressLevel());
+        }
+
+        if (dto.getLiftingOrStrain() != null) {
+            log.setLiftingOrStrain(dto.getLiftingOrStrain());
+        }
+
+        if (dto.getNotes() != null) {
+            log.setNotes(dto.getNotes());
+        }
+
+        if (dto.getPainLocations() != null) {
+            log.getManualDailyPainLocationLogs().clear();
+            List<PainLocation> locations = dto.getPainLocations();
+            Set<PainLocation> seen = new HashSet<>();
+
+            for (int i = 0; i < locations.size(); i++) {
+                ManualDailyPainLocationLog painLocationLog = new ManualDailyPainLocationLog();
+                PainLocation location = locations.get(i);
+
+                if (location == null || seen.contains(location)) {
+                    continue;
+                }
+
+                painLocationLog.setManualDailyLog(log);
+                painLocationLog.setPainLocation(location);
+                log.getManualDailyPainLocationLogs().add(painLocationLog);
+
+                seen.add(location);
+            }
+        }
+
+        //Save log:
+        ManualDailyLog updateLog = manualDailyLogRepository.save(log);
+
+
+        //Map entity to dto:
+        return ManualDailyLogResponseDto.builder()
+                .id(log.getId())
+                .logDate(log.getLogDate())
+                .painLevel(log.getPainLevel())
+                .flareUpToday(log.getFlareUpToday())
+                .numbnessTingling(log.getNumbnessTingling())
+                .sittingTime(log.getSittingTime())
+                .standingTime(log.getStandingTime())
+                .stretchingDone(log.getStretchingDone())
+                .morningStiffness(log.getMorningStiffness())
+                .stressLevel(log.getStressLevel())
+                .liftingOrStrain(log.getLiftingOrStrain())
+                .notes(log.getNotes())
+                .painLocations(
+                        log.getManualDailyPainLocationLogs().stream()
+                                .map(ManualDailyPainLocationLog::getPainLocation)
+                                .toList()
+                )
+                .build();
     }
 }
