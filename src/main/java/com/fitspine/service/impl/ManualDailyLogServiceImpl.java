@@ -17,6 +17,7 @@ import com.fitspine.service.ManualDailyLogService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -178,6 +179,36 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
 
 
         //Map entity to dto:
+        return ManualDailyLogResponseDto.builder()
+                .id(log.getId())
+                .logDate(log.getLogDate())
+                .painLevel(log.getPainLevel())
+                .flareUpToday(log.getFlareUpToday())
+                .numbnessTingling(log.getNumbnessTingling())
+                .sittingTime(log.getSittingTime())
+                .standingTime(log.getStandingTime())
+                .stretchingDone(log.getStretchingDone())
+                .morningStiffness(log.getMorningStiffness())
+                .stressLevel(log.getStressLevel())
+                .liftingOrStrain(log.getLiftingOrStrain())
+                .notes(log.getNotes())
+                .painLocations(
+                        log.getManualDailyPainLocationLogs().stream()
+                                .map(ManualDailyPainLocationLog::getPainLocation)
+                                .toList()
+                )
+                .build();
+    }
+
+    @Transactional
+    @Override
+    public ManualDailyLogResponseDto getLog(String email, LocalDate date) {
+        //Find user:
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        //Find log:
+        ManualDailyLog log = manualDailyLogRepository.findByUserAndLogDate(user, date).orElseThrow(() -> new ResourceNotFoundException("Log for date: " + date + " not found"));
+
         return ManualDailyLogResponseDto.builder()
                 .id(log.getId())
                 .logDate(log.getLogDate())

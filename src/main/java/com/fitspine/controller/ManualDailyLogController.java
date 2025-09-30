@@ -10,6 +10,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/manual-daily-log")
@@ -34,6 +36,14 @@ public class ManualDailyLogController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
         ManualDailyLogResponseDto response = manualDailyLogService.updateDailyLog(email, dto, id);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/date/{date}")
+    public ResponseEntity<ManualDailyLogResponseDto> getLog(@PathVariable LocalDate date) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        ManualDailyLogResponseDto response = manualDailyLogService.getLog(email, date);
         return ResponseEntity.ok(response);
     }
 }
