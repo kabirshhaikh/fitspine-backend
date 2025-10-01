@@ -75,6 +75,8 @@ public class UserServiceImp implements UserService {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .id(user.getId())
+                .isWearableConnected(user.getIsWearableConnected())
+                .wearableType(user.getWearableType())
                 .build();
     }
 

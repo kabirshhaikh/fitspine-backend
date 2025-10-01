@@ -1,5 +1,6 @@
 package com.fitspine.dto;
 
+import com.fitspine.enums.WearableType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,5 +11,7 @@ public class LoginResponseDto {
     private String fullName;
     private String email;
     private String profilePicture;
+    private Boolean isWearableConnected;
+    private WearableType wearableType;
     private Long id;
 }
