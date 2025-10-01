@@ -96,6 +96,7 @@ public class UserServiceImp implements UserService {
                 .surgeryHistory(dto.getSurgeryHistory())
                 .isResearchOpt(dto.getIsResearchOpt())
                 .isWearableConnected(false)
+                .wearableType(null)
                 .role(Role.USER)
                 .build();
 
