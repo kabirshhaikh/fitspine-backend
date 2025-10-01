@@ -2,6 +2,7 @@ package com.fitspine.controller;
 
 import com.fitspine.service.WearableService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,9 @@ public class OauthCallBackController {
     @GetMapping("/callback")
     public ResponseEntity<String> fitBitCallBack(@RequestParam("code") String code, @RequestParam("state") Long userId) {
         wearableService.exchangeCodeForToken(code, userId);
-        return ResponseEntity.ok("Fitbit Connected Successfully");
+        //Hardcoding this for now, later add env variable with prod url:
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header("Location", "http://localhost:5173/dashboard?fitbit=connected")
+                .build();
     }
 }
