@@ -2,6 +2,7 @@ package com.fitspine.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fitspine.enums.WearableType;
 import com.fitspine.exception.TokenRefreshException;
 import com.fitspine.exception.UserNotFoundException;
 import com.fitspine.model.User;
@@ -106,6 +107,11 @@ public class FitbitServiceImpl implements WearableService {
             token.setScope(scope);
             token.setExpiresAt(LocalDateTime.now().plusSeconds(expiresIn));
             userWearableTokenRepository.save(token);
+
+            //Update user wearable info:
+            user.setIsWearableConnected(true);
+            user.setWearableType(WearableType.FITBIT);
+            userRepository.save(user);
         } catch (Exception e) {
             throw new TokenRefreshException("Error parsing fitbit token response", e);
         }
