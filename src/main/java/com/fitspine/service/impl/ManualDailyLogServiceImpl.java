@@ -40,58 +40,88 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
         //Get user:
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
-        //Check for duplicate entry:
-        if (manualDailyLogRepository.existsByUserAndLogDate(user, dto.getLogDate())) {
-            throw new RuntimeException("Log already exists for date:" + dto.getLogDate());
+        //Check for existing log:
+        ManualDailyLog existingLog = manualDailyLogRepository.findByUserAndLogDate(user, dto.getLogDate()).orElse(null);
+
+        ManualDailyLog logToSave;
+
+        if (existingLog != null) {
+            //Override the existing log:
+            existingLog.setPainLevel(dto.getPainLevel());
+            existingLog.setFlareUpToday(dto.getFlareUpToday());
+            existingLog.setNumbnessTingling(dto.getNumbnessTingling());
+            existingLog.setSittingTime(dto.getSittingTime());
+            existingLog.setStandingTime(dto.getStandingTime());
+            existingLog.setStretchingDone(dto.getStretchingDone());
+            existingLog.setMorningStiffness(dto.getMorningStiffness());
+            existingLog.setStressLevel(dto.getStressLevel());
+            existingLog.setLiftingOrStrain(dto.getLiftingOrStrain());
+            existingLog.setNotes(dto.getNotes());
+
+            // replace child pain locations
+            existingLog.getManualDailyPainLocationLogs().clear();
+            if (dto.getPainLocations() != null) {
+                dto.getPainLocations().forEach(location -> {
+                    ManualDailyPainLocationLog painLog = ManualDailyPainLocationLog.builder()
+                            .manualDailyLog(existingLog)
+                            .painLocation(location)
+                            .build();
+                    painLocationLogRepository.save(painLog);
+                    existingLog.getManualDailyPainLocationLogs().add(painLog);
+                });
+            }
+
+            logToSave = existingLog;
+        } else {
+            //Create new:
+            ManualDailyLog newLog = ManualDailyLog.builder()
+                    .user(user)
+                    .logDate(dto.getLogDate())
+                    .painLevel(dto.getPainLevel())
+                    .flareUpToday(dto.getFlareUpToday())
+                    .numbnessTingling(dto.getNumbnessTingling())
+                    .sittingTime(dto.getSittingTime())
+                    .standingTime(dto.getStandingTime())
+                    .stretchingDone(dto.getStretchingDone())
+                    .morningStiffness(dto.getMorningStiffness())
+                    .stressLevel(dto.getStressLevel())
+                    .liftingOrStrain(dto.getLiftingOrStrain())
+                    .notes(dto.getNotes())
+                    .build();
+
+            if (dto.getPainLocations() != null) {
+                dto.getPainLocations().forEach(location -> {
+                    ManualDailyPainLocationLog painLog = ManualDailyPainLocationLog.builder()
+                            .manualDailyLog(newLog)
+                            .painLocation(location)
+                            .build();
+                    painLocationLogRepository.save(painLog);
+                    newLog.getManualDailyPainLocationLogs().add(painLog);
+                });
+            }
+
+            logToSave = newLog;
         }
+
+        ManualDailyLog saved = manualDailyLogRepository.save(logToSave);
+
 
         //Map input dto to model:
-        ManualDailyLog savedLog = ManualDailyLog.builder()
-                .user(user)
-                .logDate(dto.getLogDate())
-                .painLevel(dto.getPainLevel())
-                .flareUpToday(dto.getFlareUpToday())
-                .numbnessTingling(dto.getNumbnessTingling())
-                .sittingTime(dto.getSittingTime())
-                .standingTime(dto.getStandingTime())
-                .stretchingDone(dto.getStretchingDone())
-                .morningStiffness(dto.getMorningStiffness())
-                .stressLevel(dto.getStressLevel())
-                .liftingOrStrain(dto.getLiftingOrStrain())
-                .notes(dto.getNotes())
-                .build();
-
-        //Save parent log:
-        manualDailyLogRepository.save(savedLog);
-
-        //Save child pain location log:
-        if (dto.getPainLocations() != null) {
-            dto.getPainLocations().forEach(location -> {
-                ManualDailyPainLocationLog painLog = ManualDailyPainLocationLog.builder()
-                        .manualDailyLog(savedLog)
-                        .painLocation(location)
-                        .build();
-                painLocationLogRepository.save(painLog);
-                savedLog.getManualDailyPainLocationLogs().add(painLog);
-            });
-        }
-
-        //Entity to response dto:
         return ManualDailyLogResponseDto.builder()
-                .id(savedLog.getId())
-                .logDate(savedLog.getLogDate())
-                .painLevel(savedLog.getPainLevel())
-                .flareUpToday(savedLog.getFlareUpToday())
-                .numbnessTingling(savedLog.getNumbnessTingling())
-                .sittingTime(savedLog.getSittingTime())
-                .standingTime(savedLog.getStandingTime())
-                .stretchingDone(savedLog.getStretchingDone())
-                .morningStiffness(savedLog.getMorningStiffness())
-                .stressLevel(savedLog.getStressLevel())
-                .liftingOrStrain(savedLog.getLiftingOrStrain())
-                .notes(savedLog.getNotes())
+                .id(saved.getId())
+                .logDate(saved.getLogDate())
+                .painLevel(saved.getPainLevel())
+                .flareUpToday(saved.getFlareUpToday())
+                .numbnessTingling(saved.getNumbnessTingling())
+                .sittingTime(saved.getSittingTime())
+                .standingTime(saved.getStandingTime())
+                .stretchingDone(saved.getStretchingDone())
+                .morningStiffness(saved.getMorningStiffness())
+                .stressLevel(saved.getStressLevel())
+                .liftingOrStrain(saved.getLiftingOrStrain())
+                .notes(saved.getNotes())
                 .painLocations(
-                        savedLog.getManualDailyPainLocationLogs().stream()
+                        saved.getManualDailyPainLocationLogs().stream()
                                 .map(ManualDailyPainLocationLog::getPainLocation)
                                 .toList()
                 )

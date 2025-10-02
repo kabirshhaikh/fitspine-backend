@@ -107,6 +107,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_GATEWAY);
     }
 
+    //Daily log exits:
+    @ExceptionHandler(DailyLogAlreadyExistsException.class)
+    public ResponseEntity<ApiError> handleDailyLogAlreadyExists(DailyLogAlreadyExistsException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                "Daily Log Already Exists",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
     //Generic exceptions:
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAllExceptions(Exception exception, HttpServletRequest request) {
