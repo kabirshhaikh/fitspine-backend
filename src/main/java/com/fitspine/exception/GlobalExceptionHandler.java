@@ -120,6 +120,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
+    //Manual daily log not found:
+    @ExceptionHandler(ManualDailyLogNotFoundException.class)
+    public ResponseEntity<ApiError> handleManualDailyLogNotFound(ManualDailyLogNotFoundException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                "Manual Daily Log Not Found",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
     //Generic exceptions:
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAllExceptions(Exception exception, HttpServletRequest request) {

@@ -1,11 +1,8 @@
 package com.fitspine.service.impl;
 
 import com.fitspine.dto.AiUserDailyInputDto;
-import com.fitspine.enums.MorningStiffness;
-import com.fitspine.enums.SittingTime;
-import com.fitspine.enums.StandingTime;
-import com.fitspine.enums.StressLevel;
-import com.fitspine.exception.ResourceNotFoundException;
+import com.fitspine.enums.WearableType;
+import com.fitspine.exception.ManualDailyLogNotFoundException;
 import com.fitspine.exception.UserNotFoundException;
 import com.fitspine.model.*;
 import com.fitspine.repository.*;
@@ -14,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -53,40 +49,67 @@ public class AiDailyAggregationServiceImpl implements AiDailyAggregationService 
     public AiUserDailyInputDto buildAiInput(String email, LocalDate logDate) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email:" + email));
 
-        //Manual Log
+        //Manual log:
         ManualDailyLog manualDailyLog = manualDailyLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
 
-        //Heart Log:
-        FitbitActivitiesHeartLog heartLog = activitiesHeartLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
-        Integer restingHeartRate = null;
-        if (heartLog.getValues() != null && !heartLog.getValues().isEmpty()) {
-            restingHeartRate = heartLog.getValues().get(0).getRestingHeartRate();
+        //If manual log is not found throw this error, so that the user creates at least manual log before requesting insights and disc score:
+        if (manualDailyLog == null) {
+            log.warn("No manual log found for user {} on date {}", user.getId(), logDate);
+            throw new ManualDailyLogNotFoundException("User " + user.getId() + " does not have manual log for date:" + logDate);
         }
 
+        //Heart log:
+        FitbitActivitiesHeartLog heartLog = null;
+        Integer restingHeartRate = null;
+
         //Activity Log:
-        FitbitActivitySummariesLog activitySummariesLog = activitySummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
-        FitbitActivityGoalsLog activityGoalsLog = activityGoalsLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
-        FitbitActivitiesLog activitiesLog = activityLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+        FitbitActivitySummariesLog activitySummariesLog = null;
+        FitbitActivityGoalsLog activityGoalsLog = null;
+        FitbitActivitiesLog activitiesLog = null;
 
         //Sleep log:
-        FitbitSleepSummaryLog sleepSummaryLog = sleepSummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
-        FitbitSleepLog sleepLog = sleepLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+        FitbitSleepSummaryLog sleepSummaryLog = null;
+        FitbitSleepLog sleepLog = null;
+
+        boolean hasFitbitConnection = Boolean.TRUE.equals(user.getIsWearableConnected()) && user.getWearableType() != null && user.getWearableType() == WearableType.FITBIT;
+
+        if (hasFitbitConnection) {
+            log.info("User {} has Fitbit connected. Loading fitbit data for date {}:", user.getId(), logDate);
+
+            //Heart:
+            heartLog = activitiesHeartLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+            if (heartLog != null && heartLog.getValues() != null && !heartLog.getValues().isEmpty()) {
+                restingHeartRate = heartLog.getValues().get(0).getRestingHeartRate();
+            }
+
+            //Activity:
+            activitySummariesLog = activitySummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+            activityGoalsLog = activityGoalsLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+            activitiesLog = activityLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+
+            //Sleep:
+            sleepSummaryLog = sleepSummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+            sleepLog = sleepLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+        } else {
+            log.info("User {} does not have fitbit connected. Skipping Fitbit data fetch for log date {}:", user.getId(), logDate);
+        }
+
 
         return AiUserDailyInputDto.builder()
                 .id(user.getId())
                 .logDate(logDate)
 
                 // Manual
-                .painLevel(manualDailyLog != null ? manualDailyLog.getPainLevel() : null)
-                .flareUpToday(manualDailyLog != null ? manualDailyLog.getFlareUpToday() : null)
-                .numbnessTingling(manualDailyLog != null ? manualDailyLog.getNumbnessTingling() : null)
-                .sittingTime(manualDailyLog != null ? manualDailyLog.getSittingTime() : null)
-                .standingTime(manualDailyLog != null ? manualDailyLog.getStandingTime() : null)
-                .stretchingDone(manualDailyLog != null ? manualDailyLog.getStretchingDone() : null)
-                .morningStiffness(manualDailyLog != null ? manualDailyLog.getMorningStiffness() : null)
-                .stressLevel(manualDailyLog != null ? manualDailyLog.getStressLevel() : null)
-                .liftingOrStrain(manualDailyLog != null ? manualDailyLog.getLiftingOrStrain() : null)
-                .notes(manualDailyLog != null ? manualDailyLog.getNotes() : null)
+                .painLevel(manualDailyLog.getPainLevel())
+                .flareUpToday(manualDailyLog.getFlareUpToday())
+                .numbnessTingling(manualDailyLog.getNumbnessTingling())
+                .sittingTime(manualDailyLog.getSittingTime())
+                .standingTime(manualDailyLog.getStandingTime())
+                .stretchingDone(manualDailyLog.getStretchingDone())
+                .morningStiffness(manualDailyLog.getMorningStiffness())
+                .stressLevel(manualDailyLog.getStressLevel())
+                .liftingOrStrain(manualDailyLog.getLiftingOrStrain())
+                .notes(manualDailyLog.getNotes())
 
                 // Heart
                 .restingHeartRate(restingHeartRate)
