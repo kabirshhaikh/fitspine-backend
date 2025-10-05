@@ -1,16 +1,18 @@
 package com.fitspine.service.impl;
 
 import com.fitspine.dto.AiUserDailyInputDto;
-import com.fitspine.enums.WearableType;
+import com.fitspine.enums.*;
 import com.fitspine.exception.ManualDailyLogNotFoundException;
 import com.fitspine.exception.UserNotFoundException;
 import com.fitspine.model.*;
 import com.fitspine.repository.*;
 import com.fitspine.service.AiDailyAggregationService;
+import com.fitspine.service.FitbitApiClientService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -23,7 +25,7 @@ public class AiDailyAggregationServiceImpl implements AiDailyAggregationService 
     private final FitbitActivitiesLogRepository activityLogRepo;
     private final FitbitSleepSummaryLogRepository sleepSummaryLogRepo;
     private final FitbitSleepLogRepository sleepLogRepo;
-
+    private final FitbitApiClientService fitbitApiClientService;
 
     public AiDailyAggregationServiceImpl(
             UserRepository userRepository,
@@ -33,7 +35,8 @@ public class AiDailyAggregationServiceImpl implements AiDailyAggregationService 
             FitbitActivityGoalsLogRepository activityGoalsLogRepo,
             FitbitActivitiesLogRepository activityLogRepo,
             FitbitSleepSummaryLogRepository sleepSummaryLogRepo,
-            FitbitSleepLogRepository sleepLogRepo
+            FitbitSleepLogRepository sleepLogRepo,
+            FitbitApiClientService fitbitApiClientService
     ) {
         this.userRepository = userRepository;
         this.manualDailyLogRepo = manualDailyLogRepo;
@@ -43,11 +46,27 @@ public class AiDailyAggregationServiceImpl implements AiDailyAggregationService 
         this.activityLogRepo = activityLogRepo;
         this.sleepSummaryLogRepo = sleepSummaryLogRepo;
         this.sleepLogRepo = sleepLogRepo;
+        this.fitbitApiClientService = fitbitApiClientService;
     }
 
     @Override
     public AiUserDailyInputDto buildAiInput(String email, LocalDate logDate) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email:" + email));
+
+        List<InjuryType> injuryTypes = user.getUserInjuryList()
+                .stream()
+                .map(UserInjury::getInjuryType)
+                .toList();
+
+        List<SurgeryType> surgeryTypes = user.getUserSurgeryList()
+                .stream()
+                .map(UserSurgery::getSurgeryType)
+                .toList();
+
+        List<DiscLevel> discLevels = user.getUserDiscIssueList()
+                .stream()
+                .map(UserDiscIssue::getDiscLevel)
+                .toList();
 
         //Manual log:
         ManualDailyLog manualDailyLog = manualDailyLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
@@ -78,17 +97,39 @@ public class AiDailyAggregationServiceImpl implements AiDailyAggregationService 
 
             //Heart:
             heartLog = activitiesHeartLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+            activitySummariesLog = activitySummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+            sleepSummaryLog = sleepSummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+
+            if (heartLog == null && activitySummariesLog == null && sleepSummaryLog == null) {
+                log.info("No Fitbit data found for {}. Triggering on-demand sync for {}", user.getId(), logDate);
+
+                //Fetch data:
+                try {
+                    log.info("Running try block fetch activity, heart and sleep data on demand..");
+                    fitbitApiClientService.getActivity(user.getEmail(), logDate.toString());
+                    fitbitApiClientService.getHeartRate(user.getEmail(), logDate.toString());
+                    fitbitApiClientService.getSleep(user.getEmail(), logDate.toString());
+                    log.info("Fetching of data complete...");
+
+                    //Re-fetch and sync the data:
+                    heartLog = activitiesHeartLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+                    activitySummariesLog = activitySummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+                    sleepSummaryLog = sleepSummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+                } catch (Exception e) {
+                    log.error("Failed to fetch on-demand Fitbit data for user {}: {}", user.getId(), e.getMessage());
+                }
+            }
+
             if (heartLog != null && heartLog.getValues() != null && !heartLog.getValues().isEmpty()) {
                 restingHeartRate = heartLog.getValues().get(0).getRestingHeartRate();
             }
 
             //Activity:
-            activitySummariesLog = activitySummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+
             activityGoalsLog = activityGoalsLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
             activitiesLog = activityLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
 
             //Sleep:
-            sleepSummaryLog = sleepSummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
             sleepLog = sleepLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
         } else {
             log.info("User {} does not have fitbit connected. Skipping Fitbit data fetch for log date {}:", user.getId(), logDate);
@@ -98,6 +139,14 @@ public class AiDailyAggregationServiceImpl implements AiDailyAggregationService 
         return AiUserDailyInputDto.builder()
                 .id(user.getId())
                 .logDate(logDate)
+
+                //User info:
+                .gender(user.getGender())
+                .age(user.getAge())
+                .hasSurgeryHistory(user.getSurgeryHistory())
+                .injuryTypes(injuryTypes)
+                .surgeryTypes(surgeryTypes)
+                .discLevels(discLevels)
 
                 // Manual
                 .painLevel(manualDailyLog.getPainLevel())

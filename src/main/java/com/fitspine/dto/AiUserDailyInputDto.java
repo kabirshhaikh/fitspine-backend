@@ -6,12 +6,21 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
 public class AiUserDailyInputDto {
     private Long id;
     private LocalDate logDate;
+
+    //User information:
+    private Gender gender;
+    private Integer age;
+    private Boolean hasSurgeryHistory;
+    private List<InjuryType> injuryTypes;
+    private List<SurgeryType> surgeryTypes;
+    private List<DiscLevel> discLevels;
 
     //Manual log fields:
     private PainLevel painLevel; //From ManualDailyLog
