@@ -4,6 +4,7 @@ import com.fitspine.dto.AiInsightResponseDto;
 import com.fitspine.dto.AiUserDailyInputDto;
 import com.fitspine.service.AiDailyFitbitAggregationService;
 import com.fitspine.service.AiInsightService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/insights")
 public class AiInsightController {
@@ -31,6 +33,7 @@ public class AiInsightController {
         String email = auth.getName();
 
         AiUserDailyInputDto dto = aiDailyAggregationService.buildAiInput(email, date);
+        log.info("User daily input dto {}", dto);
         AiInsightResponseDto responseDto = aiInsightService.generateDailyInsight(dto);
         return ResponseEntity.ok(responseDto);
     }

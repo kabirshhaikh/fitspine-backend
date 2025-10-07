@@ -29,6 +29,24 @@ public class AiInsightServiceImpl implements AiInsightService {
         this.objectMapper = objectMapper;
     }
 
+    private static final String FIELD_CONTEXT = """
+            Context (field meanings):
+            - restingHeartRate: average resting heart rate (in beats per minute, indicates cardiovascular recovery and stress level)
+            - caloriesOut: total calories burned (BMR + activity)
+            - activityCalories: calories from intentional exercise
+            - caloriesBMR: baseline metabolism at rest
+            - marginalCalories: calories from light, non-exercise movement
+            - sedentaryMinutes: total inactive minutes in the day
+            - steps: total steps walked in the day
+            - lightlyActiveMinutes, fairlyActiveMinutes, veryActiveMinutes: activity intensity levels in minutes
+            - totalMinutesAsleep: total minutes spent asleep
+            - totalTimeInBed: total minutes in bed (sleep + awake)
+            - efficiency: sleep quality percentage (0–100)
+            - startTime, endTime: sleep window timestamps
+            - minutesAsleep, minutesAwake, minutesToFallAsleep, timeInBed: detailed durations (all in minutes)
+            - isMainSleep: true if primary overnight sleep, false if nap
+            """;
+
     @Override
     public AiInsightResponseDto generateDailyInsight(AiUserDailyInputDto dto) {
         try {
@@ -51,6 +69,8 @@ public class AiInsightServiceImpl implements AiInsightService {
                     8. Always respond with factual, encouraging tone and biomechanical reasoning.
                     9. Return **strict JSON only** — no markdown, no code blocks.
 
+                    %s
+
                     Input JSON:
                     %s
 
@@ -62,7 +82,7 @@ public class AiInsightServiceImpl implements AiInsightService {
                       "discProtectionScore": 0,
                       "discScoreExplanation": "Short reasoning describing how the score was calculated based on posture, stress, sleep, and activity."
                     }
-                    """.formatted(userJson);
+                    """.formatted(FIELD_CONTEXT, userJson);
 
 
             //Build request body:
