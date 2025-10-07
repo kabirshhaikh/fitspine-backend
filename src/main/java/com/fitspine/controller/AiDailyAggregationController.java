@@ -1,6 +1,6 @@
 package com.fitspine.controller;
 
-import com.fitspine.service.AiDailyAggregationService;
+import com.fitspine.service.AiDailyFitbitAggregationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,9 +14,9 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/insights")
 public class AiDailyAggregationController {
-    private final AiDailyAggregationService aiDailyAggregationService;
+    private final AiDailyFitbitAggregationService aiDailyAggregationService;
 
-    public AiDailyAggregationController(AiDailyAggregationService aiDailyAggregationService) {
+    public AiDailyAggregationController(AiDailyFitbitAggregationService aiDailyAggregationService) {
         this.aiDailyAggregationService = aiDailyAggregationService;
     }
 
