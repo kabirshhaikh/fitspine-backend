@@ -42,7 +42,6 @@ public class AiUserDailyInputDto {
     private Integer caloriesOut; //From FitbitActivitySummariesLog
     private Integer activityCalories;
     private Integer caloriesBmr;
-    private Integer activeScore;
     private Integer steps;
     private Integer sedentaryMinutes;
     private Integer lightlyActiveMinutes;
@@ -63,13 +62,9 @@ public class AiUserDailyInputDto {
     private Integer efficiency; //From FitbitSleepLog
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private Integer infoCode;
     private Boolean isMainSleep;
-    private Integer minutesAfterWakeup;
     private Integer minutesAwake;
     private Integer minutesAsleep;
     private Integer minutesToFallAsleep;
-    private String logType;
     private Integer timeInBed;
-    private String type;
 }

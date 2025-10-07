@@ -167,7 +167,6 @@ public class AiDailyFitbitAggregationServiceImpl implements AiDailyFitbitAggrega
                 .caloriesOut(activitySummariesLog != null ? activitySummariesLog.getCaloriesOut() : null)
                 .activityCalories(activitySummariesLog != null ? activitySummariesLog.getActivityCalories() : null)
                 .caloriesBmr(activitySummariesLog != null ? activitySummariesLog.getCaloriesBmr() : null)
-                .activeScore(activitySummariesLog != null ? activitySummariesLog.getActiveScore() : null)
                 .steps(activitySummariesLog != null ? activitySummariesLog.getSteps() : null)
                 .sedentaryMinutes(activitySummariesLog != null ? activitySummariesLog.getSedentaryMinutes() : null)
                 .lightlyActiveMinutes(activitySummariesLog != null ? activitySummariesLog.getLightlyActiveMinutes() : null)
@@ -191,16 +190,31 @@ public class AiDailyFitbitAggregationServiceImpl implements AiDailyFitbitAggrega
                 .efficiency(sleepLog != null ? sleepLog.getEfficiency() : null)
                 .startTime(sleepLog != null ? sleepLog.getStartTime() : null)
                 .endTime(sleepLog != null ? sleepLog.getEndTime() : null)
-                .infoCode(sleepLog != null ? sleepLog.getInfoCode() : null)
                 .isMainSleep(sleepLog != null ? sleepLog.getIsMainSleep() : null)
-                .minutesAfterWakeup(sleepLog != null ? sleepLog.getMinutesAfterWakeup() : null)
                 .minutesAwake(sleepLog != null ? sleepLog.getMinutesAwake() : null)
                 .minutesAsleep(sleepLog != null ? sleepLog.getMinutesAsleep() : null)
                 .minutesToFallAsleep(sleepLog != null ? sleepLog.getMinutesToFallAsleep() : null)
-                .logType(sleepLog != null ? sleepLog.getLogType() : null)
                 .timeInBed(sleepLog != null ? sleepLog.getTimeInBed() : null)
-                .type(sleepLog != null ? sleepLog.getType() : null)
 
                 .build();
     }
 }
+
+
+//Context:
+//        - restingHeartRate: resting heart rate
+
+//        - caloriesOut: total calories burned (BMR + activity)
+//        - activityCalories: calories from intentional exercise
+//        - caloriesBMR: baseline metabolism at rest
+//        - marginalCalories: calories from light, non-exercise movement
+//        - sedentaryMinutes: total inactive minutes in the day
+//        - steps: total steps walked in the day
+//        - lightlyActiveMinutes, fairlyActiveMinutes, veryActiveMinutes: activity intensity levels in minutes
+
+//        - totalMinutesAsleep: total minutes spent asleep
+//        - totalTimeInBed: total minutes in bed (sleep + awake)
+//        - efficiency: sleep quality percentage (0–100)
+//        - startTime, endTime: sleep window timestamps
+//        - minutesAsleep, minutesAwake, minutesToFallAsleep, timeInBed: detailed durations (all in minutes)
+//        - isMainSleep: true if primary overnight sleep, false if nap
