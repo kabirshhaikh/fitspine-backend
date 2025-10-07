@@ -49,8 +49,14 @@ public class AiDailyInsight {
     @Column(name = "model_used")
     private String modelUsed;
 
-    @Column(name = "tokens_used")
-    private Integer tokensUsed;
+    @Column(name = "total_tokens")
+    private Integer totalTokens;
+
+    @Column(name = "prompt_tokens")
+    private Integer promptTokens;
+
+    @Column(name = "completion_tokens")
+    private Integer completionTokens;
 
     @OneToMany(mappedBy = "aiDailyInsight", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AiDailyInsightFlareUpTriggers> flareUpTriggers = new ArrayList<>();

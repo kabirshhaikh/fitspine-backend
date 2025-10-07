@@ -3,13 +3,24 @@ package com.fitspine.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitspine.dto.AiInsightResponseDto;
 import com.fitspine.dto.AiUserDailyInputDto;
+import com.fitspine.exception.ResourceNotFoundException;
+import com.fitspine.exception.UserNotFoundException;
+import com.fitspine.helper.AiInsightHelper;
+import com.fitspine.model.AiDailyInsight;
+import com.fitspine.model.AiDailyInsightFlareUpTriggers;
+import com.fitspine.model.User;
+import com.fitspine.repository.AiDailyInsightFlareUpTriggersRepository;
+import com.fitspine.repository.AiDailyInsightRepository;
+import com.fitspine.repository.UserRepository;
 import com.fitspine.service.AiInsightService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,10 +34,18 @@ public class AiInsightServiceImpl implements AiInsightService {
     private static final String OPENAI_URL = "https://api.openai.com/v1/chat/completions";
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final AiDailyInsightRepository insightRepository;
+    private final AiDailyInsightFlareUpTriggersRepository flareUpTriggersRepository;
+    private final UserRepository userRepository;
+    private final AiInsightHelper aiHelper;
 
-    public AiInsightServiceImpl(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public AiInsightServiceImpl(RestTemplate restTemplate, ObjectMapper objectMapper, AiDailyInsightRepository insightRepository, UserRepository userRepository, AiInsightHelper aiHelper, AiDailyInsightFlareUpTriggersRepository flareUpTriggersRepository) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
+        this.insightRepository = insightRepository;
+        this.flareUpTriggersRepository = flareUpTriggersRepository;
+        this.userRepository = userRepository;
+        this.aiHelper = aiHelper;
     }
 
     private static final String FIELD_CONTEXT = """
@@ -47,8 +66,29 @@ public class AiInsightServiceImpl implements AiInsightService {
             - isMainSleep: true if primary overnight sleep, false if nap
             """;
 
+    @Transactional
     @Override
-    public AiInsightResponseDto generateDailyInsight(AiUserDailyInputDto dto) {
+    public AiInsightResponseDto generateDailyInsight(AiUserDailyInputDto dto, String email, LocalDate logDate) {
+        //Get the user:
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        //Check if the ai insight exists:
+        boolean insightExists = insightRepository.existsByUserAndLogDate(user, logDate);
+
+        //If it exists then map the existing insight to dto and return that:
+        if (insightExists) {
+            AiDailyInsight insight = insightRepository.findByUserAndLogDate(user, logDate).orElseThrow(() -> new ResourceNotFoundException("Ai daily insight not found for date:" + logDate));
+            List<AiDailyInsightFlareUpTriggers> flareUpTriggers = insight.getFlareUpTriggers();
+            List<String> triggers = aiHelper.returnTriggerText(flareUpTriggers);
+            return AiInsightResponseDto.builder()
+                    .todaysInsight(insight.getTodaysInsights() != null ? insight.getTodaysInsights() : "")
+                    .flareUpTriggers(triggers != null ? triggers : new ArrayList<>())
+                    .recoveryInsights(insight.getRecoveryInsights() != null ? insight.getRecoveryInsights() : "")
+                    .discProtectionScore(insight.getDiscProtectionScore() != null ? insight.getDiscProtectionScore() : 0)
+                    .discScoreExplanation(insight.getDiscScoreExplanation() != null ? insight.getDiscScoreExplanation() : "")
+                    .build();
+        }
+
         try {
             String userJson = objectMapper.writeValueAsString(dto);
 
@@ -122,12 +162,52 @@ public class AiInsightServiceImpl implements AiInsightService {
             String responseBody = response.getBody();
             log.info("AI response: {}", responseBody);
             var root = objectMapper.readTree(responseBody);
+            String modelUsed = root.path("model").asText("unknown");
+            int totalTokensUsed = root.path("usage").path("total_tokens").asInt(0);
+            int promptTokens = root.path("usage").path("prompt_tokens").asInt(0);
+            int completionToken = root.path("usage").path("completion_tokens").asInt(0);
+
             String content = root.path("choices").get(0).path("message").path("content").asText();
             content = content
                     .replaceAll("```json", "")
                     .replaceAll("```", "")
                     .trim();
             AiInsightResponseDto insight = objectMapper.readValue(content, AiInsightResponseDto.class);
+            List<String> triggers = insight.getFlareUpTriggers();
+
+//            //Save the Ai insight in db:
+            AiDailyInsight savedInsight = AiDailyInsight.builder()
+                    .user(user)
+                    .logDate(logDate)
+                    .provider(user.getWearableType() != null ? user.getWearableType() : null)
+                    .todaysInsights(insight.getTodaysInsight() != null ? insight.getTodaysInsight() : null)
+                    .recoveryInsights(insight.getRecoveryInsights() != null ? insight.getRecoveryInsights() : null)
+                    .discScoreExplanation(insight.getDiscScoreExplanation() != null ? insight.getDiscScoreExplanation() : null)
+                    .discProtectionScore(insight.getDiscProtectionScore() != null ? insight.getDiscProtectionScore() : null)
+                    .modelUsed(modelUsed)
+                    .totalTokens(totalTokensUsed)
+                    .promptTokens(promptTokens)
+                    .completionTokens(completionToken)
+                    .build();
+
+            //Save the insight:
+            insightRepository.save(savedInsight);
+
+            //Save the flare up triggers:
+            if (triggers != null && !triggers.isEmpty()) {
+                List<AiDailyInsightFlareUpTriggers> flareUpEntries = new ArrayList<>();
+                for (int i = 0; i < triggers.size(); i++) {
+                    flareUpEntries.add(
+                            AiDailyInsightFlareUpTriggers.builder()
+                                    .aiDailyInsight(savedInsight)
+                                    .triggerText(triggers.get(i))
+                                    .build()
+                    );
+                }
+
+                flareUpTriggersRepository.saveAll(flareUpEntries);
+            }
+
             log.info("AI Insights generated successfully for user: {}", dto.getId());
             return insight;
         } catch (Exception e) {

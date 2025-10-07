@@ -34,7 +34,7 @@ public class AiInsightController {
 
         AiUserDailyInputDto dto = aiDailyAggregationService.buildAiInput(email, date);
         log.info("User daily input dto {}", dto);
-        AiInsightResponseDto responseDto = aiInsightService.generateDailyInsight(dto);
+        AiInsightResponseDto responseDto = aiInsightService.generateDailyInsight(dto, email, date);
         return ResponseEntity.ok(responseDto);
     }
 }
