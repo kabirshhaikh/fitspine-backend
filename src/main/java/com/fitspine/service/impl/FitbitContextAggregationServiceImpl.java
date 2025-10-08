@@ -3,10 +3,7 @@ package com.fitspine.service.impl;
 import com.fitspine.dto.FitbitAiContextInsightDto;
 
 import com.fitspine.exception.UserNotFoundException;
-import com.fitspine.model.FitbitActivitiesHeartLog;
-import com.fitspine.model.FitbitActivitiesHeartValueLog;
-import com.fitspine.model.ManualDailyLog;
-import com.fitspine.model.User;
+import com.fitspine.model.*;
 import com.fitspine.repository.*;
 import com.fitspine.service.FitbitContextAggregationService;
 import lombok.extern.slf4j.Slf4j;
@@ -73,8 +70,35 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
             }
         }
 
-        for (int i=0; i<restingHeartRateList.size(); i++) {
-            System.out.println("Resting heart rate: " +i +" is: " +restingHeartRateList.get(i));
+        List<FitbitActivitySummariesLog> activitySummariesLogs = activitySummariesLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
+
+
+        for (int i = 0; i < activitySummariesLogs.size(); i++) {
+            FitbitActivitySummariesLog current = activitySummariesLogs.get(i);
+            System.out.println("Calories Out:" + current.getCaloriesOut());
+            System.out.println("Steps:" + current.getSteps());
+            System.out.println("Sedentary Minutes:" + current.getSedentaryMinutes());
+        }
+
+        List<FitbitActivityGoalsLog> activityGoalsLogs = activityGoalsLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
+
+        for (int i = 0; i < activityGoalsLogs.size(); i++) {
+            FitbitActivityGoalsLog current = activityGoalsLogs.get(i);
+            System.out.println("Active minutes: " + current.getActiveMinutes());
+        }
+
+        List<FitbitSleepLog> sleepLogs = sleepLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
+
+        for (int i = 0; i < sleepLogs.size(); i++) {
+            FitbitSleepLog current = sleepLogs.get(i);
+            System.out.println("Efficiency: " + current.getEfficiency());
+        }
+
+        List<FitbitSleepSummaryLog> sleepSummaryLogs = sleepSummaryLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
+
+        for (int i = 0; i < sleepSummaryLogs.size(); i++) {
+            FitbitSleepSummaryLog current = sleepSummaryLogs.get(i);
+            System.out.println("Total minutes asleep: " + current.getTotalMinutesAsleep());
         }
 
         return FitbitAiContextInsightDto.builder()
