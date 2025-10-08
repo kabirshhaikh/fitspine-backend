@@ -6,7 +6,7 @@ import com.fitspine.exception.ManualDailyLogNotFoundException;
 import com.fitspine.exception.UserNotFoundException;
 import com.fitspine.model.*;
 import com.fitspine.repository.*;
-import com.fitspine.service.AiDailyFitbitAggregationService;
+import com.fitspine.service.FitbitAiDailyAggregationService;
 import com.fitspine.service.FitbitApiClientService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class AiDailyFitbitAggregationServiceImpl implements AiDailyFitbitAggregationService {
+public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggregationService {
     private final UserRepository userRepository;
     private final ManualDailyLogRepository manualDailyLogRepo;
     private final FitbitActivitiesHeartLogRepository activitiesHeartLogRepo;
@@ -27,7 +27,7 @@ public class AiDailyFitbitAggregationServiceImpl implements AiDailyFitbitAggrega
     private final FitbitSleepLogRepository sleepLogRepo;
     private final FitbitApiClientService fitbitApiClientService;
 
-    public AiDailyFitbitAggregationServiceImpl(
+    public FitbitAiDailyAggregationServiceImpl(
             UserRepository userRepository,
             ManualDailyLogRepository manualDailyLogRepo,
             FitbitActivitiesHeartLogRepository activitiesHeartLogRepo,

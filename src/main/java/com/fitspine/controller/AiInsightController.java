@@ -2,7 +2,7 @@ package com.fitspine.controller;
 
 import com.fitspine.dto.AiInsightResponseDto;
 import com.fitspine.dto.AiUserDailyInputDto;
-import com.fitspine.service.AiDailyFitbitAggregationService;
+import com.fitspine.service.FitbitAiDailyAggregationService;
 import com.fitspine.service.AiInsightService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +20,9 @@ import java.time.LocalDate;
 @RequestMapping("/api/insights")
 public class AiInsightController {
     private final AiInsightService aiInsightService;
-    private final AiDailyFitbitAggregationService aiDailyAggregationService;
+    private final FitbitAiDailyAggregationService aiDailyAggregationService;
 
-    public AiInsightController(AiInsightService aiInsightService, AiDailyFitbitAggregationService aiDailyAggregationService) {
+    public AiInsightController(AiInsightService aiInsightService, FitbitAiDailyAggregationService aiDailyAggregationService) {
         this.aiInsightService = aiInsightService;
         this.aiDailyAggregationService = aiDailyAggregationService;
     }

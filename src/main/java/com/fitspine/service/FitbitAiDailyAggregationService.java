@@ -4,6 +4,6 @@ import com.fitspine.dto.AiUserDailyInputDto;
 
 import java.time.LocalDate;
 
-public interface AiDailyFitbitAggregationService {
+public interface FitbitAiDailyAggregationService {
     AiUserDailyInputDto buildAiInput(String email, LocalDate logDate);
 }
