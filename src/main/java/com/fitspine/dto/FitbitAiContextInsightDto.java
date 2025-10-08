@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class AiDailyContextInsightDto {
+public class FitbitAiContextInsightDto {
     private Long id;
     private LocalDate logDate;
 
