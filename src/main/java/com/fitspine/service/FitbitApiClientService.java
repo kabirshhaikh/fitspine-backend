@@ -329,7 +329,7 @@ public class FitbitApiClientService {
 
         JsonNode heartRateZonesArray = (valueArray != null) ? valueArray.get("heartRateZones") : null;
 
-        if (fitbitActivitiesHeartLogRepository.existsByUserAndDateTime(user, logDate)) {
+        if (fitbitActivitiesHeartLogRepository.existsByUserAndLogDate(user, logDate)) {
             log.info("Skipping duplicate heart log for user {} on date {}", user.getId(), logDate);
             return root;
         }

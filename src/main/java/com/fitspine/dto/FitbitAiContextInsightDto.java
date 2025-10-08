@@ -32,7 +32,7 @@ public class FitbitAiContextInsightDto {
 
     //Fitbit Integration Data:
     //Heart
-    private Integer averageRestingHeartRate; //From FitbitActivitiesHeartValueLog
+    private Integer averageRestingHeartRate; //From FitbitActivitiesHeartLog -> FitbitActivitiesHeartValueLog
 
     //Activities:
     private Integer averageCaloriesOut; //From FitbitActivitySummariesLog
