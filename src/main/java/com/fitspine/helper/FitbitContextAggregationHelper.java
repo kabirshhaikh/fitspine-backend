@@ -1,0 +1,498 @@
+package com.fitspine.helper;
+
+import com.fitspine.dto.FitbitActivityGoalsLogMetricDto;
+import com.fitspine.dto.FitbitActivitySummariesMetricDto;
+import com.fitspine.dto.FitbitSleepLogMetricDto;
+import com.fitspine.dto.FitbitSleepSummaryLogMetricDto;
+import com.fitspine.model.*;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@Component
+public class FitbitContextAggregationHelper {
+    //Helper functions to return list of fitbit normalized metrics:
+    public List<Integer> getRestingHeartRate(List<FitbitActivitiesHeartLog> heartLogs) {
+        List<Integer> restingHeartRates = new ArrayList<>();
+
+        if (heartLogs == null || heartLogs.isEmpty()) {
+            return restingHeartRates;
+        }
+
+        for (int i = 0; i < heartLogs.size(); i++) {
+            FitbitActivitiesHeartLog heartLog = heartLogs.get(i);
+            if (heartLog == null || heartLog.getValues() == null) continue;
+
+            List<FitbitActivitiesHeartValueLog> valueLogs = heartLog.getValues();
+            if (valueLogs == null || valueLogs.isEmpty()) continue;
+
+            for (int j = 0; j < valueLogs.size(); j++) {
+                FitbitActivitiesHeartValueLog heartValueLog = valueLogs.get(j);
+                if (heartValueLog == null) continue;
+                Integer rhr = heartValueLog.getRestingHeartRate();
+                if (rhr != null) {
+                    restingHeartRates.add(rhr);
+                }
+            }
+        }
+
+        return restingHeartRates;
+    }
+
+    public List<FitbitActivitySummariesMetricDto> getActivityMetric(List<FitbitActivitySummariesLog> activitySummariesLogs) {
+        List<FitbitActivitySummariesMetricDto> metric = new ArrayList<>();
+        if (activitySummariesLogs == null || activitySummariesLogs.isEmpty()) {
+            return metric;
+        }
+
+        for (int i = 0; i < activitySummariesLogs.size(); i++) {
+            FitbitActivitySummariesLog log = activitySummariesLogs.get(i);
+            if (log == null) continue;
+            metric.add(FitbitActivitySummariesMetricDto.builder()
+                    .caloriesOut(log.getCaloriesOut())
+                    .steps(log.getSteps())
+                    .sedentaryMinutes(log.getSedentaryMinutes())
+                    .build()
+            );
+        }
+
+        return metric;
+    }
+
+    public List<FitbitActivityGoalsLogMetricDto> getGoalsMetrics(List<FitbitActivityGoalsLog> activityGoalsLogs) {
+        List<FitbitActivityGoalsLogMetricDto> activityGoalsLogMetric = new ArrayList<>();
+        if (activityGoalsLogs == null || activityGoalsLogs.isEmpty()) {
+            return activityGoalsLogMetric;
+        }
+
+        for (int i = 0; i < activityGoalsLogs.size(); i++) {
+            FitbitActivityGoalsLog log = activityGoalsLogs.get(i);
+            if (log == null || log.getActiveMinutes() == null) continue;
+            activityGoalsLogMetric.add(FitbitActivityGoalsLogMetricDto.builder()
+                    .activeMinutes(log.getActiveMinutes())
+                    .build()
+            );
+        }
+
+        return activityGoalsLogMetric;
+    }
+
+    public List<FitbitSleepLogMetricDto> getSleepLogMetric(List<FitbitSleepLog> sleepLogs) {
+        List<FitbitSleepLogMetricDto> sleepLogMetrics = new ArrayList<>();
+        if (sleepLogs == null || sleepLogs.isEmpty()) {
+            return sleepLogMetrics;
+        }
+
+        for (int i = 0; i < sleepLogs.size(); i++) {
+            FitbitSleepLog log = sleepLogs.get(i);
+            if (log == null || log.getEfficiency() == null) continue;
+            sleepLogMetrics.add(FitbitSleepLogMetricDto.builder()
+                    .efficiency(log.getEfficiency())
+                    .build()
+            );
+        }
+
+        return sleepLogMetrics;
+    }
+
+    public List<FitbitSleepSummaryLogMetricDto> getSleepSummaryMetrics(List<FitbitSleepSummaryLog> sleepSummaryLogs) {
+        List<FitbitSleepSummaryLogMetricDto> sleepSummaries = new ArrayList<>();
+        if (sleepSummaryLogs == null || sleepSummaryLogs.isEmpty()) {
+            return sleepSummaries;
+        }
+
+        for (int i = 0; i < sleepSummaryLogs.size(); i++) {
+            FitbitSleepSummaryLog log = sleepSummaryLogs.get(i);
+            if (log == null || log.getTotalMinutesAsleep() == null) continue;
+            sleepSummaries.add(FitbitSleepSummaryLogMetricDto.builder()
+                    .totalMinutesAsleep(log.getTotalMinutesAsleep())
+                    .build()
+            );
+        }
+
+        return sleepSummaries;
+    }
+
+    //Helper functions to calculate Fitbit metrics:
+
+    public int calculateAverageRestingHeartRate(List<Integer> restingHeartRates) {
+        if (restingHeartRates == null || restingHeartRates.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+        for (int i = 0; i < restingHeartRates.size(); i++) {
+            if (restingHeartRates.get(i) == null) continue;
+            sum = sum + restingHeartRates.get(i);
+            count++;
+        }
+
+        if (count == 0) {
+            return -1;
+        }
+
+        return sum / count;
+    }
+
+    public int calculateAverageCaloriesOut(List<FitbitActivitySummariesMetricDto> activityMetrics) {
+        if (activityMetrics == null || activityMetrics.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < activityMetrics.size(); i++) {
+            FitbitActivitySummariesMetricDto metric = activityMetrics.get(i);
+            if (metric == null || metric.getCaloriesOut() == null) continue;
+            sum = sum + metric.getCaloriesOut();
+            count++;
+        }
+
+        if (count == 0) return -1;
+
+        return sum / count;
+    }
+
+    public int calculateAverageSteps(List<FitbitActivitySummariesMetricDto> activityMetrics) {
+        if (activityMetrics == null || activityMetrics.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < activityMetrics.size(); i++) {
+            FitbitActivitySummariesMetricDto metric = activityMetrics.get(i);
+            if (metric == null || metric.getSteps() == null) continue;
+            sum = sum + metric.getSteps();
+            count++;
+        }
+
+        if (count == 0) return -1;
+
+        return sum / count;
+    }
+
+    public int calculateAverageSedentaryMinutes(List<FitbitActivitySummariesMetricDto> activityMetrics) {
+        if (activityMetrics == null || activityMetrics.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < activityMetrics.size(); i++) {
+            FitbitActivitySummariesMetricDto metric = activityMetrics.get(i);
+            if (metric == null || metric.getSedentaryMinutes() == null) continue;
+            sum = sum + metric.getSedentaryMinutes();
+            count++;
+        }
+
+        if (count == 0) return -1;
+
+        return sum / count;
+    }
+
+    public int calculateAverageActiveMinutes(List<FitbitActivityGoalsLogMetricDto> activityGoalsLogMetrics) {
+        if (activityGoalsLogMetrics == null || activityGoalsLogMetrics.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < activityGoalsLogMetrics.size(); i++) {
+            FitbitActivityGoalsLogMetricDto metricDto = activityGoalsLogMetrics.get(i);
+            if (metricDto == null || metricDto.getActiveMinutes() == null) continue;
+            sum = sum + metricDto.getActiveMinutes();
+            count++;
+        }
+
+        if (count == 0) return -1;
+        return sum / count;
+    }
+
+    public int calculateAverageEfficiency(List<FitbitSleepLogMetricDto> sleepLogMetrics) {
+        if (sleepLogMetrics == null || sleepLogMetrics.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < sleepLogMetrics.size(); i++) {
+            FitbitSleepLogMetricDto metric = sleepLogMetrics.get(i);
+            if (metric == null || metric.getEfficiency() == null) continue;
+            sum = sum + metric.getEfficiency();
+            count++;
+        }
+
+        if (count == 0) return -1;
+
+        return sum / count;
+    }
+
+    public int calculateAverageTotalMinutesAsleep(List<FitbitSleepSummaryLogMetricDto> sleepSummaryMetrics) {
+        if (sleepSummaryMetrics == null || sleepSummaryMetrics.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < sleepSummaryMetrics.size(); i++) {
+            FitbitSleepSummaryLogMetricDto metric = sleepSummaryMetrics.get(i);
+            if (metric == null || metric.getTotalMinutesAsleep() == null) continue;
+            sum = sum + metric.getTotalMinutesAsleep();
+            count++;
+        }
+
+        if (count == 0) return -1;
+        return sum / count;
+    }
+
+    //Helper functions to calculate average of Manual log:
+    public int calculateAveragePainLevel(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+            if (log == null) continue;
+            int score = EnumScoreHelper.pain(log.getPainLevel());
+            if (score < 0) continue;
+            sum = sum + score;
+            count++;
+        }
+
+        return count == 0 ? -1 : sum / count;
+    }
+
+    public int calculateAverageSittingTime(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+            if (log == null) continue;
+            int score = EnumScoreHelper.sittingTime(log.getSittingTime());
+            if (score < 0) continue;
+            sum = sum + score;
+            count++;
+        }
+
+        return count == 0 ? -1 : sum / count;
+    }
+
+    public int calculateAverageStandingTime(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+            if (log == null) continue;
+            int score = EnumScoreHelper.standingTime(log.getStandingTime());
+            if (score < 0) continue;
+            sum = sum + score;
+            count++;
+        }
+
+        return count == 0 ? -1 : sum / count;
+    }
+
+    public int calculateAverageMorningStiffness(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+            if (log == null) continue;
+            int score = EnumScoreHelper.morningStiffness(log.getMorningStiffness());
+            if (score < 0) continue;
+            sum = sum + score;
+            count++;
+        }
+
+        return count == 0 ? -1 : sum / count;
+    }
+
+    public int calculateAverageStressLevel(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+            if (log == null) continue;
+            int score = EnumScoreHelper.stressLevel(log.getStressLevel());
+            if (score < 0) continue;
+            sum = sum + score;
+            count++;
+        }
+
+        return count == 0 ? -1 : sum / count;
+    }
+
+    public int calculatePercentageDaysWithStretching(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        int trueCount = 0;
+        int validCount = 0;
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog metric = manualDailyLogs.get(i);
+            if (metric == null || metric.getStretchingDone() == null) continue;
+            validCount++;
+            if (metric.getStretchingDone()) trueCount++;
+        }
+
+        if (validCount == 0) return -1;
+        return (trueCount * 100) / validCount;
+    }
+
+    public int calculatePercentageDaysWithFlareUp(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        int trueCount = 0;
+        int validCount = 0;
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog metric = manualDailyLogs.get(i);
+            if (metric == null || metric.getFlareUpToday() == null) continue;
+            validCount++;
+            if (metric.getFlareUpToday()) trueCount++;
+        }
+
+        if (validCount == 0) return -1;
+        return (trueCount * 100) / validCount;
+    }
+
+    public int calculatePercentageDaysWithNumbnessTingling(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        int trueCount = 0;
+        int validCount = 0;
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog metric = manualDailyLogs.get(i);
+            if (metric == null || metric.getNumbnessTingling() == null) continue;
+            validCount++;
+            if (metric.getNumbnessTingling()) trueCount++;
+        }
+
+        if (validCount == 0) return -1;
+        return (trueCount * 100) / validCount;
+    }
+
+    public int calculatePercentageDaysWithLiftingOrStrain(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        int trueCount = 0;
+        int validCount = 0;
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog metric = manualDailyLogs.get(i);
+            if (metric == null || metric.getLiftingOrStrain() == null) continue;
+            validCount++;
+            if (metric.getLiftingOrStrain()) trueCount++;
+        }
+
+        if (validCount == 0) return -1;
+        return (trueCount * 100) / validCount;
+    }
+
+    //Calculate the windowDays:
+    public int calculateDaysAvailable(
+            List<ManualDailyLog> manualDailyLogs,
+            List<FitbitActivitiesHeartLog> heartLogs,
+            List<FitbitActivitySummariesLog> activitySummariesLogs,
+            List<FitbitActivityGoalsLog> activityGoalsLogs,
+            List<FitbitSleepLog> sleepLogs,
+            List<FitbitSleepSummaryLog> sleepSummaryLogs
+    ) {
+        Set<LocalDate> uniqueDates = new HashSet<>();
+
+        if (manualDailyLogs != null && !manualDailyLogs.isEmpty()) {
+            for (int i = 0; i < manualDailyLogs.size(); i++) {
+                ManualDailyLog log = manualDailyLogs.get(i);
+                if (log == null || log.getLogDate() == null) continue;
+                uniqueDates.add(log.getLogDate());
+            }
+        }
+
+        if (heartLogs != null && !heartLogs.isEmpty()) {
+            for (int i = 0; i < heartLogs.size(); i++) {
+                FitbitActivitiesHeartLog log = heartLogs.get(i);
+                if (log == null || log.getLogDate() == null) continue;
+                uniqueDates.add(log.getLogDate());
+            }
+        }
+
+        if (activitySummariesLogs != null && !activitySummariesLogs.isEmpty()) {
+            for (int i = 0; i < activitySummariesLogs.size(); i++) {
+                FitbitActivitySummariesLog log = activitySummariesLogs.get(i);
+                if (log == null || log.getLogDate() == null) continue;
+                uniqueDates.add(log.getLogDate());
+            }
+        }
+
+        if (activityGoalsLogs != null && !activityGoalsLogs.isEmpty()) {
+            for (int i = 0; i < activityGoalsLogs.size(); i++) {
+                FitbitActivityGoalsLog log = activityGoalsLogs.get(i);
+                if (log == null || log.getLogDate() == null) continue;
+                uniqueDates.add(log.getLogDate());
+            }
+        }
+
+        if (sleepLogs != null && !sleepLogs.isEmpty()) {
+            for (int i = 0; i < sleepLogs.size(); i++) {
+                FitbitSleepLog log = sleepLogs.get(i);
+                if (log == null || log.getLogDate() == null) continue;
+                uniqueDates.add(log.getLogDate());
+            }
+        }
+
+        if (sleepSummaryLogs != null && !sleepSummaryLogs.isEmpty()) {
+            for (int i = 0; i < sleepSummaryLogs.size(); i++) {
+                FitbitSleepSummaryLog log = sleepSummaryLogs.get(i);
+                if (log == null || log.getLogDate() == null) continue;
+                uniqueDates.add(log.getLogDate());
+            }
+        }
+
+        return uniqueDates.size();
+    }
+}

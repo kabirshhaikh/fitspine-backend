@@ -1,8 +1,9 @@
 package com.fitspine.service.impl;
 
-import com.fitspine.dto.FitbitAiContextInsightDto;
+import com.fitspine.dto.*;
 
 import com.fitspine.exception.UserNotFoundException;
+import com.fitspine.helper.FitbitContextAggregationHelper;
 import com.fitspine.model.*;
 import com.fitspine.repository.*;
 import com.fitspine.service.FitbitContextAggregationService;
@@ -25,6 +26,7 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
     private final FitbitActivityGoalsLogRepository activityGoalsLogRepository;
     private final FitbitSleepLogRepository sleepLogRepository;
     private final FitbitSleepSummaryLogRepository sleepSummaryLogRepository;
+    private final FitbitContextAggregationHelper helper;
 
     public FitbitContextAggregationServiceImpl(
             UserRepository userRepository,
@@ -34,7 +36,8 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
             FitbitActivitySummariesLogRepository activitySummariesLogRepository,
             FitbitActivityGoalsLogRepository activityGoalsLogRepository,
             FitbitSleepLogRepository sleepLogRepository,
-            FitbitSleepSummaryLogRepository sleepSummaryLogRepository
+            FitbitSleepSummaryLogRepository sleepSummaryLogRepository,
+            FitbitContextAggregationHelper helper
     ) {
         this.userRepository = userRepository;
         this.manualDailyLogRepository = manualDailyLogRepository;
@@ -44,6 +47,7 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         this.activityGoalsLogRepository = activityGoalsLogRepository;
         this.sleepLogRepository = sleepLogRepository;
         this.sleepSummaryLogRepository = sleepSummaryLogRepository;
+        this.helper = helper;
     }
 
 
@@ -53,85 +57,53 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         LocalDate startDate = targetDate.minusDays(6);
         LocalDate endDate = targetDate.minusDays(1);
 
+        //List of models between start and end date:
         List<ManualDailyLog> manualDailyLogs = manualDailyLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
         List<FitbitActivitiesHeartLog> heartLogs = heartLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
-        List<Integer> restingHeartRateList = new ArrayList<>();
-
-        for (int i = 0; i < heartLogs.size(); i++) {
-            FitbitActivitiesHeartLog log = heartLogs.get(i);
-            List<FitbitActivitiesHeartValueLog> valueLog = log.getValues();
-            if (valueLog != null && !valueLog.isEmpty()) {
-                for (int j = 0; j < valueLog.size(); j++) {
-                    FitbitActivitiesHeartValueLog currentHeartValueLog = valueLog.get(j);
-                    if (currentHeartValueLog.getRestingHeartRate() != null) {
-                        restingHeartRateList.add(currentHeartValueLog.getRestingHeartRate());
-                    }
-                }
-            }
-        }
-
         List<FitbitActivitySummariesLog> activitySummariesLogs = activitySummariesLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
-
-
-        for (int i = 0; i < activitySummariesLogs.size(); i++) {
-            FitbitActivitySummariesLog current = activitySummariesLogs.get(i);
-            System.out.println("Calories Out:" + current.getCaloriesOut());
-            System.out.println("Steps:" + current.getSteps());
-            System.out.println("Sedentary Minutes:" + current.getSedentaryMinutes());
-        }
-
         List<FitbitActivityGoalsLog> activityGoalsLogs = activityGoalsLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
-
-        for (int i = 0; i < activityGoalsLogs.size(); i++) {
-            FitbitActivityGoalsLog current = activityGoalsLogs.get(i);
-            System.out.println("Active minutes: " + current.getActiveMinutes());
-        }
-
         List<FitbitSleepLog> sleepLogs = sleepLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
-
-        for (int i = 0; i < sleepLogs.size(); i++) {
-            FitbitSleepLog current = sleepLogs.get(i);
-            System.out.println("Efficiency: " + current.getEfficiency());
-        }
-
         List<FitbitSleepSummaryLog> sleepSummaryLogs = sleepSummaryLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
 
-        for (int i = 0; i < sleepSummaryLogs.size(); i++) {
-            FitbitSleepSummaryLog current = sleepSummaryLogs.get(i);
-            System.out.println("Total minutes asleep: " + current.getTotalMinutesAsleep());
-        }
+        //List of Metrics:
+        List<Integer> restingHeartRates = helper.getRestingHeartRate(heartLogs);
+        List<FitbitActivitySummariesMetricDto> activityMetrics = helper.getActivityMetric(activitySummariesLogs);
+        List<FitbitActivityGoalsLogMetricDto> activityGoalsLogMetrics = helper.getGoalsMetrics(activityGoalsLogs);
+        List<FitbitSleepLogMetricDto> sleepLogMetrics = helper.getSleepLogMetric(sleepLogs);
+        List<FitbitSleepSummaryLogMetricDto> sleepSummaryMetrics = helper.getSleepSummaryMetrics(sleepSummaryLogs);
+
 
         return FitbitAiContextInsightDto.builder()
                 // Metadata
                 .windowDays(7)
-                .daysAvailable(0) // computed dynamically based on available data
+                .daysAvailable(helper.calculateDaysAvailable(manualDailyLogs, heartLogs, activitySummariesLogs, activityGoalsLogs, sleepLogs, sleepSummaryLogs))
                 .startDate(startDate)
                 .endDate(endDate)
                 .computedAt(LocalDateTime.now())
 
                 // Manual Log Aggregates
-                .averagePainLevel(0)
-                .averageSittingTime(0)
-                .averageStandingTime(0)
-                .averageMorningStiffness(0)
-                .averageStressLevel(0)
-                .percentageDaysWithStretching(0)
-                .percentageDaysWithFlareUp(0)
-                .percentageDaysWithNumbnessTingling(0)
-                .percentageDaysWithLiftingOrStrain(0)
+                .averagePainLevel(helper.calculateAveragePainLevel(manualDailyLogs))
+                .averageSittingTime(helper.calculateAverageSittingTime(manualDailyLogs))
+                .averageStandingTime(helper.calculateAverageStandingTime(manualDailyLogs))
+                .averageMorningStiffness(helper.calculateAverageMorningStiffness(manualDailyLogs))
+                .averageStressLevel(helper.calculateAverageStressLevel(manualDailyLogs))
+                .percentageDaysWithStretching(helper.calculatePercentageDaysWithStretching(manualDailyLogs))
+                .percentageDaysWithFlareUp(helper.calculatePercentageDaysWithFlareUp(manualDailyLogs))
+                .percentageDaysWithNumbnessTingling(helper.calculatePercentageDaysWithNumbnessTingling(manualDailyLogs))
+                .percentageDaysWithLiftingOrStrain(helper.calculatePercentageDaysWithLiftingOrStrain(manualDailyLogs))
 
                 // Fitbit Heart Data
-                .averageRestingHeartRate(0)
+                .averageRestingHeartRate(helper.calculateAverageRestingHeartRate(restingHeartRates))
 
                 // Fitbit Activity Data
-                .averageCaloriesOut(0)
-                .averageSteps(0)
-                .averageSedentaryMinutes(0)
-                .averageActiveMinutes(0)
+                .averageCaloriesOut(helper.calculateAverageCaloriesOut(activityMetrics))
+                .averageSteps(helper.calculateAverageSteps(activityMetrics))
+                .averageSedentaryMinutes(helper.calculateAverageSedentaryMinutes(activityMetrics))
+                .averageActiveMinutes(helper.calculateAverageActiveMinutes(activityGoalsLogMetrics))
 
                 // Fitbit Sleep Data
-                .averageTotalMinutesAsleep(0)
-                .averageEfficiency(0)
+                .averageTotalMinutesAsleep(helper.calculateAverageTotalMinutesAsleep(sleepSummaryMetrics))
+                .averageEfficiency(helper.calculateAverageEfficiency(sleepLogMetrics))
 
                 .build();
     }
