@@ -3,6 +3,7 @@ package com.fitspine.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitspine.dto.AiInsightResponseDto;
 import com.fitspine.dto.AiUserDailyInputDto;
+import com.fitspine.dto.FitbitAiContextInsightDto;
 import com.fitspine.exception.ResourceNotFoundException;
 import com.fitspine.exception.UserNotFoundException;
 import com.fitspine.helper.AiInsightHelper;
@@ -13,6 +14,7 @@ import com.fitspine.repository.AiDailyInsightFlareUpTriggersRepository;
 import com.fitspine.repository.AiDailyInsightRepository;
 import com.fitspine.repository.UserRepository;
 import com.fitspine.service.AiInsightService;
+import com.fitspine.service.FitbitContextAggregationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -38,14 +40,16 @@ public class AiInsightServiceImpl implements AiInsightService {
     private final AiDailyInsightFlareUpTriggersRepository flareUpTriggersRepository;
     private final UserRepository userRepository;
     private final AiInsightHelper aiHelper;
+    private final FitbitContextAggregationService fitbitContextAggregationService;
 
-    public AiInsightServiceImpl(RestTemplate restTemplate, ObjectMapper objectMapper, AiDailyInsightRepository insightRepository, UserRepository userRepository, AiInsightHelper aiHelper, AiDailyInsightFlareUpTriggersRepository flareUpTriggersRepository) {
+    public AiInsightServiceImpl(RestTemplate restTemplate, ObjectMapper objectMapper, AiDailyInsightRepository insightRepository, UserRepository userRepository, AiInsightHelper aiHelper, AiDailyInsightFlareUpTriggersRepository flareUpTriggersRepository, FitbitContextAggregationService fitbitContextAggregationService) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         this.insightRepository = insightRepository;
         this.flareUpTriggersRepository = flareUpTriggersRepository;
         this.userRepository = userRepository;
         this.aiHelper = aiHelper;
+        this.fitbitContextAggregationService = fitbitContextAggregationService;
     }
 
     private static final String FIELD_CONTEXT = """
@@ -89,29 +93,44 @@ public class AiInsightServiceImpl implements AiInsightService {
                     .build();
         }
 
+        FitbitAiContextInsightDto contextDto = fitbitContextAggregationService.buildContext(email, logDate); //Here logDate is he currentDate meaning target date
+
         try {
-            String userJson = objectMapper.writeValueAsString(dto);
+            String todayJson = objectMapper.writeValueAsString(dto);
+            String contextJson = objectMapper.writeValueAsString(contextDto);
+
+            log.info("Today's json: {}", todayJson);
+            log.info("Context json: {}", contextJson);
 
             //Build AI prompt:
             String prompt = """
-                    You are FitSpine AI — a specialized spine health assistant that analyzes a user's daily spine log.
+                    You are FitSpine AI — a specialized spine health assistant that analyzes a user's current and past 7 days of data.
 
-                    Your job is to interpret biomechanical, neurological, and behavioral data to generate meaningful insights for spinal health and recovery.
+                    Your job is to interpret biomechanical, neurological, and behavioral data to generate meaningful daily insights for spinal recovery.
+
+                    You are given two JSON inputs:
+                    **todayJson** — represents the user's current day data (manual logs and Fitbit readings).
+                    **contextJson** — represents aggregated averages and percentages from the past 7 days of data.
+
+                    Use both together to understand the user's current recovery state and trends.
 
                     Your objectives:
-                    1. Read the user's profile: gender, age, injuries, surgeries, and disc levels.
-                    2. Analyze activity, heart, and sleep metrics together to understand daily spine recovery.
-                    3. Identify *causal flare-up triggers* with reasoning (e.g., stress, posture, over-sitting, low mobility, poor recovery).
-                    4. Write a **Today's Insight** section — a short summary (1–2 sentences) describing what went well or poorly overall.
-                    5. Write detailed **Recovery Insights** — empathetic, science-backed guidance explaining the user’s data patterns, recovery state, and prevention tips.
-                    6. Assign a **Disc Protection Score (0–100)** reflecting spinal resilience and risk for that day.
-                    7. Add a short **Disc Score Explanation** describing what most influenced the score (stress, sleep, activity, etc.).
-                    8. Always respond with factual, encouraging tone and biomechanical reasoning.
-                    9. Return **strict JSON only** — no markdown, no code blocks.
+                    1. Analyze patterns between current-day data and 7-day trends.
+                    2. Identify *causal flare-up triggers* (e.g., stress, poor sleep, inactivity, overexertion, low mobility).
+                    3. Write **Today's Insight** — short (1–2 sentences) summarizing what went well or poorly today.
+                    4. Write **Recovery Insights** — a few sentences connecting data trends to actionable advice.
+                    5. Assign a **Disc Protection Score (0–100)** for today's spine health and resilience.
+                    6. Add a **Disc Score Explanation** — explaining what most influenced the score (e.g., stress, sleep, posture).
+                    7. Always respond as **pure JSON**, no markdown, no code fences, no extra text.
 
                     %s
 
-                    Input JSON:
+                    ======
+                    Current Day Input JSON (todayJson):
+                    %s
+
+                    ======
+                    7-Day Aggregated Context JSON (contextJson):
                     %s
 
                     Output strictly as JSON:
@@ -122,8 +141,7 @@ public class AiInsightServiceImpl implements AiInsightService {
                       "discProtectionScore": 0,
                       "discScoreExplanation": "Short reasoning describing how the score was calculated based on posture, stress, sleep, and activity."
                     }
-                    """.formatted(FIELD_CONTEXT, userJson);
-
+                    """.formatted(FIELD_CONTEXT, todayJson, contextJson);
 
             //Build request body:
             Map<String, Object> body = new HashMap<>();
@@ -175,7 +193,7 @@ public class AiInsightServiceImpl implements AiInsightService {
             AiInsightResponseDto insight = objectMapper.readValue(content, AiInsightResponseDto.class);
             List<String> triggers = insight.getFlareUpTriggers();
 
-//            //Save the Ai insight in db:
+            //Save the Ai insight in db:
             AiDailyInsight savedInsight = AiDailyInsight.builder()
                     .user(user)
                     .logDate(logDate)

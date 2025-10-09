@@ -68,7 +68,6 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         List<FitbitSleepLogMetricDto> sleepLogMetrics = helper.getSleepLogMetric(sleepLogs);
         List<FitbitSleepSummaryLogMetricDto> sleepSummaryMetrics = helper.getSleepSummaryMetrics(sleepSummaryLogs);
 
-
         return FitbitAiContextInsightDto.builder()
                 // Metadata
                 .windowDays(7)
