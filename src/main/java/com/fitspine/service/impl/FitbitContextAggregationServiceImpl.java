@@ -21,7 +21,6 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
     private final UserRepository userRepository;
     private final ManualDailyLogRepository manualDailyLogRepository;
     private final FitbitActivitiesHeartLogRepository heartLogRepository;
-    private final FitbitActivitiesHeartValueLogRepository heartValueLogRepository;
     private final FitbitActivitySummariesLogRepository activitySummariesLogRepository;
     private final FitbitActivityGoalsLogRepository activityGoalsLogRepository;
     private final FitbitSleepLogRepository sleepLogRepository;
@@ -32,7 +31,6 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
             UserRepository userRepository,
             ManualDailyLogRepository manualDailyLogRepository,
             FitbitActivitiesHeartLogRepository heartLogRepository,
-            FitbitActivitiesHeartValueLogRepository heartValueLogRepository,
             FitbitActivitySummariesLogRepository activitySummariesLogRepository,
             FitbitActivityGoalsLogRepository activityGoalsLogRepository,
             FitbitSleepLogRepository sleepLogRepository,
@@ -42,7 +40,6 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         this.userRepository = userRepository;
         this.manualDailyLogRepository = manualDailyLogRepository;
         this.heartLogRepository = heartLogRepository;
-        this.heartValueLogRepository = heartValueLogRepository;
         this.activitySummariesLogRepository = activitySummariesLogRepository;
         this.activityGoalsLogRepository = activityGoalsLogRepository;
         this.sleepLogRepository = sleepLogRepository;
