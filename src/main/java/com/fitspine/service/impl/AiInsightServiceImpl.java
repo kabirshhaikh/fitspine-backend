@@ -68,6 +68,18 @@ public class AiInsightServiceImpl implements AiInsightService {
             - startTime, endTime: sleep window timestamps
             - minutesAsleep, minutesAwake, minutesToFallAsleep, timeInBed: detailed durations (all in minutes)
             - isMainSleep: true if primary overnight sleep, false if nap
+
+            Scoring Reference (Enum-based numeric scores):
+            - painLevel: 0=None, 1=Mild, 2=Moderate, 3=Severe
+            - sittingTime: 0=<2h, 1=2–4h, 2=4–6h, 3=6–8h, 4=>8h
+            - standingTime: 0=<2h, 1=2–4h, 2=4–6h, 3=6–8h, 4=>8h
+            - morningStiffness: 0=None, 1=Mild, 2=Moderate, 3=Severe
+            - stressLevel: 0=Very Low, 1=Low, 2=Moderate, 3=High, 4=Very High
+
+            Notes:
+            - All averages in contextJson (e.g., averagePainLevel, averageStressLevel) are derived from these scaled numeric values.
+            - Higher values indicate worse conditions for pain, stress, stiffness, sitting time, and standing time.
+            - Lower values indicate better or healthier outcomes.
             """;
 
     @Transactional
