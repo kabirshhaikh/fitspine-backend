@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitspine.dto.AiInsightResponseDto;
 import com.fitspine.dto.AiUserDailyInputDto;
 import com.fitspine.dto.FitbitAiContextInsightDto;
+import com.fitspine.exception.AiServiceException;
 import com.fitspine.exception.ResourceNotFoundException;
 import com.fitspine.exception.UserNotFoundException;
 import com.fitspine.helper.AiInsightHelper;
@@ -242,7 +243,7 @@ public class AiInsightServiceImpl implements AiInsightService {
             return insight;
         } catch (Exception e) {
             log.error("AI generation failed: {}", e.getMessage(), e);
-            throw new RuntimeException("AI generation failed", e);
+            throw new AiServiceException("Failed to generate AI insights. Please try again later.", e);
         }
     }
 }
