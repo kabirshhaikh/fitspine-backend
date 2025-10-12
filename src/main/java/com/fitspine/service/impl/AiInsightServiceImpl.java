@@ -116,45 +116,105 @@ public class AiInsightServiceImpl implements AiInsightService {
             log.info("Context json: {}", contextJson);
 
             //Build AI prompt:
-            String prompt = """
-                    You are FitSpine AI — a specialized spine health assistant that analyzes a user's current and past 7 days of data.
+            String prompt = String.format("""
+                    You are **FitSpine AI**, an advanced spine health and recovery intelligence system.
 
-                    Your job is to interpret biomechanical, neurological, and behavioral data to generate meaningful daily insights for spinal recovery.
+                    Your goal: analyze biomechanical, neurological, and lifestyle data to identify patterns,
+                    compare the user's *current day* with *7-day context averages*, and generate structured,
+                    clinically useful recovery insights.
 
-                    You are given two JSON inputs:
-                    **todayJson** — represents the user's current day data (manual logs and Fitbit readings).
-                    **contextJson** — represents aggregated averages and percentages from the past 7 days of data.
+                    ---
 
-                    Use both together to understand the user's current recovery state and trends.
+                    Data You Receive
+                    - **todayJson** → user's full daily log (symptoms + Fitbit data)
+                    - **contextJson** → 7-day aggregated averages and percentages
 
-                    Your objectives:
-                    1. Analyze patterns between current-day data and 7-day trends.
-                    2. Identify *causal flare-up triggers* (e.g., stress, poor sleep, inactivity, overexertion, low mobility).
-                    3. Write **Today's Insight** — short (1–2 sentences) summarizing what went well or poorly today.
-                    4. Write **Recovery Insights** — a few sentences connecting data trends to actionable advice.
-                    5. Assign a **Disc Protection Score (0–100)** for today's spine health and resilience.
-                    6. Add a **Disc Score Explanation** — explaining what most influenced the score (e.g., stress, sleep, posture).
-                    7. Always respond as **pure JSON**, no markdown, no code fences, no extra text.
+                    ---
 
+                    Step 1: Field-by-Field Comparison
+                    For every numeric or categorical metric that appears in both JSONs,
+                    perform a directional comparison:
+
+                    - If today's value > context average → label as "worsened"  
+                    - If today's value < context average → label as "improved"  
+                    - If approximately equal (±10%%) → label as "stable"
+
+                    Metrics to compare include (but are not limited to):
+                    painLevel, stressLevel, morningStiffness, sittingTime, standingTime,
+                    restingHeartRate, caloriesOut, steps, sedentaryMinutes, activeMinutes,
+                    totalMinutesAsleep, efficiency.
+
+                    ---
+
+                    Step 2: Detect Cause–Effect Patterns
+                    Using reasoning, look for meaningful relationships such as:
+
+                    - pain ↑ + stress ↑ → stress-related flare-up  
+                    - pain ↑ + sittingTime ↑ → posture strain  
+                    - stiffness ↑ + low sleep → poor overnight recovery  
+                    - numbnessTingling + liftingOrStrain → mechanical nerve irritation  
+                    - stress ↓ + steps ↑ → positive adaptation  
+                    - RHR ↓ + good sleep → systemic recovery  
+
+                    You may infer other clinically plausible spine health relationships.
+
+                    ---
+
+                    Step 3: Evaluate Recovery Direction
+                    From the comparison and patterns, infer what is:
+                    - **Improving** (positive trend vs baseline)
+                    - **Worsening** (negative trend)
+                    - **Stable** (no major deviation)
+
+                    ---
+
+                    Step 4: Generate Insights
+                    Produce insights with a human-readable explanation for each section:
+                    1. **What Improved:** list top 2–3 areas showing positive change.  
+                    2. **What Worsened:** list top 2–3 areas of concern.  
+                    3. **Possible Causes:** explain *why* (based on detected patterns).  
+                    4. **Actionable Advice:** short behavioral recommendations
+                       (stretching, rest, activity balance, stress control, sleep improvement).  
+
+                    ---
+
+                    Step 5: Compute Disc Protection Score
+                    Assign a score 0–100 for today's spinal resilience using this reasoning guideline:
+                    - + points for low pain/stress/stiffness, adequate sleep, balanced activity, low RHR
+                    - − points for high pain/stress, poor sleep, long sitting, high RHR, flare-up
+                    Also provide a one-sentence **Disc Score Explanation** summarizing which factors most influenced the score.
+
+                    ---
+
+                    Step 6: Output Format
+                    Respond **only** as pure JSON (no markdown, no text, no code fences):
+
+                    {
+                      "improved": ["list of metrics or habits improving"],
+                      "worsened": ["list of metrics or habits worsening"],
+                      "possibleCauses": ["list of likely causes or correlations"],
+                      "actionableAdvice": ["short bullet recommendations"],
+                      "todaysInsight": "1–2 sentence summary of today's spine condition",
+                      "recoveryInsights": "2–3 sentence deeper analysis connecting today's data to weekly trends",
+                      "discProtectionScore": 0,
+                      "discScoreExplanation": "short reasoning about the score"
+                    }
+
+                    ---
+
+                    Step 7: Data to Analyze
+                    FIELD CONTEXT (definitions and scaling):
                     %s
 
-                    ======
+                    =====
                     Current Day Input JSON (todayJson):
                     %s
 
-                    ======
+                    =====
                     7-Day Aggregated Context JSON (contextJson):
                     %s
+                    """, FIELD_CONTEXT, todayJson, contextJson);
 
-                    Output strictly as JSON:
-                    {
-                      "todaysInsight": "Short 1–2 sentence highlight of what went right or wrong today.",
-                      "flareUpTriggers": ["list of detailed causal factors"],
-                      "recoveryInsights": "Detailed explanation linking today's data patterns to advice and recovery factors.",
-                      "discProtectionScore": 0,
-                      "discScoreExplanation": "Short reasoning describing how the score was calculated based on posture, stress, sleep, and activity."
-                    }
-                    """.formatted(FIELD_CONTEXT, todayJson, contextJson);
 
             //Build request body:
             Map<String, Object> body = new HashMap<>();
@@ -191,6 +251,7 @@ public class AiInsightServiceImpl implements AiInsightService {
             );
 
             String responseBody = response.getBody();
+            System.out.println("Response Body:" + responseBody);
             log.info("AI response: {}", responseBody);
             var root = objectMapper.readTree(responseBody);
             String modelUsed = root.path("model").asText("unknown");
