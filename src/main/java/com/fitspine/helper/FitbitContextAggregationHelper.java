@@ -8,10 +8,7 @@ import com.fitspine.model.*;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Component
 public class FitbitContextAggregationHelper {
@@ -358,80 +355,76 @@ public class FitbitContextAggregationHelper {
         return count == 0 ? -1 : sum / count;
     }
 
-    public int calculatePercentageDaysWithStretching(List<ManualDailyLog> manualDailyLogs) {
+    public int calculateDaysWithStretching(List<ManualDailyLog> manualDailyLogs) {
         if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
             return -1;
         }
 
-        int trueCount = 0;
-        int validCount = 0;
+        int daysWithStretching = 0;
 
         for (int i = 0; i < manualDailyLogs.size(); i++) {
             ManualDailyLog metric = manualDailyLogs.get(i);
             if (metric == null || metric.getStretchingDone() == null) continue;
-            validCount++;
-            if (metric.getStretchingDone()) trueCount++;
+            if (Boolean.TRUE.equals(metric.getStretchingDone())) {
+                daysWithStretching++;
+            }
         }
 
-        if (validCount == 0) return -1;
-        return (trueCount * 100) / validCount;
+        return daysWithStretching;
     }
 
-    public int calculatePercentageDaysWithFlareUp(List<ManualDailyLog> manualDailyLogs) {
+    public int calculateDaysWithFlareUp(List<ManualDailyLog> manualDailyLogs) {
         if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
             return -1;
         }
 
-        int trueCount = 0;
-        int validCount = 0;
+        int daysWithFlareUps = 0;
 
         for (int i = 0; i < manualDailyLogs.size(); i++) {
             ManualDailyLog metric = manualDailyLogs.get(i);
             if (metric == null || metric.getFlareUpToday() == null) continue;
-            validCount++;
-            if (metric.getFlareUpToday()) trueCount++;
+            if (Boolean.TRUE.equals(metric.getFlareUpToday())) {
+                daysWithFlareUps++;
+            }
         }
 
-        if (validCount == 0) return -1;
-        return (trueCount * 100) / validCount;
+        return daysWithFlareUps;
     }
 
-    public int calculatePercentageDaysWithNumbnessTingling(List<ManualDailyLog> manualDailyLogs) {
+    public int calculateDaysWithNumbnessTingling(List<ManualDailyLog> manualDailyLogs) {
         if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
             return -1;
         }
 
-        int trueCount = 0;
-        int validCount = 0;
+        int daysWithNumbnessTingling = 0;
 
         for (int i = 0; i < manualDailyLogs.size(); i++) {
             ManualDailyLog metric = manualDailyLogs.get(i);
             if (metric == null || metric.getNumbnessTingling() == null) continue;
-            validCount++;
-            if (metric.getNumbnessTingling()) trueCount++;
+            if (Boolean.TRUE.equals(metric.getNumbnessTingling())) {
+                daysWithNumbnessTingling++;
+            }
         }
 
-        if (validCount == 0) return -1;
-        return (trueCount * 100) / validCount;
+        return daysWithNumbnessTingling;
     }
 
-    public int calculatePercentageDaysWithLiftingOrStrain(List<ManualDailyLog> manualDailyLogs) {
+    public int calculateDaysWithLiftingOrStrain(List<ManualDailyLog> manualDailyLogs) {
         if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
             return -1;
         }
 
-        int trueCount = 0;
-        int validCount = 0;
+        int daysWithLiftingOrStrain = 0;
 
         for (int i = 0; i < manualDailyLogs.size(); i++) {
             ManualDailyLog metric = manualDailyLogs.get(i);
             if (metric == null || metric.getLiftingOrStrain() == null) continue;
-            validCount++;
-            if (metric.getLiftingOrStrain()) trueCount++;
+            if (Boolean.TRUE.equals(metric.getLiftingOrStrain())) {
+                daysWithLiftingOrStrain++;
+            }
         }
 
-        if (validCount == 0) return -1;
-        return (trueCount * 100) / validCount;
+        return daysWithLiftingOrStrain;
     }
 
     //Calculate the windowDays:
@@ -494,5 +487,244 @@ public class FitbitContextAggregationHelper {
         }
 
         return uniqueDates.size();
+    }
+
+    //Risk forecast:
+    public int getYesterdaysSleep(List<FitbitSleepSummaryLog> sleepSummaryLogs) {
+        if (sleepSummaryLogs == null || sleepSummaryLogs.isEmpty()) {
+            return -1;
+        }
+
+        //Sort the list in ascending order of logDate:
+        sleepSummaryLogs.sort(Comparator.comparing(FitbitSleepSummaryLog::getLogDate));
+
+        FitbitSleepSummaryLog log = sleepSummaryLogs.get(sleepSummaryLogs.size() - 1);
+
+        if (log == null || log.getTotalMinutesAsleep() == null) {
+            return -1;
+        }
+
+        return log.getTotalMinutesAsleep();
+    }
+
+    public int getYesterdaysRestingHeartRate(List<FitbitActivitiesHeartLog> heartLogs) {
+        if (heartLogs == null || heartLogs.isEmpty()) {
+            return -1;
+        }
+
+        //Sort the list in ascending order of logDate:
+        heartLogs.sort(Comparator.comparing(FitbitActivitiesHeartLog::getLogDate));
+
+        FitbitActivitiesHeartLog log = heartLogs.get(heartLogs.size() - 1);
+
+        if (log == null || log.getValues() == null || log.getValues().isEmpty()) {
+            return -1;
+        }
+
+        List<FitbitActivitiesHeartValueLog> values = log.getValues();
+        FitbitActivitiesHeartValueLog restingHeartRateLog = values.get(values.size() - 1);
+
+        if (restingHeartRateLog == null || restingHeartRateLog.getRestingHeartRate() == null) {
+            return -1;
+        }
+
+        return restingHeartRateLog.getRestingHeartRate();
+    }
+
+    public int getYesterdaysPainLevel(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        //Sort the list in ascending order of logDate:
+        manualDailyLogs.sort(Comparator.comparing(ManualDailyLog::getLogDate));
+
+        ManualDailyLog log = manualDailyLogs.get(manualDailyLogs.size() - 1);
+
+        if (log == null || log.getPainLevel() == null) {
+            return -1;
+        }
+
+        return EnumScoreHelper.pain(log.getPainLevel());
+    }
+
+    public int calculateDaysSinceLastFlareUp(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        int daysSinceLastFlareUps = 0;
+
+        //Sort the list in ascending order of logDate:
+        manualDailyLogs.sort(Comparator.comparing(ManualDailyLog::getLogDate));
+
+        for (int i = manualDailyLogs.size() - 1; i >= 0; i--) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+            if (log == null || log.getFlareUpToday() == null) continue;
+            if (Boolean.TRUE.equals(log.getFlareUpToday())) {
+                return daysSinceLastFlareUps;
+            } else {
+                daysSinceLastFlareUps++;
+            }
+        }
+
+        return daysSinceLastFlareUps;
+    }
+
+    //Standard Deviations:
+    public int calculateStepsStandardDeviation(List<FitbitActivitySummariesLog> activitySummariesLogs) {
+        if (activitySummariesLogs == null || activitySummariesLogs.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+
+        //Calculate mean:
+        for (int i = 0; i < activitySummariesLogs.size(); i++) {
+            FitbitActivitySummariesLog log = activitySummariesLogs.get(i);
+            if (log == null || log.getSteps() == null) continue;
+            sum = sum + log.getSteps();
+            count++;
+        }
+
+        if (count == 0) return -1;
+
+        double mean = (double) sum / count;
+        double varianceSum = 0.0;
+        int validCount = 0;
+
+        //Calculate variance (average of squared differences from the mean):
+        for (int i = 0; i < activitySummariesLogs.size(); i++) {
+            FitbitActivitySummariesLog log = activitySummariesLogs.get(i);
+            if (log == null || log.getSteps() == null) continue;
+            double diff = log.getSteps() - mean;
+            varianceSum += diff * diff;
+            validCount++;
+        }
+
+        if (validCount == 0) return -1;
+
+        //Compute variance and standard deviation:
+        double variance = varianceSum / validCount;
+        return (int) Math.round(Math.sqrt(variance));
+    }
+
+    public int calculateRestingHeartRateStandardDeviation(List<FitbitActivitiesHeartLog> heartLogs) {
+        if (heartLogs == null || heartLogs.isEmpty()) {
+            return -1;
+        }
+
+        List<Integer> restingHeartRateArray = new ArrayList<>();
+
+        //Add resting heart rate in to the array:
+        for (int i = 0; i < heartLogs.size(); i++) {
+            FitbitActivitiesHeartLog log = heartLogs.get(i);
+            if (log == null || log.getValues() == null || log.getValues().isEmpty()) continue;
+            List<FitbitActivitiesHeartValueLog> values = log.getValues();
+            for (int j = 0; j < values.size(); j++) {
+                FitbitActivitiesHeartValueLog heartValueLog = values.get(j);
+                if (heartValueLog == null || heartValueLog.getRestingHeartRate() == null) continue;
+                restingHeartRateArray.add(heartValueLog.getRestingHeartRate());
+            }
+        }
+
+        if (restingHeartRateArray.isEmpty()) return -1;
+
+        int sum = 0;
+        //Calculate mean (average):
+        for (int i = 0; i < restingHeartRateArray.size(); i++) {
+            sum = sum + restingHeartRateArray.get(i);
+        }
+
+        double mean = (double) sum / restingHeartRateArray.size();
+
+        //Calculate variance:
+        double varianceSum = 0.0;
+        for (int i = 0; i < restingHeartRateArray.size(); i++) {
+            double diff = restingHeartRateArray.get(i) - mean;
+            varianceSum += diff * diff;
+        }
+
+        double variance = varianceSum / restingHeartRateArray.size();
+
+        //Calculate standard deviation (sqrt of variance):
+        double stdDev = Math.sqrt(variance);
+
+        //Return rounded integer
+        return (int) Math.round(stdDev);
+    }
+
+    public int calculateSleepStandardDeviation(List<FitbitSleepSummaryLog> sleepSummaryLogs) {
+        if (sleepSummaryLogs == null || sleepSummaryLogs.isEmpty()) {
+            return -1;
+        }
+
+        List<Integer> sleepMinutesArray = new ArrayList<>();
+
+        for (int i = 0; i < sleepSummaryLogs.size(); i++) {
+            FitbitSleepSummaryLog log = sleepSummaryLogs.get(i);
+            if (log == null || log.getTotalMinutesAsleep() == null) continue;
+            sleepMinutesArray.add(log.getTotalMinutesAsleep());
+        }
+
+        if (sleepMinutesArray.isEmpty()) return -1;
+
+        //Calculate mean (average):
+        int sum = 0;
+        for (int i = 0; i < sleepMinutesArray.size(); i++) {
+            sum = sum + sleepMinutesArray.get(i);
+        }
+
+        double mean = (double) sum / sleepMinutesArray.size();
+
+        //Calculate variance:
+        double varianceSum = 0.0;
+        for (int i = 0; i < sleepMinutesArray.size(); i++) {
+            double diff = sleepMinutesArray.get(i) - mean;
+            varianceSum += diff * diff;
+        }
+
+        double variance = varianceSum / sleepMinutesArray.size();
+
+        //Calculate standard deviation:
+        double stdDev = Math.sqrt(variance);
+
+        return (int) Math.round(stdDev);
+    }
+
+    public int calculateSedentaryStandardDeviation(List<FitbitActivitySummariesLog> activitySummariesLogs) {
+        if (activitySummariesLogs == null || activitySummariesLogs.isEmpty()) {
+            return -1;
+        }
+
+        List<Integer> sedentaryMinutesArray = new ArrayList<>();
+
+        for (int i = 0; i < activitySummariesLogs.size(); i++) {
+            FitbitActivitySummariesLog log = activitySummariesLogs.get(i);
+            if (log == null || log.getSedentaryMinutes() == null) continue;
+            sedentaryMinutesArray.add(log.getSedentaryMinutes());
+        }
+
+        //Calculate mean (average):
+        int sum = 0;
+        for (int i = 0; i < sedentaryMinutesArray.size(); i++) {
+            sum = sum + sedentaryMinutesArray.get(i);
+        }
+
+        double mean = (double) sum / sedentaryMinutesArray.size();
+
+        //Calculate variance:
+        double varianceSum = 0.0;
+        for (int i = 0; i < sedentaryMinutesArray.size(); i++) {
+            double diff = sedentaryMinutesArray.get(i) - mean;
+            varianceSum += diff * diff;
+        }
+        double variance = varianceSum / sedentaryMinutesArray.size();
+
+        //Calculate standard deviation:
+        double stdDev = Math.sqrt(variance);
+
+        return (int) Math.round(stdDev);
     }
 }

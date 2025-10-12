@@ -22,10 +22,10 @@ public class FitbitAiContextInsightDto {
     private Integer averageStandingTime;
     private Integer averageMorningStiffness;
     private Integer averageStressLevel;
-    private Integer percentageDaysWithStretching;
-    private Integer percentageDaysWithFlareUp;
-    private Integer percentageDaysWithNumbnessTingling;
-    private Integer percentageDaysWithLiftingOrStrain;
+    private Integer daysWithStretching;
+    private Integer daysWithFlareups;
+    private Integer daysWithNumbnessTingling;
+    private Integer daysWithLiftingOrStrain;
 
     //Fitbit Integration Data:
     //Heart
@@ -40,4 +40,14 @@ public class FitbitAiContextInsightDto {
     //Sleep
     private Integer averageTotalMinutesAsleep; //From FitbitSleepSummaryLog
     private Integer averageEfficiency; //From FitbitSleepLog
+
+    //New fields for risk forecast:
+    private Integer yesterdaySleepMinutes;
+    private Integer yesterdayRestingHeartRate;
+    private Integer yesterdayPainLevel;
+    private Integer daysSinceLastFlareUp;
+    private Integer stepsStandardDeviation;
+    private Integer restingHearRateStandardDeviation;
+    private Integer sleepStandardDeviation;
+    private Integer sedentaryStandardDeviation;
 }

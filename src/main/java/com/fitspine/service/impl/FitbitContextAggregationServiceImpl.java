@@ -82,10 +82,10 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
                 .averageStandingTime(helper.calculateAverageStandingTime(manualDailyLogs))
                 .averageMorningStiffness(helper.calculateAverageMorningStiffness(manualDailyLogs))
                 .averageStressLevel(helper.calculateAverageStressLevel(manualDailyLogs))
-                .percentageDaysWithStretching(helper.calculatePercentageDaysWithStretching(manualDailyLogs))
-                .percentageDaysWithFlareUp(helper.calculatePercentageDaysWithFlareUp(manualDailyLogs))
-                .percentageDaysWithNumbnessTingling(helper.calculatePercentageDaysWithNumbnessTingling(manualDailyLogs))
-                .percentageDaysWithLiftingOrStrain(helper.calculatePercentageDaysWithLiftingOrStrain(manualDailyLogs))
+                .daysWithStretching(helper.calculateDaysWithStretching(manualDailyLogs))
+                .daysWithFlareups(helper.calculateDaysWithFlareUp(manualDailyLogs))
+                .daysWithNumbnessTingling(helper.calculateDaysWithNumbnessTingling(manualDailyLogs))
+                .daysWithLiftingOrStrain(helper.calculateDaysWithLiftingOrStrain(manualDailyLogs))
 
                 // Fitbit Heart Data
                 .averageRestingHeartRate(helper.calculateAverageRestingHeartRate(restingHeartRates))
@@ -99,6 +99,18 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
                 // Fitbit Sleep Data
                 .averageTotalMinutesAsleep(helper.calculateAverageTotalMinutesAsleep(sleepSummaryMetrics))
                 .averageEfficiency(helper.calculateAverageEfficiency(sleepLogMetrics))
+
+                //Risk forecast:
+                .yesterdaySleepMinutes(helper.getYesterdaysSleep(sleepSummaryLogs))
+                .yesterdayRestingHeartRate(helper.getYesterdaysRestingHeartRate(heartLogs))
+                .yesterdayPainLevel(helper.getYesterdaysPainLevel(manualDailyLogs))
+                .daysSinceLastFlareUp(helper.calculateDaysSinceLastFlareUp(manualDailyLogs))
+
+                //Standard Deviations:
+                .stepsStandardDeviation(helper.calculateStepsStandardDeviation(activitySummariesLogs))
+                .restingHearRateStandardDeviation(helper.calculateRestingHeartRateStandardDeviation(heartLogs))
+                .sleepStandardDeviation(helper.calculateSleepStandardDeviation(sleepSummaryLogs))
+                .sedentaryStandardDeviation(helper.calculateSedentaryStandardDeviation(activitySummariesLogs))
 
                 .build();
     }
