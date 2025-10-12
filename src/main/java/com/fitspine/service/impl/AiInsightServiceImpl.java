@@ -364,7 +364,7 @@ public class AiInsightServiceImpl implements AiInsightService {
                     flareUpEntries.add(
                             AiDailyInsightFlareUpTriggers.builder()
                                     .aiDailyInsight(savedInsight)
-                                    .triggerText(triggers.get(i))
+//                                    .triggerText(triggers.get(i))
                                     .build()
                     );
                 }

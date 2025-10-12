@@ -61,6 +61,24 @@ public class AiDailyInsight {
     @OneToMany(mappedBy = "aiDailyInsight", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AiDailyInsightFlareUpTriggers> flareUpTriggers = new ArrayList<>();
 
+    @OneToMany(mappedBy = "aiDailyInsight", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AiDailyInsightInterventionsToday> interventionsToday = new ArrayList<>();
+
+    @OneToMany(mappedBy = "aiDailyInsight", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AiDailyInsightActionableAdvice> actionableAdvices = new ArrayList<>();
+
+    @OneToMany(mappedBy = "aiDailyInsight", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AiDailyInsightPossibleCauses> possibleCausesList = new ArrayList<>();
+
+    @OneToOne(mappedBy = "aiDailyInsight", cascade = CascadeType.ALL, orphanRemoval = true)
+    private AiDailyInsightRiskForecasts riskForecasts;
+
+    @OneToMany(mappedBy = "aiDailyInsight", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AiDailyInsightImproved> improved = new ArrayList<>();
+
+    @OneToMany(mappedBy = "aiDailyInsight", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AiDailyInsightWorsened> worsened = new ArrayList<>();
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

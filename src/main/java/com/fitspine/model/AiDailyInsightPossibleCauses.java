@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Data
-@Table(name = "ai_daily_insights_flare_up_triggers")
-public class AiDailyInsightFlareUpTriggers {
+@Table(name = "ai_daily_insights_possible_causes")
+public class AiDailyInsightPossibleCauses {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,17 +23,8 @@ public class AiDailyInsightFlareUpTriggers {
     @JoinColumn(name = "id_ai_daily_insights", nullable = false)
     private AiDailyInsight aiDailyInsight;
 
-    @Column(name = "metric")
-    private String metric;
-
-    @Column(name = "value")
-    private Integer value;
-
-    @Column(name = "deviation", columnDefinition = "TEXT")
-    private String deviation;
-
-    @Column(name = "impact", columnDefinition = "TEXT")
-    private String impact;
+    @Column(name = "possible_causes", columnDefinition = "TEXT")
+    private String possibleCauses;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
