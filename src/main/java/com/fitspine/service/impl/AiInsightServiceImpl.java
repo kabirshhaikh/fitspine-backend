@@ -53,34 +53,72 @@ public class AiInsightServiceImpl implements AiInsightService {
         this.fitbitContextAggregationService = fitbitContextAggregationService;
     }
 
-    private static final String FIELD_CONTEXT = """
-            Context (field meanings):
-            - restingHeartRate: average resting heart rate (in beats per minute, indicates cardiovascular recovery and stress level)
-            - caloriesOut: total calories burned (BMR + activity)
-            - activityCalories: calories from intentional exercise
-            - caloriesBMR: baseline metabolism at rest
-            - marginalCalories: calories from light, non-exercise movement
-            - sedentaryMinutes: total inactive minutes in the day
-            - steps: total steps walked in the day
-            - lightlyActiveMinutes, fairlyActiveMinutes, veryActiveMinutes: activity intensity levels in minutes
-            - totalMinutesAsleep: total minutes spent asleep
-            - totalTimeInBed: total minutes in bed (sleep + awake)
-            - efficiency: sleep quality percentage (0–100)
-            - startTime, endTime: sleep window timestamps
-            - minutesAsleep, minutesAwake, minutesToFallAsleep, timeInBed: detailed durations (all in minutes)
-            - isMainSleep: true if primary overnight sleep, false if nap
+    private static final String FIELD_CONTEXT_EXTENDED = """
+            Field Reference for FitSpine AI
 
-            Scoring Reference (Enum-based numeric scores):
-            - painLevel: 0=None, 1=Mild, 2=Moderate, 3=Severe
-            - sittingTime: 0=<2h, 1=2–4h, 2=4–6h, 3=6–8h, 4=>8h
-            - standingTime: 0=<2h, 1=2–4h, 2=4–6h, 3=6–8h, 4=>8h
-            - morningStiffness: 0=None, 1=Mild, 2=Moderate, 3=Severe
-            - stressLevel: 0=Very Low, 1=Low, 2=Moderate, 3=High, 4=Very High
+            ---
+                        
+            General Rules:
+            - Any value of **-1** means "no data available" and should be ignored in all comparisons.
+            - If both today and context values are -1 → skip metric entirely.
+            - Higher numeric values generally indicate worse conditions (pain, stress, stiffness, sitting time, etc.).
+            - Lower numeric values indicate better recovery or healthier status (sleep duration, heart rate, activity).
 
-            Notes:
-            - All averages in contextJson (e.g., averagePainLevel, averageStressLevel) are derived from these scaled numeric values.
-            - Higher values indicate worse conditions for pain, stress, stiffness, sitting time, and standing time.
-            - Lower values indicate better or healthier outcomes.
+            ---
+
+            Current Day (todayJson → AiUserDailyInputDto)
+            - painLevel: User's perceived pain [0=None, 1=Mild, 2=Moderate, 3=Severe]
+            - flareUpToday: Whether a flare-up occurred today (true/false)
+            - numbnessTingling: Indicates nerve irritation (true/false)
+            - sittingTime: Daily sitting duration [0=<2h, 1=2–4h, 2=4–6h, 3=6–8h, 4=>8h]
+            - standingTime: Daily standing duration [same scale]
+            - stretchingDone: If user performed spine-protective stretching
+            - morningStiffness: Stiffness after waking [0=None, 1=Mild, 2=Moderate, 3=Severe]
+            - stressLevel: Daily psychological stress [0=Very Low → 4=Very High]
+            - liftingOrStrain: True if heavy lifting or awkward posture occurred
+            - restingHeartRate: Resting heart rate (bpm)
+            - caloriesOut: Total calories burned (BMR + activity)
+            - activityCalories: Calories from intentional exercise
+            - caloriesBMR: Basal metabolic rate calories
+            - steps: Total daily steps
+            - sedentaryMinutes: Minutes spent inactive
+            - activeMinutes: Sum of lightly, fairly, and very active minutes
+            - totalMinutesAsleep: Total minutes asleep
+            - efficiency: Sleep quality (0–100)
+            - timeInBed: Total minutes in bed (asleep + awake)
+            - notes: User’s textual remarks about the day
+
+            ---
+
+            7-Day Context (contextJson → FitbitAiContextInsightDto)
+            - windowDays: Number of days in rolling window (usually 7)
+            - daysAvailable: How many days had valid data
+            - averagePainLevel: Mean of daily pain scores
+            - averageSittingTime: Mean of sitting time category
+            - averageStandingTime: Mean of standing time category
+            - averageMorningStiffness: Mean of stiffness score
+            - averageStressLevel: Mean of stress score
+            - daysWithStretching: Count of days stretchingDone=true
+            - daysWithFlareups: Count of days with flare-ups
+            - daysWithNumbnessTingling: Count of days with tingling symptoms
+            - daysWithLiftingOrStrain: Count of days with strain
+            - averageRestingHeartRate: Mean RHR over window
+            - averageCaloriesOut: Mean calories burned
+            - averageSteps: Mean daily steps
+            - averageSedentaryMinutes: Mean sedentary time
+            - averageActiveMinutes: Mean active minutes
+            - averageTotalMinutesAsleep: Mean sleep minutes
+            - averageEfficiency: Mean sleep efficiency
+            - yesterdaySleepMinutes: Sleep from the previous day
+            - yesterdayRestingHeartRate: RHR from previous day
+            - yesterdayPainLevel: Pain score from yesterday
+            - daysSinceLastFlareUp: Days since last flare-up
+            - stepsStandardDeviation: Variability in steps
+            - restingHearRateStandardDeviation: Variability in RHR
+            - sleepStandardDeviation: Variability in sleep
+            - sedentaryStandardDeviation: Variability in sedentary time
+
+            ---
             """;
 
     @Transactional
@@ -115,106 +153,140 @@ public class AiInsightServiceImpl implements AiInsightService {
             log.info("Today's json: {}", todayJson);
             log.info("Context json: {}", contextJson);
 
-            //Build AI prompt:
+            //AI prompt:
             String prompt = String.format("""
                     You are **FitSpine AI**, an advanced spine health and recovery intelligence system.
 
-                    Your goal: analyze biomechanical, neurological, and lifestyle data to identify patterns,
-                    compare the user's *current day* with *7-day context averages*, and generate structured,
-                    clinically useful recovery insights.
+                    Goal:
+                    Analyze biomechanical, neurological, and lifestyle data to identify patterns,
+                    compare the user's *current day* (todayJson) with *7-day averages* (contextJson),
+                    and generate structured, clinically meaningful recovery insights.
 
                     ---
 
-                    Data You Receive
-                    - **todayJson** → user's full daily log (symptoms + Fitbit data)
-                    - **contextJson** → 7-day aggregated averages and percentages
+                    FIELD CONTEXT (definitions, scaling, and interpretation):
+                    %s
+
+                    Interpretation Guidelines:
+                    - Any value of -1 means no data available — skip that metric.
+                    - Compare only metrics present in both JSONs.
+                    - Higher numeric = worse symptom/load; Lower numeric = healthier/recovered.
+                    - Boolean fields (true/false) represent behavior or symptom presence.
 
                     ---
 
-                    Step 1: Field-by-Field Comparison
-                    For every numeric or categorical metric that appears in both JSONs,
-                    perform a directional comparison:
+                    Comparison Rules for Output Sections:
 
-                    - If today's value > context average → label as "worsened"  
-                    - If today's value < context average → label as "improved"  
-                    - If approximately equal (±10%%) → label as "stable"
+                    **For "improved":**
+                    Mark metrics as improved if today's value is better (lower for pain/stress/stiffness/sitting; higher for sleep/steps).
+                    - painLevel ↓, stressLevel ↓, morningStiffness ↓, sittingTime ↓
+                    - restingHeartRate ↓
+                    - totalMinutesAsleep ↑, efficiency ↑
+                    - steps ↑, activeMinutes ↑
 
-                    Metrics to compare include (but are not limited to):
-                    painLevel, stressLevel, morningStiffness, sittingTime, standingTime,
-                    restingHeartRate, caloriesOut, steps, sedentaryMinutes, activeMinutes,
-                    totalMinutesAsleep, efficiency.
+                    **For "worsened":**
+                    Mark metrics as worsened if today's value is worse.
+                    - painLevel ↑, stressLevel ↑, morningStiffness ↑
+                    - sittingTime ↑, sedentaryMinutes ↑
+                    - totalMinutesAsleep ↓, efficiency ↓
+                    - steps ↓, activeMinutes ↓
+                    - restingHeartRate ↑
+
+                    **For "possibleCauses":**
+                    Detect cause-effect relations:
+                    - pain ↑ + sittingTime ↑ → posture-related load
+                    - pain ↑ + stress ↑ → stress-linked flare-up
+                    - stiffness ↑ + sleep ↓ → poor overnight recovery
+                    - numbnessTingling + liftingOrStrain → mechanical irritation
+                    - stress ↓ + steps ↑ → positive recovery adaptation
+
+                    **For "actionableAdvice":**
+                    Map worsened metrics to behavioral actions:
+                    - sittingTime ↑ → "Take short standing breaks every 45–60 min"
+                    - stressLevel ↑ → "Try box breathing or light mindfulness"
+                    - stiffness ↑ → "Perform McGill Big-3 exercises"
+                    - sleep ↓ → "Wind down earlier; reduce screen use before bed"
+                    - low steps → "Add short evening walk or gentle mobility"
+
+                    **For "discProtectionScore":**
+                    Assign 0–100 based on:
+                    + Add points for low pain/stress, stretchingDone=true, good sleep, high steps, RHR↓
+                    − Subtract for pain/stress↑, long sitting, poor sleep, RHR↑, flare-up=true
+                    Include a short "discScoreExplanation" summarizing why score changed.
+
+                    **For "flareUpTriggers":**
+                    Compare today vs averages:
+                    Identify metrics deviating >1 standard deviation (steps, sedentary, sleep, RHR).
+                    Correlate with pain↑ or flareUpToday=true to find likely biomechanical or lifestyle triggers.
+
+                    Each object in "flareUpTriggers" must always include:
+                    {
+                      "metric": "string",
+                      "value": "string or number",
+                      "deviation": "string",
+                      "impact": "string"
+                    }
+                    If no triggers exist, return an empty array [].
+
+                    **For "riskForecast":**
+                    Always return an object with:
+                    {
+                      "risk": float between 0.0–1.0,
+                      "bucket": "LOW" | "MODERATE" | "HIGH"
+                    }
+                    If not enough data, default to { "risk": 0.0, "bucket": "LOW" }.
+
+                    **For "interventionsToday":**
+                    Recommend 2–3 short interventions based on worsened categories (stretch, stress, posture).
 
                     ---
 
-                    Step 2: Detect Cause–Effect Patterns
-                    Using reasoning, look for meaningful relationships such as:
-
-                    - pain ↑ + stress ↑ → stress-related flare-up  
-                    - pain ↑ + sittingTime ↑ → posture strain  
-                    - stiffness ↑ + low sleep → poor overnight recovery  
-                    - numbnessTingling + liftingOrStrain → mechanical nerve irritation  
-                    - stress ↓ + steps ↑ → positive adaptation  
-                    - RHR ↓ + good sleep → systemic recovery  
-
-                    You may infer other clinically plausible spine health relationships.
+                    IMPORTANT JSON CONTRACT RULES
+                    - Output must be **valid JSON**. No markdown, no explanations, no code fences.
+                    - Use only these keys exactly as shown below.
+                    - Do not rename, remove, or add new keys.
+                    - Use empty arrays [] or default objects {} if data missing.
+                    - Never output null values.
+                    - Structure must strictly match the schema below.
 
                     ---
 
-                    Step 3: Evaluate Recovery Direction
-                    From the comparison and patterns, infer what is:
-                    - **Improving** (positive trend vs baseline)
-                    - **Worsening** (negative trend)
-                    - **Stable** (no major deviation)
-
-                    ---
-
-                    Step 4: Generate Insights
-                    Produce insights with a human-readable explanation for each section:
-                    1. **What Improved:** list top 2–3 areas showing positive change.  
-                    2. **What Worsened:** list top 2–3 areas of concern.  
-                    3. **Possible Causes:** explain *why* (based on detected patterns).  
-                    4. **Actionable Advice:** short behavioral recommendations
-                       (stretching, rest, activity balance, stress control, sleep improvement).  
-
-                    ---
-
-                    Step 5: Compute Disc Protection Score
-                    Assign a score 0–100 for today's spinal resilience using this reasoning guideline:
-                    - + points for low pain/stress/stiffness, adequate sleep, balanced activity, low RHR
-                    - − points for high pain/stress, poor sleep, long sitting, high RHR, flare-up
-                    Also provide a one-sentence **Disc Score Explanation** summarizing which factors most influenced the score.
-
-                    ---
-
-                    Step 6: Output Format
-                    Respond **only** as pure JSON (no markdown, no text, no code fences):
+                    Output JSON format (return ONLY JSON, no text/markdown):
 
                     {
-                      "improved": ["list of metrics or habits improving"],
-                      "worsened": ["list of metrics or habits worsening"],
-                      "possibleCauses": ["list of likely causes or correlations"],
-                      "actionableAdvice": ["short bullet recommendations"],
-                      "todaysInsight": "1–2 sentence summary of today's spine condition",
-                      "recoveryInsights": "2–3 sentence deeper analysis connecting today's data to weekly trends",
+                      "improved": [],
+                      "worsened": [],
+                      "possibleCauses": [],
+                      "actionableAdvice": [],
+                      "todaysInsight": "",
+                      "recoveryInsights": "",
                       "discProtectionScore": 0,
-                      "discScoreExplanation": "short reasoning about the score"
+                      "discScoreExplanation": "",
+                      "flareUpTriggers": [
+                        {
+                          "metric": "",
+                          "value": "",
+                          "deviation": "",
+                          "impact": ""
+                        }
+                      ],
+                      "riskForecast": {
+                        "risk": 0.0,
+                        "bucket": "LOW"
+                      },
+                      "interventionsToday": []
                     }
 
                     ---
 
-                    Step 7: Data to Analyze
-                    FIELD CONTEXT (definitions and scaling):
-                    %s
+                    Data to Analyze:
 
-                    =====
                     Current Day Input JSON (todayJson):
                     %s
 
-                    =====
                     7-Day Aggregated Context JSON (contextJson):
                     %s
-                    """, FIELD_CONTEXT, todayJson, contextJson);
-
+                    """, FIELD_CONTEXT_EXTENDED, todayJson, contextJson);
 
             //Build request body:
             Map<String, Object> body = new HashMap<>();
