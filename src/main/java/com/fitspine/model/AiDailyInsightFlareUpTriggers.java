@@ -27,7 +27,7 @@ public class AiDailyInsightFlareUpTriggers {
     private String metric;
 
     @Column(name = "value")
-    private Integer value;
+    private String value;
 
     @Column(name = "deviation", columnDefinition = "TEXT")
     private String deviation;

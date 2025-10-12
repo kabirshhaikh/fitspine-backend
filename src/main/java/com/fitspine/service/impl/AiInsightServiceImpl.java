@@ -1,19 +1,13 @@
 package com.fitspine.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fitspine.dto.AiInsightResponseDto;
-import com.fitspine.dto.AiUserDailyInputDto;
-import com.fitspine.dto.FitbitAiContextInsightDto;
+import com.fitspine.dto.*;
 import com.fitspine.exception.AiServiceException;
 import com.fitspine.exception.ResourceNotFoundException;
 import com.fitspine.exception.UserNotFoundException;
 import com.fitspine.helper.AiInsightHelper;
-import com.fitspine.model.AiDailyInsight;
-import com.fitspine.model.AiDailyInsightFlareUpTriggers;
-import com.fitspine.model.User;
-import com.fitspine.repository.AiDailyInsightFlareUpTriggersRepository;
-import com.fitspine.repository.AiDailyInsightRepository;
-import com.fitspine.repository.UserRepository;
+import com.fitspine.model.*;
+import com.fitspine.repository.*;
 import com.fitspine.service.AiInsightService;
 import com.fitspine.service.FitbitContextAggregationService;
 import lombok.extern.slf4j.Slf4j;
@@ -42,8 +36,30 @@ public class AiInsightServiceImpl implements AiInsightService {
     private final UserRepository userRepository;
     private final AiInsightHelper aiHelper;
     private final FitbitContextAggregationService fitbitContextAggregationService;
+    private final AiDailyInsightImprovedRepository improvedRepository;
+    private final AiDailyInsightWorsenedRepository worsenedRepository;
 
-    public AiInsightServiceImpl(RestTemplate restTemplate, ObjectMapper objectMapper, AiDailyInsightRepository insightRepository, UserRepository userRepository, AiInsightHelper aiHelper, AiDailyInsightFlareUpTriggersRepository flareUpTriggersRepository, FitbitContextAggregationService fitbitContextAggregationService) {
+    private final AiDailyInsightPossibleCausesRepository possibleCausesRepository;
+    private final AiDailyInsightActionableAdviceRepository actionableAdviceRepository;
+    private final AiDailyInsightInterventionsTodayRepository interventionsTodayRepository;
+    private final AiDailyInsightRiskForecastsRepository riskForecastsRepository;
+
+
+    public AiInsightServiceImpl(
+            RestTemplate restTemplate,
+            ObjectMapper objectMapper,
+            AiDailyInsightRepository insightRepository,
+            UserRepository userRepository,
+            AiInsightHelper aiHelper,
+            AiDailyInsightFlareUpTriggersRepository flareUpTriggersRepository,
+            FitbitContextAggregationService fitbitContextAggregationService,
+            AiDailyInsightImprovedRepository improvedRepository,
+            AiDailyInsightWorsenedRepository worsenedRepository,
+            AiDailyInsightPossibleCausesRepository possibleCausesRepository,
+            AiDailyInsightActionableAdviceRepository actionableAdviceRepository,
+            AiDailyInsightInterventionsTodayRepository interventionsTodayRepository,
+            AiDailyInsightRiskForecastsRepository riskForecastsRepository
+    ) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         this.insightRepository = insightRepository;
@@ -51,6 +67,12 @@ public class AiInsightServiceImpl implements AiInsightService {
         this.userRepository = userRepository;
         this.aiHelper = aiHelper;
         this.fitbitContextAggregationService = fitbitContextAggregationService;
+        this.improvedRepository = improvedRepository;
+        this.worsenedRepository = worsenedRepository;
+        this.possibleCausesRepository = possibleCausesRepository;
+        this.actionableAdviceRepository = actionableAdviceRepository;
+        this.interventionsTodayRepository = interventionsTodayRepository;
+        this.riskForecastsRepository = riskForecastsRepository;
     }
 
     private static final String FIELD_CONTEXT_EXTENDED = """
@@ -133,14 +155,44 @@ public class AiInsightServiceImpl implements AiInsightService {
         //If it exists then map the existing insight to dto and return that:
         if (insightExists) {
             AiDailyInsight insight = insightRepository.findByUserAndLogDate(user, logDate).orElseThrow(() -> new ResourceNotFoundException("Ai daily insight not found for date:" + logDate));
+
             List<AiDailyInsightFlareUpTriggers> flareUpTriggers = insight.getFlareUpTriggers();
-            List<String> triggers = aiHelper.returnTriggerText(flareUpTriggers);
+            List<FlareUpTriggersDto> triggers = aiHelper.returnTriggerText(flareUpTriggers);
+
+            List<AiDailyInsightImproved> improvedList = insight.getImproved();
+            List<String> improved = aiHelper.returnImprovedList(improvedList);
+
+            List<AiDailyInsightWorsened> worsenedList = insight.getWorsened();
+            List<String> worsened = aiHelper.returnWorsenedList(worsenedList);
+
+            List<AiDailyInsightPossibleCauses> possibleCausesList = insight.getPossibleCausesList();
+            List<String> possibleCauses = aiHelper.returnPossibleCausesList(possibleCausesList);
+
+            List<String> actionableAdvice = aiHelper.returnActionableAdviceList(insight.getActionableAdvices());
+
+            List<String> interventionsToday = aiHelper.returnInterventionsTodayList(insight.getInterventionsToday());
+
+            RiskForecastDto riskForecastDto = null;
+            if (insight.getRiskForecasts() != null) {
+                riskForecastDto = RiskForecastDto.builder()
+                        .risk(insight.getRiskForecasts().getRisk())
+                        .bucket(insight.getRiskForecasts().getBucket())
+                        .build();
+            }
+
             return AiInsightResponseDto.builder()
                     .todaysInsight(insight.getTodaysInsights() != null ? insight.getTodaysInsights() : "")
-                    .flareUpTriggers(triggers != null ? triggers : new ArrayList<>())
                     .recoveryInsights(insight.getRecoveryInsights() != null ? insight.getRecoveryInsights() : "")
                     .discProtectionScore(insight.getDiscProtectionScore() != null ? insight.getDiscProtectionScore() : 0)
                     .discScoreExplanation(insight.getDiscScoreExplanation() != null ? insight.getDiscScoreExplanation() : "")
+
+                    .flareUpTriggers(triggers != null ? triggers : new ArrayList<>())
+                    .improved(improved != null ? improved : new ArrayList<>())
+                    .worsened(worsened != null ? worsened : new ArrayList<>())
+                    .possibleCauses(possibleCauses != null ? possibleCauses : new ArrayList<>())
+                    .actionableAdvice(actionableAdvice != null ? actionableAdvice : new ArrayList<>())
+                    .interventionsToday(interventionsToday != null ? interventionsToday : new ArrayList<>())
+                    .riskForecast(riskForecastDto)
                     .build();
         }
 
@@ -337,7 +389,13 @@ public class AiInsightServiceImpl implements AiInsightService {
                     .replaceAll("```", "")
                     .trim();
             AiInsightResponseDto insight = objectMapper.readValue(content, AiInsightResponseDto.class);
-            List<String> triggers = insight.getFlareUpTriggers();
+            List<FlareUpTriggersDto> flareUpTriggersDtos = insight.getFlareUpTriggers();
+            List<String> improved = insight.getImproved();
+            List<String> worsened = insight.getWorsened();
+            List<String> possibleCauses = insight.getPossibleCauses();
+            List<String> actionableAdvice = insight.getActionableAdvice();
+            List<String> interventionsToday = insight.getInterventionsToday();
+            RiskForecastDto riskForecastDto = insight.getRiskForecast();
 
             //Save the Ai insight in db:
             AiDailyInsight savedInsight = AiDailyInsight.builder()
@@ -358,18 +416,107 @@ public class AiInsightServiceImpl implements AiInsightService {
             insightRepository.save(savedInsight);
 
             //Save the flare up triggers:
-            if (triggers != null && !triggers.isEmpty()) {
+            if (flareUpTriggersDtos != null && !flareUpTriggersDtos.isEmpty()) {
                 List<AiDailyInsightFlareUpTriggers> flareUpEntries = new ArrayList<>();
-                for (int i = 0; i < triggers.size(); i++) {
+                for (int i = 0; i < flareUpTriggersDtos.size(); i++) {
                     flareUpEntries.add(
                             AiDailyInsightFlareUpTriggers.builder()
                                     .aiDailyInsight(savedInsight)
-//                                    .triggerText(triggers.get(i))
+                                    .metric(flareUpTriggersDtos.get(i).getMetric())
+                                    .value(flareUpTriggersDtos.get(i).getValue())
+                                    .deviation(flareUpTriggersDtos.get(i).getDeviation())
+                                    .impact(flareUpTriggersDtos.get(i).getImpact())
                                     .build()
                     );
                 }
 
                 flareUpTriggersRepository.saveAll(flareUpEntries);
+            }
+
+            //Save improved:
+            if (improved != null && !improved.isEmpty()) {
+                List<AiDailyInsightImproved> improvedList = new ArrayList<>();
+                for (int i = 0; i < improved.size(); i++) {
+                    improvedList.add(
+                            AiDailyInsightImproved.builder()
+                                    .aiDailyInsight(savedInsight)
+                                    .improved(improved.get(i))
+                                    .build()
+                    );
+                }
+
+                improvedRepository.saveAll(improvedList);
+            }
+
+            //Save worsened:
+            if (worsened != null && !worsened.isEmpty()) {
+                List<AiDailyInsightWorsened> worsenedList = new ArrayList<>();
+                for (int i = 0; i < worsened.size(); i++) {
+                    worsenedList.add(
+                            AiDailyInsightWorsened.builder()
+                                    .aiDailyInsight(savedInsight)
+                                    .worsened(worsened.get(i))
+                                    .build()
+                    );
+                }
+
+                worsenedRepository.saveAll(worsenedList);
+            }
+
+            //Save possible causes:
+            if (possibleCauses != null && !possibleCauses.isEmpty()) {
+                List<AiDailyInsightPossibleCauses> possibleCausesList = new ArrayList<>();
+                for (int i = 0; i < possibleCauses.size(); i++) {
+                    possibleCausesList.add(
+                            AiDailyInsightPossibleCauses.builder()
+                                    .aiDailyInsight(savedInsight)
+                                    .possibleCauses(possibleCauses.get(i))
+                                    .build()
+                    );
+                }
+
+                possibleCausesRepository.saveAll(possibleCausesList);
+            }
+
+            //Save actionable advices:
+            if (actionableAdvice != null && !actionableAdvice.isEmpty()) {
+                List<AiDailyInsightActionableAdvice> actionableAdvicesList = new ArrayList<>();
+                for (int i = 0; i < actionableAdvice.size(); i++) {
+                    actionableAdvicesList.add(
+                            AiDailyInsightActionableAdvice.builder()
+                                    .aiDailyInsight(savedInsight)
+                                    .advice(actionableAdvice.get(i))
+                                    .build()
+                    );
+                }
+
+                actionableAdviceRepository.saveAll(actionableAdvicesList);
+            }
+
+            //Save interventions today:
+            if (interventionsToday != null && !interventionsToday.isEmpty()) {
+                List<AiDailyInsightInterventionsToday> interventionsTodaysList = new ArrayList<>();
+                for (int i = 0; i < interventionsToday.size(); i++) {
+                    interventionsTodaysList.add(
+                            AiDailyInsightInterventionsToday.builder()
+                                    .aiDailyInsight(savedInsight)
+                                    .interventions(interventionsToday.get(i))
+                                    .build()
+                    );
+                }
+
+                interventionsTodayRepository.saveAll(interventionsTodaysList);
+            }
+
+            //Save risk forecast (one to one):
+            if (riskForecastDto != null) {
+                AiDailyInsightRiskForecasts riskForecasts = AiDailyInsightRiskForecasts.builder()
+                        .aiDailyInsight(savedInsight)
+                        .risk(riskForecastDto.getRisk())
+                        .bucket(riskForecastDto.getBucket())
+                        .build();
+
+                riskForecastsRepository.save(riskForecasts);
             }
 
             log.info("AI Insights generated successfully for user: {}", dto.getId());
