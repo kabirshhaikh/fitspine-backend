@@ -67,4 +67,92 @@ public class AiInsightHelper {
         }
         return interventions;
     }
+
+    public List<AiDailyInsightImproved> getImprovedList(List<String> improved, AiDailyInsight savedInsight) {
+        List<AiDailyInsightImproved> improvedList = new ArrayList<>();
+
+        for (int i = 0; i < improved.size(); i++) {
+            improvedList.add(
+                    AiDailyInsightImproved.builder()
+                            .aiDailyInsight(savedInsight)
+                            .improved(improved.get(i))
+                            .build()
+            );
+        }
+
+        return improvedList;
+    }
+
+    public List<AiDailyInsightWorsened> getWorsened(List<String> worsened, AiDailyInsight savedInsight) {
+        List<AiDailyInsightWorsened> worsenedList = new ArrayList<>();
+        for (int i = 0; i < worsened.size(); i++) {
+            worsenedList.add(
+                    AiDailyInsightWorsened.builder()
+                            .aiDailyInsight(savedInsight)
+                            .worsened(worsened.get(i))
+                            .build()
+            );
+        }
+
+        return worsenedList;
+    }
+
+    public List<AiDailyInsightPossibleCauses> getPossibleIssues(List<String> possibleCauses, AiDailyInsight savedInsight) {
+        List<AiDailyInsightPossibleCauses> possibleCausesList = new ArrayList<>();
+        for (int i = 0; i < possibleCauses.size(); i++) {
+            possibleCausesList.add(
+                    AiDailyInsightPossibleCauses.builder()
+                            .aiDailyInsight(savedInsight)
+                            .possibleCauses(possibleCauses.get(i))
+                            .build()
+            );
+        }
+
+        return possibleCausesList;
+    }
+
+    public List<AiDailyInsightActionableAdvice> getActionableAdvice(List<String> actionableAdvice, AiDailyInsight savedInsight) {
+        List<AiDailyInsightActionableAdvice> actionableAdvicesList = new ArrayList<>();
+        for (int i = 0; i < actionableAdvice.size(); i++) {
+            actionableAdvicesList.add(
+                    AiDailyInsightActionableAdvice.builder()
+                            .aiDailyInsight(savedInsight)
+                            .advice(actionableAdvice.get(i))
+                            .build()
+            );
+        }
+
+        return actionableAdvicesList;
+    }
+
+    public List<AiDailyInsightInterventionsToday> getInterventionsToday(List<String> interventionsToday, AiDailyInsight savedInsight) {
+        List<AiDailyInsightInterventionsToday> interventionsTodaysList = new ArrayList<>();
+        for (int i = 0; i < interventionsToday.size(); i++) {
+            interventionsTodaysList.add(
+                    AiDailyInsightInterventionsToday.builder()
+                            .aiDailyInsight(savedInsight)
+                            .interventions(interventionsToday.get(i))
+                            .build()
+            );
+        }
+
+        return interventionsTodaysList;
+    }
+
+    public List<AiDailyInsightFlareUpTriggers> getFlareUpTriggers(List<FlareUpTriggersDto> flareUpTriggersDtos, AiDailyInsight savedInsight) {
+        List<AiDailyInsightFlareUpTriggers> flareUpEntries = new ArrayList<>();
+        for (int i = 0; i < flareUpTriggersDtos.size(); i++) {
+            flareUpEntries.add(
+                    AiDailyInsightFlareUpTriggers.builder()
+                            .aiDailyInsight(savedInsight)
+                            .metric(flareUpTriggersDtos.get(i).getMetric())
+                            .value(flareUpTriggersDtos.get(i).getValue())
+                            .deviation(flareUpTriggersDtos.get(i).getDeviation())
+                            .impact(flareUpTriggersDtos.get(i).getImpact())
+                            .build()
+            );
+        }
+
+        return flareUpEntries;
+    }
 }

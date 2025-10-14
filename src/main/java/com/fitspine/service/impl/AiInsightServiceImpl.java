@@ -417,105 +417,43 @@ public class AiInsightServiceImpl implements AiInsightService {
 
             //Save the flare up triggers:
             if (flareUpTriggersDtos != null && !flareUpTriggersDtos.isEmpty()) {
-                List<AiDailyInsightFlareUpTriggers> flareUpEntries = new ArrayList<>();
-                for (int i = 0; i < flareUpTriggersDtos.size(); i++) {
-                    flareUpEntries.add(
-                            AiDailyInsightFlareUpTriggers.builder()
-                                    .aiDailyInsight(savedInsight)
-                                    .metric(flareUpTriggersDtos.get(i).getMetric())
-                                    .value(flareUpTriggersDtos.get(i).getValue())
-                                    .deviation(flareUpTriggersDtos.get(i).getDeviation())
-                                    .impact(flareUpTriggersDtos.get(i).getImpact())
-                                    .build()
-                    );
-                }
-
+                List<AiDailyInsightFlareUpTriggers> flareUpEntries = aiHelper.getFlareUpTriggers(flareUpTriggersDtos, savedInsight);
                 flareUpTriggersRepository.saveAll(flareUpEntries);
             }
 
             //Save improved:
             if (improved != null && !improved.isEmpty()) {
-                List<AiDailyInsightImproved> improvedList = new ArrayList<>();
-                for (int i = 0; i < improved.size(); i++) {
-                    improvedList.add(
-                            AiDailyInsightImproved.builder()
-                                    .aiDailyInsight(savedInsight)
-                                    .improved(improved.get(i))
-                                    .build()
-                    );
-                }
-
+                List<AiDailyInsightImproved> improvedList = aiHelper.getImprovedList(improved, savedInsight);
                 improvedRepository.saveAll(improvedList);
             }
 
             //Save worsened:
             if (worsened != null && !worsened.isEmpty()) {
-                List<AiDailyInsightWorsened> worsenedList = new ArrayList<>();
-                for (int i = 0; i < worsened.size(); i++) {
-                    worsenedList.add(
-                            AiDailyInsightWorsened.builder()
-                                    .aiDailyInsight(savedInsight)
-                                    .worsened(worsened.get(i))
-                                    .build()
-                    );
-                }
-
+                List<AiDailyInsightWorsened> worsenedList = aiHelper.getWorsened(worsened, savedInsight);
                 worsenedRepository.saveAll(worsenedList);
             }
 
             //Save possible causes:
             if (possibleCauses != null && !possibleCauses.isEmpty()) {
-                List<AiDailyInsightPossibleCauses> possibleCausesList = new ArrayList<>();
-                for (int i = 0; i < possibleCauses.size(); i++) {
-                    possibleCausesList.add(
-                            AiDailyInsightPossibleCauses.builder()
-                                    .aiDailyInsight(savedInsight)
-                                    .possibleCauses(possibleCauses.get(i))
-                                    .build()
-                    );
-                }
-
+                List<AiDailyInsightPossibleCauses> possibleCausesList = aiHelper.getPossibleIssues(possibleCauses, savedInsight);
                 possibleCausesRepository.saveAll(possibleCausesList);
             }
 
             //Save actionable advices:
             if (actionableAdvice != null && !actionableAdvice.isEmpty()) {
-                List<AiDailyInsightActionableAdvice> actionableAdvicesList = new ArrayList<>();
-                for (int i = 0; i < actionableAdvice.size(); i++) {
-                    actionableAdvicesList.add(
-                            AiDailyInsightActionableAdvice.builder()
-                                    .aiDailyInsight(savedInsight)
-                                    .advice(actionableAdvice.get(i))
-                                    .build()
-                    );
-                }
-
+                List<AiDailyInsightActionableAdvice> actionableAdvicesList = aiHelper.getActionableAdvice(actionableAdvice, savedInsight);
                 actionableAdviceRepository.saveAll(actionableAdvicesList);
             }
 
             //Save interventions today:
             if (interventionsToday != null && !interventionsToday.isEmpty()) {
-                List<AiDailyInsightInterventionsToday> interventionsTodaysList = new ArrayList<>();
-                for (int i = 0; i < interventionsToday.size(); i++) {
-                    interventionsTodaysList.add(
-                            AiDailyInsightInterventionsToday.builder()
-                                    .aiDailyInsight(savedInsight)
-                                    .interventions(interventionsToday.get(i))
-                                    .build()
-                    );
-                }
-
+                List<AiDailyInsightInterventionsToday> interventionsTodaysList = aiHelper.getInterventionsToday(interventionsToday, savedInsight);
                 interventionsTodayRepository.saveAll(interventionsTodaysList);
             }
 
             //Save risk forecast (one to one):
             if (riskForecastDto != null) {
-                AiDailyInsightRiskForecasts riskForecasts = AiDailyInsightRiskForecasts.builder()
-                        .aiDailyInsight(savedInsight)
-                        .risk(riskForecastDto.getRisk())
-                        .bucket(riskForecastDto.getBucket())
-                        .build();
-
+                AiDailyInsightRiskForecasts riskForecasts = AiDailyInsightRiskForecasts.builder().aiDailyInsight(savedInsight).risk(riskForecastDto.getRisk()).bucket(riskForecastDto.getBucket()).build();
                 riskForecastsRepository.save(riskForecasts);
             }
 
