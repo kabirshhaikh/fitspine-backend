@@ -4,6 +4,7 @@ import com.fitspine.dto.AiUserDailyInputDto;
 import com.fitspine.enums.*;
 import com.fitspine.exception.ManualDailyLogNotFoundException;
 import com.fitspine.exception.UserNotFoundException;
+import com.fitspine.helper.EnumScoreHelper;
 import com.fitspine.model.*;
 import com.fitspine.repository.*;
 import com.fitspine.service.FitbitAiDailyAggregationService;
@@ -122,6 +123,8 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
 
             if (heartLog != null && heartLog.getValues() != null && !heartLog.getValues().isEmpty()) {
                 restingHeartRate = heartLog.getValues().get(0).getRestingHeartRate();
+            } else {
+                restingHeartRate = -1;
             }
 
             //Activity:
@@ -149,14 +152,14 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
                 .discLevels(discLevels)
 
                 // Manual
-                .painLevel(manualDailyLog.getPainLevel())
+                .painLevel(EnumScoreHelper.pain(manualDailyLog.getPainLevel()))
                 .flareUpToday(manualDailyLog.getFlareUpToday())
                 .numbnessTingling(manualDailyLog.getNumbnessTingling())
-                .sittingTime(manualDailyLog.getSittingTime())
-                .standingTime(manualDailyLog.getStandingTime())
+                .sittingTime(EnumScoreHelper.sittingTime(manualDailyLog.getSittingTime()))
+                .standingTime(EnumScoreHelper.standingTime(manualDailyLog.getStandingTime()))
                 .stretchingDone(manualDailyLog.getStretchingDone())
-                .morningStiffness(manualDailyLog.getMorningStiffness())
-                .stressLevel(manualDailyLog.getStressLevel())
+                .morningStiffness(EnumScoreHelper.morningStiffness(manualDailyLog.getMorningStiffness()))
+                .stressLevel(EnumScoreHelper.stressLevel(manualDailyLog.getStressLevel()))
                 .liftingOrStrain(manualDailyLog.getLiftingOrStrain())
                 .notes(manualDailyLog.getNotes())
 
@@ -164,57 +167,38 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
                 .restingHeartRate(restingHeartRate)
 
                 // Activity summary
-                .caloriesOut(activitySummariesLog != null ? activitySummariesLog.getCaloriesOut() : null)
-                .activityCalories(activitySummariesLog != null ? activitySummariesLog.getActivityCalories() : null)
-                .caloriesBmr(activitySummariesLog != null ? activitySummariesLog.getCaloriesBmr() : null)
-                .steps(activitySummariesLog != null ? activitySummariesLog.getSteps() : null)
-                .sedentaryMinutes(activitySummariesLog != null ? activitySummariesLog.getSedentaryMinutes() : null)
-                .lightlyActiveMinutes(activitySummariesLog != null ? activitySummariesLog.getLightlyActiveMinutes() : null)
-                .fairlyActiveMinutes(activitySummariesLog != null ? activitySummariesLog.getFairlyActiveMinutes() : null)
-                .veryActiveMinutes(activitySummariesLog != null ? activitySummariesLog.getVeryActiveMinutes() : null)
-                .marginalCalories(activitySummariesLog != null ? activitySummariesLog.getMarginalCalories() : null)
+                .caloriesOut(activitySummariesLog != null ? activitySummariesLog.getCaloriesOut() : -1)
+                .activityCalories(activitySummariesLog != null ? activitySummariesLog.getActivityCalories() : -1)
+                .caloriesBmr(activitySummariesLog != null ? activitySummariesLog.getCaloriesBmr() : -1)
+                .steps(activitySummariesLog != null ? activitySummariesLog.getSteps() : -1)
+                .sedentaryMinutes(activitySummariesLog != null ? activitySummariesLog.getSedentaryMinutes() : -1)
+                .lightlyActiveMinutes(activitySummariesLog != null ? activitySummariesLog.getLightlyActiveMinutes() : -1)
+                .fairlyActiveMinutes(activitySummariesLog != null ? activitySummariesLog.getFairlyActiveMinutes() : -1)
+                .veryActiveMinutes(activitySummariesLog != null ? activitySummariesLog.getVeryActiveMinutes() : -1)
+                .marginalCalories(activitySummariesLog != null ? activitySummariesLog.getMarginalCalories() : -1)
 
                 // Goals
-                .floors(activityGoalsLog != null ? activityGoalsLog.getFloors() : null)
-                .activeMinutes(activityGoalsLog != null ? activityGoalsLog.getActiveMinutes() : null)
+                .floors(activityGoalsLog != null ? activityGoalsLog.getFloors() : -1)
+                .activeMinutes(activityGoalsLog != null ? activityGoalsLog.getActiveMinutes() : -1)
 
                 // Activities
                 .description(activitiesLog != null ? activitiesLog.getDescription() : null)
 
                 // Sleep summary
-                .totalMinutesAsleep(sleepSummaryLog != null ? sleepSummaryLog.getTotalMinutesAsleep() : null)
-                .totalSleepRecords(sleepSummaryLog != null ? sleepSummaryLog.getTotalSleepRecords() : null)
-                .totalTimeInBed(sleepSummaryLog != null ? sleepSummaryLog.getTotalTimeInBed() : null)
+                .totalMinutesAsleep(sleepSummaryLog != null ? sleepSummaryLog.getTotalMinutesAsleep() : -1)
+                .totalSleepRecords(sleepSummaryLog != null ? sleepSummaryLog.getTotalSleepRecords() : -1)
+                .totalTimeInBed(sleepSummaryLog != null ? sleepSummaryLog.getTotalTimeInBed() : -1)
 
                 // Sleep log
-                .efficiency(sleepLog != null ? sleepLog.getEfficiency() : null)
+                .efficiency(sleepLog != null ? sleepLog.getEfficiency() : -1)
                 .startTime(sleepLog != null ? sleepLog.getStartTime() : null)
                 .endTime(sleepLog != null ? sleepLog.getEndTime() : null)
                 .isMainSleep(sleepLog != null ? sleepLog.getIsMainSleep() : null)
-                .minutesAwake(sleepLog != null ? sleepLog.getMinutesAwake() : null)
-                .minutesAsleep(sleepLog != null ? sleepLog.getMinutesAsleep() : null)
-                .minutesToFallAsleep(sleepLog != null ? sleepLog.getMinutesToFallAsleep() : null)
-                .timeInBed(sleepLog != null ? sleepLog.getTimeInBed() : null)
+                .minutesAwake(sleepLog != null ? sleepLog.getMinutesAwake() : -1)
+                .minutesAsleep(sleepLog != null ? sleepLog.getMinutesAsleep() : -1)
+                .minutesToFallAsleep(sleepLog != null ? sleepLog.getMinutesToFallAsleep() : -1)
+                .timeInBed(sleepLog != null ? sleepLog.getTimeInBed() : -1)
 
                 .build();
     }
 }
-
-
-//Context:
-//        - restingHeartRate: resting heart rate
-
-//        - caloriesOut: total calories burned (BMR + activity)
-//        - activityCalories: calories from intentional exercise
-//        - caloriesBMR: baseline metabolism at rest
-//        - marginalCalories: calories from light, non-exercise movement
-//        - sedentaryMinutes: total inactive minutes in the day
-//        - steps: total steps walked in the day
-//        - lightlyActiveMinutes, fairlyActiveMinutes, veryActiveMinutes: activity intensity levels in minutes
-
-//        - totalMinutesAsleep: total minutes spent asleep
-//        - totalTimeInBed: total minutes in bed (sleep + awake)
-//        - efficiency: sleep quality percentage (0–100)
-//        - startTime, endTime: sleep window timestamps
-//        - minutesAsleep, minutesAwake, minutesToFallAsleep, timeInBed: detailed durations (all in minutes)
-//        - isMainSleep: true if primary overnight sleep, false if nap

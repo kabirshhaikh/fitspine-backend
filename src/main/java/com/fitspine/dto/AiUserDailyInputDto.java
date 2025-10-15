@@ -23,14 +23,14 @@ public class AiUserDailyInputDto {
     private List<DiscLevel> discLevels;
 
     //Manual log fields:
-    private PainLevel painLevel; //From ManualDailyLog
+    private Integer painLevel; //From ManualDailyLog
     private Boolean flareUpToday;
     private Boolean numbnessTingling;
-    private SittingTime sittingTime;
-    private StandingTime standingTime;
+    private Integer sittingTime;
+    private Integer standingTime;
     private Boolean stretchingDone;
-    private MorningStiffness morningStiffness;
-    private StressLevel stressLevel;
+    private Integer morningStiffness;
+    private Integer stressLevel;
     private Boolean liftingOrStrain;
     private String notes;
 
