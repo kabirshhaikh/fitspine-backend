@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface UserWearableTokenRepository extends JpaRepository<UserWearableToken, Long> {
     Optional<UserWearableToken> findByUserIdAndProvider(Long userId, String provider);
+
+    void deleteByUserIdAndProvider(Long userId, String provider);
 }

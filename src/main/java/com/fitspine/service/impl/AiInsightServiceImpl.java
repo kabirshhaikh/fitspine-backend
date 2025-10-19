@@ -214,6 +214,23 @@ public class AiInsightServiceImpl implements AiInsightService {
                     compare the user's current day (todayJson) with 7-day context (contextJson),
                     and generate structured, clinically meaningful recovery insights that a patient can read.
 
+                    Clinical Reasoning Context (FitSpine AI knowledge base):
+                    - FitSpine AI must use physiological and biomechanical reasoning when explaining any change, cause, or advice.
+                    - Link all metric changes to plausible mechanisms like:
+                      • inflammation or recovery (pain, stiffness, sleep, restingHeartRate)
+                      • spinal load tolerance and disc pressure (sittingTime, liftingOrStrain)
+                      • nervous system regulation (stressLevel, morningStiffness)
+                      • tissue circulation and mobility (steps, activeMinutes)
+                    - Use phrases like “which may indicate”, “suggesting”, or “likely due to” to show clinical reasoning.
+                    - Every “possibleCause”, “actionableAdvice”, and “interventionToday” must explain the physiological *why*, not just what changed.
+                    - NEVER copy or reuse example text or phrasing shown anywhere in this prompt. Generate original, context-specific sentences every time.
+                    - Do NOT sound generic. Always reference the metric values and the underlying spine-related mechanism.
+                    - Avoid speculative language like “might be” or “maybe”; use assertive but cautious phrasing like “likely due to” or “consistent with”.
+                    - Ensure advice is spine-safe and recovery-oriented:
+                      - Encourage gentle mobility, short walks, and neutral-spine movements.
+                      - Avoid recommending heavy lifting, deep flexion, or twisting.
+                    - For flareUpTriggers, connect deviations to biomechanical stress or recovery deficits (e.g., “lower sleep and higher heart rate may signal incomplete recovery”).
+
                     ---
 
                     FIELD CONTEXT (definitions, scaling, and interpretation):
@@ -266,11 +283,13 @@ public class AiInsightServiceImpl implements AiInsightService {
                     - For each improved metric, provide a short human sentence per item, not just the name.
                     - Format: "steps — about {todayMinusAvg} more than your typical day over the last {daysAvailable} days (today {todayValue}, typical {avgValue})."
                     - Use words like “about”, “around”, “slightly”, “clearly” instead of symbols or percentages.
+                    - Add a brief physiological explanation for each improvement (e.g., “suggesting better circulation or recovery”).
 
                     "worsened" (array of strings):
                     - For each worsened metric, provide a short human sentence per item, not just the name.
                     - Format: "painLevel — worse by one level (today {labelToday} vs {labelAvg}) compared with your last {daysAvailable} days."
                     - For quantitative: "sedentaryMinutes — about {absDelta} more minutes than typical (today {todayValue}, typical {avgValue})."
+                    - Add a brief clinical reason (e.g., “which may indicate increased load or incomplete recovery”).
 
                     "todaysInsight":
                     - 2–4 concise sentences summarizing the 2–4 biggest changes using plain words and numbers with units.
@@ -282,18 +301,16 @@ public class AiInsightServiceImpl implements AiInsightService {
 
                     "possibleCauses":
                     - Provide 2–4 sentences. Each item must be a full sentence using “because” and the actual compared values.
+                    - Explain *why* in clinical terms: reference inflammation, disc pressure, fatigue, or recovery deficit.
                     - Example style (adapt numbers and levels):
-                      - "Pain likely increased because sitting time category moved higher today compared with your typical last {daysAvailable} days, indicating posture-related load."
-                      - "Higher stress today alongside slightly lower sleep efficiency may have increased pain sensitivity."
-                    - NEVER output symbolic templates or arrows. NEVER contradict numbers.
+                      - "Pain likely increased because sitting time category moved higher today compared with your typical last {daysAvailable} days, increasing disc pressure and muscle tension."
+                      - "Higher stress today alongside slightly lower sleep efficiency may have heightened pain sensitivity."
+                    - NEVER copy example text or templates — generate fresh, context-specific explanations every time.
 
                     "actionableAdvice":
-                    - Provide exactly 3 concrete, metric-driven items tied to TODAY’S worsened set or the clearest negative deltas.
+                    - Provide exactly 3 concrete, clinically sound, metric-driven items tied to TODAY’S worsened set or the clearest negative deltas.
                     - Each item must include WHAT to do, HOW MUCH/HOW LONG/WHEN, and WHY it fits the user’s data and conditions (injuries/surgery if present).
-                    - Examples (adapt to actual metrics and constraints):
-                      - "Reduce prolonged sitting: set a reminder every 50–60 minutes and take a 2–3 minute mobility break to trim about 40–60 sedentary minutes today."
-                      - "Manage stress: schedule two brief breathing sessions (about 4 minutes midday and 4 minutes before bed) to help bring perceived stress down a level."
-                      - "Keep spinal loads spine-sparing: a gentle 12–15 minute walk this evening and a set of the McGill Big Three with neutral spine."
+                    - Include the physiological rationale (e.g., “to reduce disc pressure”, “to enhance recovery”, “to calm nervous system reactivity”).
                     - Do not repeat a generic list; tailor to today's numbers and the user’s conditions.
 
                     "flareUpTriggers":
@@ -303,7 +320,7 @@ public class AiInsightServiceImpl implements AiInsightService {
                         "metric": "<name>",
                         "value": "today {todayValue} vs typical {avgValue} over the last {daysAvailable} days; about {absDelta} difference; {zScoreText if SD available}",
                         "deviation": "above or below typical by {zScoreRounded} SD (or 'N/A' if SD unavailable)",
-                        "impact": "clinically plausible impact tied to pain or flareUpToday and the user’s conditions"
+                        "impact": "connect the deviation to a plausible biomechanical or physiological explanation, such as poor sleep reducing tissue recovery or increased sitting elevating disc pressure."
                       }
                     - If no SD is available for any candidate but deltas exist, pick the largest absolute delta and set deviation='N/A' with a qualitative impact.
                     - Avoid contradictions: if today < average, do not say “higher”.
@@ -318,6 +335,8 @@ public class AiInsightServiceImpl implements AiInsightService {
                     "interventionsToday":
                     - MUST contain 2–3 brief, specific actions for today. Never return an empty array.
                     - Each item should be 1 sentence, actionable, and compatible with the user’s injuries/surgery status.
+                    - Include reasoning (e.g., “to decompress the spine”, “to improve circulation”, “to calm the nervous system”).
+                    - NEVER copy or reuse example text or phrasing.
 
                     "riskForecast":
                     - Keep the same structure as provided. If insufficient data, keep LOW.
@@ -366,7 +385,6 @@ public class AiInsightServiceImpl implements AiInsightService {
                     7-Day Aggregated Context JSON (contextJson):
                     %s
                     """, FIELD_CONTEXT_EXTENDED, todayJson, contextJson);
-
 
             //Build request body:
             Map<String, Object> body = new HashMap<>();

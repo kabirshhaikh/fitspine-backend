@@ -90,15 +90,20 @@ public class FitbitServiceImpl implements WearableService {
         try {
             User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found with id:" + userId));
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
+
+            if (jsonNode.has("errors")) {
+                throw new TokenRefreshException("Fitbit returned an error: " + jsonNode.get("errors").toString());
+            }
+
             String accessToken = jsonNode.get("access_token").asText();
             String refreshToken = jsonNode.get("refresh_token").asText();
             int expiresIn = jsonNode.get("expires_in").asInt();
             String tokenType = jsonNode.get("token_type").asText();
             String scope = jsonNode.get("scope").asText();
 
-            Optional<UserWearableToken> existingToken = userWearableTokenRepository.findByUserIdAndProvider(userId, getProvider());
+            userWearableTokenRepository.deleteByUserIdAndProvider(userId, getProvider());
 
-            UserWearableToken token = existingToken.orElseGet(UserWearableToken::new);
+            UserWearableToken token = new UserWearableToken();
             token.setUser(user);
             token.setAccessToken(accessToken);
             token.setRefreshToken(refreshToken);
