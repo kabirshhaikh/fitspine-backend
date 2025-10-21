@@ -12,11 +12,14 @@ import com.fitspine.service.AiInsightService;
 import com.fitspine.service.FitbitContextAggregationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,6 +46,8 @@ public class AiInsightServiceImpl implements AiInsightService {
     private final AiDailyInsightActionableAdviceRepository actionableAdviceRepository;
     private final AiDailyInsightInterventionsTodayRepository interventionsTodayRepository;
     private final AiDailyInsightRiskForecastsRepository riskForecastsRepository;
+    private final StringRedisTemplate redisTemplate;
+    private final RedisTemplate<String, Object> redis;
 
 
     public AiInsightServiceImpl(
@@ -58,7 +63,9 @@ public class AiInsightServiceImpl implements AiInsightService {
             AiDailyInsightPossibleCausesRepository possibleCausesRepository,
             AiDailyInsightActionableAdviceRepository actionableAdviceRepository,
             AiDailyInsightInterventionsTodayRepository interventionsTodayRepository,
-            AiDailyInsightRiskForecastsRepository riskForecastsRepository
+            AiDailyInsightRiskForecastsRepository riskForecastsRepository,
+            StringRedisTemplate redisTemplate,
+            RedisTemplate<String, Object> redis
     ) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
@@ -73,6 +80,8 @@ public class AiInsightServiceImpl implements AiInsightService {
         this.actionableAdviceRepository = actionableAdviceRepository;
         this.interventionsTodayRepository = interventionsTodayRepository;
         this.riskForecastsRepository = riskForecastsRepository;
+        this.redisTemplate = redisTemplate;
+        this.redis = redis;
     }
 
     private static final String FIELD_CONTEXT_EXTENDED = """
@@ -148,6 +157,18 @@ public class AiInsightServiceImpl implements AiInsightService {
     public AiInsightResponseDto generateDailyInsight(AiUserDailyInputDto dto, String email, LocalDate logDate) {
         //Get the user:
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        //Redis key:
+        String key = "ai_insights:" + email + ":" + logDate;
+
+        AiInsightResponseDto cacheResponse = (AiInsightResponseDto) redis.opsForValue().get(key);
+
+        if (cacheResponse != null) {
+            log.info("Cache HIT for {}", key);
+            return cacheResponse;
+        }
+
+        log.info("Cache MISS for {}", key);
 
         //Check if the ai insight exists:
         boolean insightExists = insightRepository.existsByUserAndLogDate(user, logDate);
@@ -435,6 +456,12 @@ public class AiInsightServiceImpl implements AiInsightService {
                     .replaceAll("```", "")
                     .trim();
             AiInsightResponseDto insight = objectMapper.readValue(content, AiInsightResponseDto.class);
+
+            if (cacheResponse == null) {
+                log.info("Writing CACHE into redis: ");
+                redis.opsForValue().set(key, insight, Duration.ofHours(12));
+            }
+
             List<FlareUpTriggersDto> flareUpTriggersDtos = insight.getFlareUpTriggers();
             List<String> improved = insight.getImproved();
             List<String> worsened = insight.getWorsened();
