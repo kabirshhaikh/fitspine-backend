@@ -1,6 +1,7 @@
 package com.fitspine.model;
 
 import com.fitspine.enums.PainLocation;
+import com.fitspine.listener.EntityAuditListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +16,8 @@ import java.time.LocalDateTime;
 @Builder
 @Data
 @Table(name = "manual_daily_pain_locations_log")
+@EntityListeners(EntityAuditListener.class)
+
 public class ManualDailyPainLocationLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

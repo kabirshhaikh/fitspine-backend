@@ -1,5 +1,6 @@
 package com.fitspine.model;
 
+import com.fitspine.listener.EntityAuditListener;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,6 +15,8 @@ import java.util.List;
 @Builder
 @Data
 @Table(name = "fitbit_activities_heart_log")
+@EntityListeners(EntityAuditListener.class)
+
 public class FitbitActivitiesHeartLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

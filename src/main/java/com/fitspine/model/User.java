@@ -3,6 +3,7 @@ package com.fitspine.model;
 import com.fitspine.enums.Gender;
 import com.fitspine.enums.Role;
 import com.fitspine.enums.WearableType;
+import com.fitspine.listener.EntityAuditListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +20,7 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "users")
+@EntityListeners(EntityAuditListener.class)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

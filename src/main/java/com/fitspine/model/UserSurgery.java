@@ -1,6 +1,7 @@
 package com.fitspine.model;
 
 import com.fitspine.enums.SurgeryType;
+import com.fitspine.listener.EntityAuditListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +16,8 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name = "user_surgeries")
+@EntityListeners(EntityAuditListener.class)
+
 public class UserSurgery {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

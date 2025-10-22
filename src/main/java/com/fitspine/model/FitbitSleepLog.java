@@ -1,5 +1,6 @@
 package com.fitspine.model;
 
+import com.fitspine.listener.EntityAuditListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +18,8 @@ import java.util.List;
 @Builder
 @Data
 @Table(name = "fitbit_sleep_log")
+@EntityListeners(EntityAuditListener.class)
+
 public class FitbitSleepLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

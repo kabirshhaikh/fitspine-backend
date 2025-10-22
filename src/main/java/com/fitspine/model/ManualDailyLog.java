@@ -1,6 +1,7 @@
 package com.fitspine.model;
 
 import com.fitspine.enums.*;
+import com.fitspine.listener.EntityAuditListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +19,8 @@ import java.util.List;
 @Builder
 @Data
 @Table(name = "manual_daily_log")
+@EntityListeners(EntityAuditListener.class)
+
 public class ManualDailyLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

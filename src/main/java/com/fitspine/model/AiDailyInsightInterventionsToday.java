@@ -1,5 +1,6 @@
 package com.fitspine.model;
 
+import com.fitspine.listener.EntityAuditListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,6 +15,8 @@ import java.time.LocalDateTime;
 @Builder
 @Data
 @Table(name = "ai_daily_insights_interventions_today")
+@EntityListeners(EntityAuditListener.class)
+
 public class AiDailyInsightInterventionsToday {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

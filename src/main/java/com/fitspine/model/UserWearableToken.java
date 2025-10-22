@@ -1,5 +1,6 @@
 package com.fitspine.model;
 
+import com.fitspine.listener.EntityAuditListener;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,6 +15,8 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "user_wearable_token")
+@EntityListeners(EntityAuditListener.class)
+
 public class UserWearableToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
