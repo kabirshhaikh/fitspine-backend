@@ -13,6 +13,137 @@ import java.util.*;
 @Component
 public class FitbitContextAggregationHelper {
     //Helper functions to return list of fitbit normalized metrics:
+    public List<Integer> getPainLevels(List<ManualDailyLog> manualDailyLogs) {
+        List<Integer> painLevels = new ArrayList<>();
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+            if (log == null || log.getPainLevel() == null) {
+                painLevels.add(null);
+            } else {
+                painLevels.add(EnumScoreHelper.pain(log.getPainLevel()));
+            }
+        }
+
+        return painLevels;
+    }
+
+    public List<Integer> getMorningStiffness(List<ManualDailyLog> manualDailyLogs) {
+        List<Integer> morningStiffness = new ArrayList<>();
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+            if (log == null || log.getMorningStiffness() == null) {
+                morningStiffness.add(null);
+            } else {
+                morningStiffness.add(EnumScoreHelper.morningStiffness(log.getMorningStiffness()));
+            }
+        }
+
+        return morningStiffness;
+    }
+
+    public List<Integer> getSittingTime(List<ManualDailyLog> manualDailyLogs) {
+        List<Integer> sittingTime = new ArrayList<>();
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+            if (log == null || log.getSittingTime() == null) {
+                sittingTime.add(null);
+            } else {
+                sittingTime.add(EnumScoreHelper.sittingTime(log.getSittingTime()));
+            }
+        }
+
+        return sittingTime;
+    }
+
+    public List<Integer> getStandingTime(List<ManualDailyLog> manualDailyLogs) {
+        List<Integer> standingTime = new ArrayList<>();
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+            if (log == null || log.getStandingTime() == null) {
+                standingTime.add(null);
+            } else {
+                standingTime.add(EnumScoreHelper.standingTime(log.getStandingTime()));
+            }
+        }
+
+        return standingTime;
+    }
+
+    public List<Integer> getStressLevel(List<ManualDailyLog> manualDailyLogs) {
+        List<Integer> stressLevel = new ArrayList<>();
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+            if (log == null || log.getStressLevel() == null) {
+                stressLevel.add(null);
+            } else {
+                stressLevel.add(EnumScoreHelper.stressLevel(log.getStressLevel()));
+            }
+        }
+
+        return stressLevel;
+    }
+
+    public List<Double> getSedentaryHours(List<FitbitActivitySummariesLog> activitySummariesLogs) {
+        List<Double> sedentaryHours = new ArrayList<>();
+
+        for (int i = 0; i < activitySummariesLogs.size(); i++) {
+            FitbitActivitySummariesLog log = activitySummariesLogs.get(i);
+
+            if (log == null || log.getSedentaryMinutes() == null) {
+                sedentaryHours.add(null);
+            } else {
+                int sedentaryMinutes = log.getSedentaryMinutes();
+                double hours = Math.round((sedentaryMinutes / 60.0) * 10.0) / 10.0;
+                sedentaryHours.add(hours);
+            }
+        }
+
+        return sedentaryHours;
+    }
+
+    public List<String> getDatesForWeeklyGraph(LocalDate startDate) {
+        List<String> dates = new ArrayList<>();
+
+        for (int i = 0; i < 7; i++) {
+            dates.add(startDate.plusDays(i).toString());
+        }
+
+        return dates;
+    }
+
+    public List<Integer> getRestingHeartRateForWeeklyGraph(List<FitbitActivitiesHeartLog> heartLogs) {
+        List<Integer> restingHeartRates = new ArrayList<>();
+
+        if (heartLogs == null || heartLogs.isEmpty()) {
+            return restingHeartRates;
+        }
+
+        for (int i = 0; i < heartLogs.size(); i++) {
+            FitbitActivitiesHeartLog heartLog = heartLogs.get(i);
+            if (heartLog == null || heartLog.getValues() == null) continue;
+
+            List<FitbitActivitiesHeartValueLog> valueLogs = heartLog.getValues();
+            if (valueLogs == null || valueLogs.isEmpty()) continue;
+
+            for (int j = 0; j < valueLogs.size(); j++) {
+                FitbitActivitiesHeartValueLog heartValueLog = valueLogs.get(j);
+                if (heartValueLog == null) {
+                    restingHeartRates.add(null);
+                } else {
+                    Integer rhr = heartValueLog.getRestingHeartRate();
+                    restingHeartRates.add(rhr);
+                }
+            }
+        }
+
+        return restingHeartRates;
+    }
+
     public List<Integer> getRestingHeartRate(List<FitbitActivitiesHeartLog> heartLogs) {
         List<Integer> restingHeartRates = new ArrayList<>();
 

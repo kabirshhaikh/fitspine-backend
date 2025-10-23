@@ -114,4 +114,36 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
 
                 .build();
     }
+
+    @Override
+    public WeeklyGraphDto generateWeeklyGraph(LocalDate targetDate, User user) {
+        LocalDate startDate = targetDate.minusDays(7);
+        LocalDate endDate = targetDate.minusDays(1);
+
+        //Extract data between start and end date:
+        List<ManualDailyLog> manualDailyLogs = manualDailyLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
+        List<FitbitActivitiesHeartLog> heartLogs = heartLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
+        List<FitbitActivitySummariesLog> activitySummariesLogs = activitySummariesLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
+
+        //Extract list of metrics using helper class:
+        List<Integer> restingHeartRate = helper.getRestingHeartRateForWeeklyGraph(heartLogs);
+        List<Integer> painLevels = helper.getPainLevels(manualDailyLogs);
+        List<Integer> morningStiffness = helper.getMorningStiffness(manualDailyLogs);
+        List<Integer> sittingTime = helper.getSittingTime(manualDailyLogs);
+        List<Integer> standingTime = helper.getStandingTime(manualDailyLogs);
+        List<Integer> stressLevel = helper.getStressLevel(manualDailyLogs);
+        List<Double> sedentaryHours = helper.getSedentaryHours(activitySummariesLogs);
+        List<String> dates = helper.getDatesForWeeklyGraph(startDate);
+
+        return WeeklyGraphDto.builder()
+                .dates(dates)
+                .restingHeartRate(restingHeartRate)
+                .painLevel(painLevels)
+                .morningStiffness(morningStiffness)
+                .sittingTime(sittingTime)
+                .standingTime(standingTime)
+                .stressLevel(stressLevel)
+                .sedentaryHours(sedentaryHours)
+                .build();
+    }
 }

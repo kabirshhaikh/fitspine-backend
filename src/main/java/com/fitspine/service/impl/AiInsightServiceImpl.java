@@ -537,4 +537,12 @@ public class AiInsightServiceImpl implements AiInsightService {
             throw new AiServiceException("Failed to generate AI insights. Please try again later.", e);
         }
     }
+
+    @Override
+    public WeeklyGraphDto weeklyGraph(LocalDate date, String email) {
+        //Get the user:
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        return fitbitContextAggregationService.generateWeeklyGraph(date, user);
+    }
 }

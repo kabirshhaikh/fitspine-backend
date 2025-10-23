@@ -2,6 +2,7 @@ package com.fitspine.controller;
 
 import com.fitspine.dto.AiInsightResponseDto;
 import com.fitspine.dto.AiUserDailyInputDto;
+import com.fitspine.dto.WeeklyGraphDto;
 import com.fitspine.service.FitbitAiDailyAggregationService;
 import com.fitspine.service.AiInsightService;
 import lombok.extern.slf4j.Slf4j;
@@ -36,5 +37,13 @@ public class AiInsightController {
         log.info("User daily input dto {}", dto);
         AiInsightResponseDto responseDto = aiInsightService.generateDailyInsight(dto, email, date);
         return ResponseEntity.ok(responseDto);
+    }
+
+    @GetMapping("/weekly-graph/{date}")
+    public ResponseEntity<WeeklyGraphDto> generateWeeklyGraph(@PathVariable LocalDate date) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        WeeklyGraphDto response = aiInsightService.weeklyGraph(date, email);
+        return ResponseEntity.ok(response);
     }
 }
