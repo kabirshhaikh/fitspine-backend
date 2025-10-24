@@ -75,7 +75,7 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
         //If manual log is not found throw this error, so that the user creates at least manual log before requesting insights and disc score:
         if (manualDailyLog == null) {
             log.warn("No manual log found for user {} on date {}", user.getId(), logDate);
-            throw new ManualDailyLogNotFoundException("User " + user.getId() + " does not have manual log for date:" + logDate);
+            throw new ManualDailyLogNotFoundException("User " + user.getFullName() + " does not have manual log for date:" + logDate);
         }
 
         //Heart log:
