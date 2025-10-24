@@ -16,7 +16,6 @@ import com.fitspine.repository.UserSurgeryRepository;
 import com.fitspine.service.JwtService;
 import com.fitspine.service.S3Service;
 import com.fitspine.service.UserService;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.transaction.annotation.Transactional;
