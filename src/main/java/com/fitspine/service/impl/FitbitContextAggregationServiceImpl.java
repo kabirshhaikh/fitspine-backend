@@ -8,8 +8,10 @@ import com.fitspine.model.*;
 import com.fitspine.repository.*;
 import com.fitspine.service.FitbitContextAggregationService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +27,7 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
     private final FitbitSleepLogRepository sleepLogRepository;
     private final FitbitSleepSummaryLogRepository sleepSummaryLogRepository;
     private final FitbitContextAggregationHelper helper;
+    private final RedisTemplate<String, Object> redis;
 
     public FitbitContextAggregationServiceImpl(
             UserRepository userRepository,
@@ -34,7 +37,8 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
             FitbitActivityGoalsLogRepository activityGoalsLogRepository,
             FitbitSleepLogRepository sleepLogRepository,
             FitbitSleepSummaryLogRepository sleepSummaryLogRepository,
-            FitbitContextAggregationHelper helper
+            FitbitContextAggregationHelper helper,
+            RedisTemplate<String, Object> redis
     ) {
         this.userRepository = userRepository;
         this.manualDailyLogRepository = manualDailyLogRepository;
@@ -44,6 +48,7 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         this.sleepLogRepository = sleepLogRepository;
         this.sleepSummaryLogRepository = sleepSummaryLogRepository;
         this.helper = helper;
+        this.redis = redis;
     }
 
 
@@ -120,6 +125,17 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         LocalDate startDate = targetDate.minusDays(7);
         LocalDate endDate = targetDate.minusDays(1);
 
+        //Redis key:
+        String key = "weekly_graph:" + user.getEmail() + ":" + targetDate;
+        WeeklyGraphDto cachedResponse = (WeeklyGraphDto) redis.opsForValue().get(key);
+
+        if (cachedResponse != null) {
+            log.info("Returned cached response for weekly graph {}", key);
+            return cachedResponse;
+        }
+
+        log.info("Missing Cache value for weekly graph {}", key);
+
         //Extract data between start and end date:
         List<ManualDailyLog> manualDailyLogs = manualDailyLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
         List<FitbitActivitiesHeartLog> heartLogs = heartLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
@@ -135,7 +151,7 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         List<Double> sedentaryHours = helper.getSedentaryHours(activitySummariesLogs);
         List<String> dates = helper.getDatesForWeeklyGraph(startDate);
 
-        return WeeklyGraphDto.builder()
+        WeeklyGraphDto dto = WeeklyGraphDto.builder()
                 .dates(dates)
                 .restingHeartRate(restingHeartRate)
                 .painLevel(painLevels)
@@ -145,5 +161,12 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
                 .stressLevel(stressLevel)
                 .sedentaryHours(sedentaryHours)
                 .build();
+
+        if (cachedResponse == null) {
+            log.info("Writing cache into redis for weekly graph..");
+            redis.opsForValue().set(key, dto, Duration.ofHours(12));
+        }
+
+        return dto;
     }
 }
