@@ -75,5 +75,4 @@ public class EmailSenderService {
         int number = 100000 + random.nextInt(900000);
         return String.valueOf(number);
     }
-
 }
