@@ -28,6 +28,22 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiError> handleUserNotFoundException(
+            UserNotFoundException exception,
+            HttpServletRequest request) {
+
+        ApiError error = new ApiError(
+                LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                "User Not Found",
+                exception.getMessage(),
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
     //User Mismatch:
     @ExceptionHandler(UserMismatchException.class)
     public ResponseEntity<ApiError> handleUserMismatch(UserMismatchException exception, HttpServletRequest request) {

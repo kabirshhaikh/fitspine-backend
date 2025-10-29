@@ -1,6 +1,7 @@
 package com.fitspine.controller;
 
 import com.fitspine.dto.*;
+import com.fitspine.service.EmailSenderService;
 import com.fitspine.service.JwtService;
 import com.fitspine.service.UserService;
 import jakarta.validation.Valid;
@@ -19,10 +20,12 @@ import java.util.Optional;
 @RequestMapping("/api/user")
 public class UserController {
     private final UserService userService;
+    private final EmailSenderService emailSenderService;
 
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, EmailSenderService emailSenderService) {
         this.userService = userService;
+        this.emailSenderService = emailSenderService;
     }
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -51,5 +54,11 @@ public class UserController {
         String email = auth.getName();
         UserProfileDto userProfile = userService.userProfile(email);
         return ResponseEntity.ok(userProfile);
+    }
+
+    @PostMapping(value = "/forgot-password")
+    public ResponseEntity<String> sendEmail(@RequestBody @Valid ForgotPasswordDto request) {
+        emailSenderService.sendPasswordResetEmail(request.getEmail());
+        return ResponseEntity.ok("Password reset link and security code sent to your email.");
     }
 }
