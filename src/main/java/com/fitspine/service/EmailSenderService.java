@@ -1,14 +1,18 @@
 package com.fitspine.service;
 
+import com.fitspine.dto.ForgotPasswordResponseDto;
+import com.fitspine.exception.PasswordMismatchException;
+import com.fitspine.exception.PasswordReuseException;
+import com.fitspine.exception.TokenExpiredException;
 import com.fitspine.exception.UserNotFoundException;
 import com.fitspine.model.User;
 import com.fitspine.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -20,19 +24,19 @@ public class EmailSenderService {
     @Value("${app.frontend.url}")
     private String frontEndBaseUrl;
     private final JavaMailSender mailSender;
-    private final StringRedisTemplate redisTemplate;
-    private final RedisTemplate<String, Object> redis;
+    private final RedisTemplate<String, String> redis;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public EmailSenderService(JavaMailSender mailSender,
-                              StringRedisTemplate redisTemplate,
-                              RedisTemplate<String, Object> redis,
-                              UserRepository userRepository
+                              RedisTemplate<String, String> redis,
+                              UserRepository userRepository,
+                              PasswordEncoder passwordEncoder
     ) {
         this.mailSender = mailSender;
-        this.redisTemplate = redisTemplate;
         this.redis = redis;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public void sendPasswordResetEmail(String toEmail) {
@@ -68,6 +72,37 @@ public class EmailSenderService {
         email.setFrom("no-reply@fit-spine.app");
 
         mailSender.send(email);
+    }
+
+    public void resetPassword(ForgotPasswordResponseDto dto) {
+        String normalizedEmail = dto.getEmail().trim().toLowerCase();
+        String key = "password_reset_email:" + normalizedEmail;
+        String token = redis.opsForValue().get(key);
+
+        //Check if the token is expired or if the token is null.
+        if (token == null) {
+            throw new TokenExpiredException("Your password reset code has expired. Please request a new one");
+        }
+
+        //Get the old password and check if new password is same as old password?
+        User user = userRepository.findByEmail(dto.getEmail()).orElseThrow(() -> new UserNotFoundException("User with email: " + dto.getEmail() + " not found to reset password"));
+        if (passwordEncoder.matches(dto.getNewPassword(), user.getPassword())) {
+            throw new PasswordReuseException("New password cannot be same as the old password");
+        }
+
+        //Compare the new password and confirm password:
+
+        if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
+            throw new PasswordMismatchException("New password and confirm password do not match");
+        }
+
+        //Update the new password for the user:
+        String newEncodedPassword = passwordEncoder.encode(dto.getNewPassword());
+        user.setPassword(newEncodedPassword);
+        userRepository.save(user);
+
+        //Delete key from redis:
+        redis.delete(key);
     }
 
     public String generateNumericToken() {

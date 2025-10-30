@@ -61,4 +61,10 @@ public class UserController {
         emailSenderService.sendPasswordResetEmail(request.getEmail());
         return ResponseEntity.ok("Password reset link and security code sent to your email.");
     }
+
+    @PostMapping(value = "/set-password")
+    public ResponseEntity<String> resetPassword(@RequestBody @Valid ForgotPasswordResponseDto dto) {
+        emailSenderService.resetPassword(dto);
+        return ResponseEntity.ok("Password has been reset successfully");
+    }
 }
