@@ -14,7 +14,9 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -125,6 +127,10 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         LocalDate startDate = targetDate.minusDays(7);
         LocalDate endDate = targetDate.minusDays(1);
 
+        log.info("Target date for weekly graph: {}", targetDate);
+        log.info("Start date for weekly graph: {}", startDate);
+        log.info("End date for weekly graph: {}", endDate);
+
         //Redis key:
         String key = "weekly_graph:" + user.getEmail() + ":" + targetDate;
         WeeklyGraphDto cachedResponse = (WeeklyGraphDto) redis.opsForValue().get(key);
@@ -142,24 +148,28 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         List<FitbitActivitySummariesLog> activitySummariesLogs = activitySummariesLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
 
         //Extract list of metrics using helper class:
-        List<Integer> restingHeartRate = helper.getRestingHeartRateForWeeklyGraph(heartLogs);
-        List<Integer> painLevels = helper.getPainLevels(manualDailyLogs);
-        List<Integer> morningStiffness = helper.getMorningStiffness(manualDailyLogs);
-        List<Integer> sittingTime = helper.getSittingTime(manualDailyLogs);
-        List<Integer> standingTime = helper.getStandingTime(manualDailyLogs);
-        List<Integer> stressLevel = helper.getStressLevel(manualDailyLogs);
-        List<Double> sedentaryHours = helper.getSedentaryHours(activitySummariesLogs);
-        List<String> dates = helper.getDatesForWeeklyGraph(startDate);
+        Map<LocalDate, Integer> restingHeartRate = helper.getRestingHeartRateForWeeklyGraph(heartLogs);
+        Map<LocalDate, Integer> painLevels = helper.getPainLevels(manualDailyLogs);
+        Map<LocalDate, Integer> morningStiffness = helper.getMorningStiffness(manualDailyLogs);
+        Map<LocalDate, Integer> sittingTime = helper.getSittingTime(manualDailyLogs);
+        Map<LocalDate, Integer> standingTime = helper.getStandingTime(manualDailyLogs);
+        Map<LocalDate, Integer> stressLevel = helper.getStressLevel(manualDailyLogs);
+        Map<LocalDate, Double> sedentaryHours = helper.getSedentaryHours(activitySummariesLogs);
+
+        List<DailyGraphDto> dailyData = helper.getDailyDataBetweenDates(
+                startDate,
+                endDate,
+                restingHeartRate,
+                painLevels,
+                morningStiffness,
+                sittingTime,
+                standingTime,
+                stressLevel,
+                sedentaryHours
+        );
 
         WeeklyGraphDto dto = WeeklyGraphDto.builder()
-                .dates(dates)
-                .restingHeartRate(restingHeartRate)
-                .painLevel(painLevels)
-                .morningStiffness(morningStiffness)
-                .sittingTime(sittingTime)
-                .standingTime(standingTime)
-                .stressLevel(stressLevel)
-                .sedentaryHours(sedentaryHours)
+                .dailyData(dailyData)
                 .build();
 
         if (cachedResponse == null) {

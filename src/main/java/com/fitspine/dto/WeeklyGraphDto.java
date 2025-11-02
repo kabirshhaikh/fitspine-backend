@@ -12,12 +12,5 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WeeklyGraphDto {
-    private List<String> dates;
-    private List<Integer> painLevel;
-    private List<Integer> sittingTime;
-    private List<Integer> standingTime;
-    private List<Integer> morningStiffness;
-    private List<Integer> stressLevel;
-    private List<Integer> restingHeartRate;
-    private List<Double> sedentaryHours;
+    List<DailyGraphDto> dailyData;
 }

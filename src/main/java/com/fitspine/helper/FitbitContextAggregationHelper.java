@@ -1,11 +1,9 @@
 package com.fitspine.helper;
 
-import com.fitspine.dto.FitbitActivityGoalsLogMetricDto;
-import com.fitspine.dto.FitbitActivitySummariesMetricDto;
-import com.fitspine.dto.FitbitSleepLogMetricDto;
-import com.fitspine.dto.FitbitSleepSummaryLogMetricDto;
+import com.fitspine.dto.*;
 import com.fitspine.model.*;
 import org.springframework.stereotype.Component;
+import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -13,111 +11,153 @@ import java.util.*;
 @Component
 public class FitbitContextAggregationHelper {
     //Helper functions to return list of fitbit normalized metrics:
-    public List<Integer> getPainLevels(List<ManualDailyLog> manualDailyLogs) {
-        List<Integer> painLevels = new ArrayList<>();
+    public Map<LocalDate, Integer> getPainLevels(List<ManualDailyLog> manualDailyLogs) {
+        Map<LocalDate, Integer> painLevels = new HashMap<>();
+
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return painLevels;
+        }
 
         for (int i = 0; i < manualDailyLogs.size(); i++) {
             ManualDailyLog log = manualDailyLogs.get(i);
-            if (log == null || log.getPainLevel() == null) {
-                painLevels.add(null);
-            } else {
-                painLevels.add(EnumScoreHelper.pain(log.getPainLevel()));
+
+
+            if (log != null && log.getPainLevel() != null) {
+                LocalDate logDate = log.getLogDate();
+                painLevels.put(logDate, EnumScoreHelper.pain(log.getPainLevel()));
             }
         }
 
         return painLevels;
     }
 
-    public List<Integer> getMorningStiffness(List<ManualDailyLog> manualDailyLogs) {
-        List<Integer> morningStiffness = new ArrayList<>();
+    public Map<LocalDate, Integer> getMorningStiffness(List<ManualDailyLog> manualDailyLogs) {
+        Map<LocalDate, Integer> morningStiffness = new HashMap<>();
+
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return morningStiffness;
+        }
 
         for (int i = 0; i < manualDailyLogs.size(); i++) {
             ManualDailyLog log = manualDailyLogs.get(i);
-            if (log == null || log.getMorningStiffness() == null) {
-                morningStiffness.add(null);
-            } else {
-                morningStiffness.add(EnumScoreHelper.morningStiffness(log.getMorningStiffness()));
+            if (log != null && log.getMorningStiffness() != null) {
+                LocalDate logDate = log.getLogDate();
+                morningStiffness.put(logDate, EnumScoreHelper.morningStiffness(log.getMorningStiffness()));
             }
         }
 
         return morningStiffness;
     }
 
-    public List<Integer> getSittingTime(List<ManualDailyLog> manualDailyLogs) {
-        List<Integer> sittingTime = new ArrayList<>();
+    public Map<LocalDate, Integer> getSittingTime(List<ManualDailyLog> manualDailyLogs) {
+        Map<LocalDate, Integer> sittingTime = new HashMap<>();
+
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return sittingTime;
+        }
 
         for (int i = 0; i < manualDailyLogs.size(); i++) {
             ManualDailyLog log = manualDailyLogs.get(i);
-            if (log == null || log.getSittingTime() == null) {
-                sittingTime.add(null);
-            } else {
-                sittingTime.add(EnumScoreHelper.sittingTime(log.getSittingTime()));
+            if (log != null && log.getSittingTime() != null) {
+                LocalDate logDate = log.getLogDate();
+                sittingTime.put(logDate, EnumScoreHelper.sittingTime(log.getSittingTime()));
             }
         }
 
         return sittingTime;
     }
 
-    public List<Integer> getStandingTime(List<ManualDailyLog> manualDailyLogs) {
-        List<Integer> standingTime = new ArrayList<>();
+    public Map<LocalDate, Integer> getStandingTime(List<ManualDailyLog> manualDailyLogs) {
+        Map<LocalDate, Integer> standingTime = new HashMap<>();
+
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return standingTime;
+        }
 
         for (int i = 0; i < manualDailyLogs.size(); i++) {
             ManualDailyLog log = manualDailyLogs.get(i);
-            if (log == null || log.getStandingTime() == null) {
-                standingTime.add(null);
-            } else {
-                standingTime.add(EnumScoreHelper.standingTime(log.getStandingTime()));
+            if (log != null && log.getStandingTime() != null) {
+                LocalDate logDate = log.getLogDate();
+                standingTime.put(logDate, EnumScoreHelper.standingTime(log.getStandingTime()));
             }
         }
 
         return standingTime;
     }
 
-    public List<Integer> getStressLevel(List<ManualDailyLog> manualDailyLogs) {
-        List<Integer> stressLevel = new ArrayList<>();
+    public Map<LocalDate, Integer> getStressLevel(List<ManualDailyLog> manualDailyLogs) {
+        Map<LocalDate, Integer> stressLevel = new HashMap<>();
+
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return stressLevel;
+        }
 
         for (int i = 0; i < manualDailyLogs.size(); i++) {
             ManualDailyLog log = manualDailyLogs.get(i);
-            if (log == null || log.getStressLevel() == null) {
-                stressLevel.add(null);
-            } else {
-                stressLevel.add(EnumScoreHelper.stressLevel(log.getStressLevel()));
+            if (log != null && log.getStressLevel() != null) {
+                LocalDate logDate = log.getLogDate();
+                stressLevel.put(logDate, EnumScoreHelper.stressLevel(log.getStressLevel()));
             }
         }
 
         return stressLevel;
     }
 
-    public List<Double> getSedentaryHours(List<FitbitActivitySummariesLog> activitySummariesLogs) {
-        List<Double> sedentaryHours = new ArrayList<>();
+    public Map<LocalDate, Double> getSedentaryHours(List<FitbitActivitySummariesLog> activitySummariesLogs) {
+        Map<LocalDate, Double> sedentaryHours = new HashMap<>();
+
+        if (activitySummariesLogs == null || activitySummariesLogs.isEmpty()) {
+            return sedentaryHours;
+        }
 
         for (int i = 0; i < activitySummariesLogs.size(); i++) {
             FitbitActivitySummariesLog log = activitySummariesLogs.get(i);
 
-            if (log == null || log.getSedentaryMinutes() == null) {
-                sedentaryHours.add(null);
-            } else {
+            if (log != null && log.getSedentaryMinutes() != null) {
+                LocalDate logDate = log.getLogDate();
                 int sedentaryMinutes = log.getSedentaryMinutes();
                 double hours = Math.round((sedentaryMinutes / 60.0) * 10.0) / 10.0;
-                sedentaryHours.add(hours);
+                sedentaryHours.put(logDate, hours);
             }
         }
 
         return sedentaryHours;
     }
 
-    public List<String> getDatesForWeeklyGraph(LocalDate startDate) {
-        List<String> dates = new ArrayList<>();
+    public List<DailyGraphDto> getDailyDataBetweenDates(LocalDate startDate,
+                                                LocalDate endDate,
+                                                Map<LocalDate, Integer> restingHeartRate,
+                                                Map<LocalDate, Integer> painLevels,
+                                                Map<LocalDate, Integer> morningStiffness,
+                                                Map<LocalDate, Integer> sittingTime,
+                                                Map<LocalDate, Integer> standingTime,
+                                                Map<LocalDate, Integer> stressLevel,
+                                                Map<LocalDate, Double> sedentaryHours
+    ) {
+        List<DailyGraphDto> dailyData = new ArrayList<>();
 
-        for (int i = 0; i < 7; i++) {
-            dates.add(startDate.plusDays(i).toString());
+        //Basically int i=0; i<=endDate; date++
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+
+            dailyData.add(
+                    DailyGraphDto.builder()
+                            .date(date.toString())
+                            .painLevel(painLevels.getOrDefault(date, null))
+                            .morningStiffness(morningStiffness.getOrDefault(date, null))
+                            .sittingTime(sittingTime.getOrDefault(date, null))
+                            .standingTime(standingTime.getOrDefault(date, null))
+                            .stressLevel(stressLevel.getOrDefault(date, null))
+                            .restingHeartRate(restingHeartRate.getOrDefault(date, null))
+                            .sedentaryHours(sedentaryHours.getOrDefault(date, null))
+                            .build()
+            );
         }
 
-        return dates;
+        return dailyData;
     }
 
-    public List<Integer> getRestingHeartRateForWeeklyGraph(List<FitbitActivitiesHeartLog> heartLogs) {
-        List<Integer> restingHeartRates = new ArrayList<>();
+    public Map<LocalDate, Integer> getRestingHeartRateForWeeklyGraph(List<FitbitActivitiesHeartLog> heartLogs) {
+        Map<LocalDate, Integer> restingHeartRates = new HashMap<>();
 
         if (heartLogs == null || heartLogs.isEmpty()) {
             return restingHeartRates;
@@ -125,18 +165,16 @@ public class FitbitContextAggregationHelper {
 
         for (int i = 0; i < heartLogs.size(); i++) {
             FitbitActivitiesHeartLog heartLog = heartLogs.get(i);
-            if (heartLog == null || heartLog.getValues() == null) continue;
+            if (heartLog == null || heartLog.getValues() == null || heartLog.getLogDate() == null) continue;
 
+            LocalDate logDate = heartLog.getLogDate();
             List<FitbitActivitiesHeartValueLog> valueLogs = heartLog.getValues();
             if (valueLogs == null || valueLogs.isEmpty()) continue;
 
             for (int j = 0; j < valueLogs.size(); j++) {
                 FitbitActivitiesHeartValueLog heartValueLog = valueLogs.get(j);
-                if (heartValueLog == null) {
-                    restingHeartRates.add(null);
-                } else {
-                    Integer rhr = heartValueLog.getRestingHeartRate();
-                    restingHeartRates.add(rhr);
+                if (heartValueLog != null && heartValueLog.getRestingHeartRate() != null) {
+                    restingHeartRates.put(logDate, valueLogs.get(j).getRestingHeartRate());
                 }
             }
         }
