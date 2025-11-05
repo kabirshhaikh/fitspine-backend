@@ -117,7 +117,7 @@ public class AiInsightServiceImpl implements AiInsightService {
             - totalMinutesAsleep: Total minutes asleep
             - efficiency: Sleep quality (0–100)
             - timeInBed: Total minutes in bed (asleep + awake)
-            - notes: User’s textual remarks about the day
+            - notes: User’s textual de-identified remarks about the day
 
             ---
 
@@ -530,7 +530,7 @@ public class AiInsightServiceImpl implements AiInsightService {
                 riskForecastsRepository.save(riskForecasts);
             }
 
-            log.info("AI Insights generated successfully for user: {}", dto.getId());
+//            log.info("AI Insights generated successfully for user: {}", dto.getId());
             return insight;
         } catch (Exception e) {
             log.error("AI generation failed: {}", e.getMessage(), e);

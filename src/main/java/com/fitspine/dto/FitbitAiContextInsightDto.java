@@ -12,9 +12,9 @@ public class FitbitAiContextInsightDto {
     // Window metadata
     private Integer windowDays;
     private Integer daysAvailable;
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private LocalDateTime computedAt;
+    private String startDateContext;
+    private String endDateContext;
+    private String computedContext;
 
     //Manual log fields:
     private Integer averagePainLevel; //From ManualDailyLog

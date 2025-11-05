@@ -3,6 +3,7 @@ package com.fitspine.service.impl;
 import com.fitspine.dto.*;
 
 import com.fitspine.exception.UserNotFoundException;
+import com.fitspine.helper.DeIdentificationHelper;
 import com.fitspine.helper.FitbitContextAggregationHelper;
 import com.fitspine.model.*;
 import com.fitspine.repository.*;
@@ -30,6 +31,7 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
     private final FitbitSleepSummaryLogRepository sleepSummaryLogRepository;
     private final FitbitContextAggregationHelper helper;
     private final RedisTemplate<String, Object> redis;
+    private final DeIdentificationHelper deIdentificationHelper;
 
     public FitbitContextAggregationServiceImpl(
             UserRepository userRepository,
@@ -40,7 +42,8 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
             FitbitSleepLogRepository sleepLogRepository,
             FitbitSleepSummaryLogRepository sleepSummaryLogRepository,
             FitbitContextAggregationHelper helper,
-            RedisTemplate<String, Object> redis
+            RedisTemplate<String, Object> redis,
+            DeIdentificationHelper deIdentificationHelper
     ) {
         this.userRepository = userRepository;
         this.manualDailyLogRepository = manualDailyLogRepository;
@@ -51,8 +54,8 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         this.sleepSummaryLogRepository = sleepSummaryLogRepository;
         this.helper = helper;
         this.redis = redis;
+        this.deIdentificationHelper = deIdentificationHelper;
     }
-
 
     @Override
     public FitbitAiContextInsightDto buildContext(String email, LocalDate targetDate) {
@@ -75,13 +78,18 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         List<FitbitSleepLogMetricDto> sleepLogMetrics = helper.getSleepLogMetric(sleepLogs);
         List<FitbitSleepSummaryLogMetricDto> sleepSummaryMetrics = helper.getSleepSummaryMetrics(sleepSummaryLogs);
 
+        //De-Identified data:
+        String computedContext = deIdentificationHelper.sanitizeTheDate(LocalDate.now());
+        String startDateContext = deIdentificationHelper.sanitizeTheDateForContextBuilding(startDate);
+        String endDateContext = deIdentificationHelper.sanitizeTheDateForContextBuilding(endDate);
+
         return FitbitAiContextInsightDto.builder()
                 // Metadata
                 .windowDays(7)
                 .daysAvailable(helper.calculateDaysAvailable(manualDailyLogs, heartLogs, activitySummariesLogs, activityGoalsLogs, sleepLogs, sleepSummaryLogs))
-                .startDate(startDate)
-                .endDate(endDate)
-                .computedAt(LocalDateTime.now())
+                .startDateContext(startDateContext)
+                .endDateContext(endDateContext)
+                .computedContext(computedContext)
 
                 // Manual Log Aggregates
                 .averagePainLevel(helper.calculateAveragePainLevel(manualDailyLogs))

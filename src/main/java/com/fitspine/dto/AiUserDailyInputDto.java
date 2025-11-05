@@ -11,8 +11,7 @@ import java.util.List;
 @Data
 @Builder
 public class AiUserDailyInputDto {
-    private Long id;
-    private LocalDate logDate;
+    private String dayContext;
 
     //User information:
     private Gender gender;

@@ -4,6 +4,7 @@ import com.fitspine.dto.AiUserDailyInputDto;
 import com.fitspine.enums.*;
 import com.fitspine.exception.ManualDailyLogNotFoundException;
 import com.fitspine.exception.UserNotFoundException;
+import com.fitspine.helper.DeIdentificationHelper;
 import com.fitspine.helper.EnumScoreHelper;
 import com.fitspine.model.*;
 import com.fitspine.repository.*;
@@ -27,6 +28,7 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
     private final FitbitSleepSummaryLogRepository sleepSummaryLogRepo;
     private final FitbitSleepLogRepository sleepLogRepo;
     private final FitbitApiClientService fitbitApiClientService;
+    private final DeIdentificationHelper deIdentificationHelper;
 
     public FitbitAiDailyAggregationServiceImpl(
             UserRepository userRepository,
@@ -37,7 +39,8 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
             FitbitActivitiesLogRepository activityLogRepo,
             FitbitSleepSummaryLogRepository sleepSummaryLogRepo,
             FitbitSleepLogRepository sleepLogRepo,
-            FitbitApiClientService fitbitApiClientService
+            FitbitApiClientService fitbitApiClientService,
+            DeIdentificationHelper deIdentificationHelper
     ) {
         this.userRepository = userRepository;
         this.manualDailyLogRepo = manualDailyLogRepo;
@@ -48,6 +51,7 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
         this.sleepSummaryLogRepo = sleepSummaryLogRepo;
         this.sleepLogRepo = sleepLogRepo;
         this.fitbitApiClientService = fitbitApiClientService;
+        this.deIdentificationHelper = deIdentificationHelper;
     }
 
     @Override
@@ -138,10 +142,15 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
             log.info("User {} does not have fitbit connected. Skipping Fitbit data fetch for log date {}:", user.getId(), logDate);
         }
 
+        //De-identifying the data before setting it up in the dto:
+        String dayContext = deIdentificationHelper.sanitizeTheDate(logDate);
+        String notes = deIdentificationHelper.sanitizeNotes(manualDailyLog.getNotes());
+
+        log.info("De-Identified logDate {}, ", dayContext);
+        log.info("De-Identified notes {}, ", notes);
 
         return AiUserDailyInputDto.builder()
-                .id(user.getId())
-                .logDate(logDate)
+                .dayContext(dayContext)
 
                 //User info:
                 .gender(user.getGender())
@@ -161,7 +170,7 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
                 .morningStiffness(EnumScoreHelper.morningStiffness(manualDailyLog.getMorningStiffness()))
                 .stressLevel(EnumScoreHelper.stressLevel(manualDailyLog.getStressLevel()))
                 .liftingOrStrain(manualDailyLog.getLiftingOrStrain())
-                .notes(manualDailyLog.getNotes())
+                .notes(notes)
 
                 // Heart
                 .restingHeartRate(restingHeartRate)
