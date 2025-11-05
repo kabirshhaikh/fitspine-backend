@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -57,6 +58,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "wearable_type")
     private WearableType wearableType;
+
+    @Column(name = "public_id", nullable = false, unique = true, updatable = false)
+    private String publicId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -106,6 +110,10 @@ public class User {
 
     @PrePersist
     protected void onCreate() {
+        if (publicId == null) {
+            publicId = UUID.randomUUID().toString();
+        }
+
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
