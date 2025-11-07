@@ -5,7 +5,9 @@ import com.fitspine.model.*;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class AiInsightHelper {
@@ -154,5 +156,41 @@ public class AiInsightHelper {
         }
 
         return flareUpEntries;
+    }
+
+    public HashMap<String, Integer> getActivityLogMap(List<FitbitActivitiesLog> activitiesLog) {
+        HashMap<String, Integer> outputMap = new HashMap<>();
+
+        if (activitiesLog == null || activitiesLog.isEmpty()) {
+            return outputMap;
+        }
+
+        for (int i = 0; i < activitiesLog.size(); i++) {
+            FitbitActivitiesLog current = activitiesLog.get(i);
+            if (current != null && current.getActivityParentName() != null && current.getCalories() != null) {
+                outputMap.put(current.getActivityParentName(), current.getCalories());
+            }
+        }
+
+        return outputMap;
+    }
+
+    public String getHumanReadableDescription(HashMap<String, Integer> map) {
+        if (map.isEmpty()) {
+            return "No description found for the activity";
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        for (Map.Entry<String, Integer> myMap : map.entrySet()) {
+            String key = myMap.getKey();
+            Integer value = myMap.getValue();
+            if (key != null && value != null) {
+                sb.append(key).append(" (").append(value).append(" kcal)").append(", ");
+            }
+        }
+
+        String result = sb.toString().trim();
+        return result.endsWith(",") ? result.substring(0, result.length() - 1) : result;
     }
 }

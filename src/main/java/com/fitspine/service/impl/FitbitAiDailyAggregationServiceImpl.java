@@ -4,6 +4,7 @@ import com.fitspine.dto.AiUserDailyInputDto;
 import com.fitspine.enums.*;
 import com.fitspine.exception.ManualDailyLogNotFoundException;
 import com.fitspine.exception.UserNotFoundException;
+import com.fitspine.helper.AiInsightHelper;
 import com.fitspine.helper.DeIdentificationHelper;
 import com.fitspine.helper.EnumScoreHelper;
 import com.fitspine.model.*;
@@ -14,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Slf4j
@@ -29,6 +32,7 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
     private final FitbitSleepLogRepository sleepLogRepo;
     private final FitbitApiClientService fitbitApiClientService;
     private final DeIdentificationHelper deIdentificationHelper;
+    private final AiInsightHelper helper;
 
     public FitbitAiDailyAggregationServiceImpl(
             UserRepository userRepository,
@@ -40,7 +44,8 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
             FitbitSleepSummaryLogRepository sleepSummaryLogRepo,
             FitbitSleepLogRepository sleepLogRepo,
             FitbitApiClientService fitbitApiClientService,
-            DeIdentificationHelper deIdentificationHelper
+            DeIdentificationHelper deIdentificationHelper,
+            AiInsightHelper helper
     ) {
         this.userRepository = userRepository;
         this.manualDailyLogRepo = manualDailyLogRepo;
@@ -52,6 +57,7 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
         this.sleepLogRepo = sleepLogRepo;
         this.fitbitApiClientService = fitbitApiClientService;
         this.deIdentificationHelper = deIdentificationHelper;
+        this.helper = helper;
     }
 
     @Override
@@ -89,7 +95,7 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
         //Activity Log:
         FitbitActivitySummariesLog activitySummariesLog = null;
         FitbitActivityGoalsLog activityGoalsLog = null;
-        FitbitActivitiesLog activitiesLog = null;
+        List<FitbitActivitiesLog> activitiesLog = new ArrayList<>();
 
         //Sleep log:
         FitbitSleepSummaryLog sleepSummaryLog = null;
@@ -134,7 +140,7 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
             //Activity:
 
             activityGoalsLog = activityGoalsLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
-            activitiesLog = activityLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+            activitiesLog = activityLogRepo.findByUserAndLogDate(user, logDate);
 
             //Sleep:
             sleepLog = sleepLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
@@ -145,7 +151,10 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
         //De-identifying the data before setting it up in the dto:
         String dayContext = deIdentificationHelper.sanitizeTheDate(logDate);
         String notes = deIdentificationHelper.sanitizeNotes(manualDailyLog.getNotes());
+        HashMap<String, Integer> activityMap = helper.getActivityLogMap(activitiesLog);
+        String humanReadableDescription = helper.getHumanReadableDescription(activityMap);
 
+        log.info("human description {}", humanReadableDescription);
         log.info("De-Identified logDate {}, ", dayContext);
         log.info("De-Identified notes {}, ", notes);
 
@@ -191,7 +200,8 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
                 .activeMinutes(activityGoalsLog != null ? activityGoalsLog.getActiveMinutes() : -1)
 
                 // Activities
-                .description(activitiesLog != null ? activitiesLog.getDescription() : null)
+                .description(humanReadableDescription)
+//                .description(activitiesLog != null ? activitiesLog.getDescription() : null)
 
                 // Sleep summary
                 .totalMinutesAsleep(sleepSummaryLog != null ? sleepSummaryLog.getTotalMinutesAsleep() : -1)
