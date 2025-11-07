@@ -61,7 +61,7 @@ public class EmailSenderService {
                 token
         );
 
-        String key = "password_reset_email:" + normalizedEmail;
+        String key = "password_reset_email:" + user.getPublicId();
         redis.opsForValue().set(key, token, Duration.ofMinutes(15));
         log.info("Stored password reset token for {} (expires in 15 minutes)", normalizedEmail);
 
@@ -75,8 +75,9 @@ public class EmailSenderService {
     }
 
     public void resetPassword(ForgotPasswordResponseDto dto) {
-        String normalizedEmail = dto.getEmail().trim().toLowerCase();
-        String key = "password_reset_email:" + normalizedEmail;
+        User user = userRepository.findByEmail(dto.getEmail()).orElseThrow(() -> new UserNotFoundException("User with email: " + dto.getEmail() + " not found to reset password"));
+
+        String key = "password_reset_email:" + user.getPublicId();
         String token = redis.opsForValue().get(key);
 
         //Check if the token is expired or if the token is null.
@@ -85,7 +86,6 @@ public class EmailSenderService {
         }
 
         //Get the old password and check if new password is same as old password?
-        User user = userRepository.findByEmail(dto.getEmail()).orElseThrow(() -> new UserNotFoundException("User with email: " + dto.getEmail() + " not found to reset password"));
         if (passwordEncoder.matches(dto.getNewPassword(), user.getPassword())) {
             throw new PasswordReuseException("New password cannot be same as the old password");
         }

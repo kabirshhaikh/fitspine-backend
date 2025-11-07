@@ -159,7 +159,7 @@ public class AiInsightServiceImpl implements AiInsightService {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
         //Redis key:
-        String key = "ai_insights:" + email + ":" + logDate;
+        String key = "ai_insights:" + user.getPublicId() + ":" + logDate;
 
         AiInsightResponseDto cacheResponse = (AiInsightResponseDto) redis.opsForValue().get(key);
 

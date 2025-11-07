@@ -140,7 +140,7 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         log.info("End date for weekly graph: {}", endDate);
 
         //Redis key:
-        String key = "weekly_graph:" + user.getEmail() + ":" + targetDate;
+        String key = "weekly_graph:" + user.getPublicId() + ":" + targetDate;
         WeeklyGraphDto cachedResponse = (WeeklyGraphDto) redis.opsForValue().get(key);
 
         if (cachedResponse != null) {
