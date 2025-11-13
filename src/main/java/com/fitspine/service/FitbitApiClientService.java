@@ -3,6 +3,7 @@ package com.fitspine.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fitspine.client.FitbitApiClient;
 import com.fitspine.exception.UserNotFoundException;
+import com.fitspine.helper.FitbitApiClientServiceHelper;
 import com.fitspine.model.*;
 import com.fitspine.repository.*;
 import com.fitspine.service.impl.FitbitServiceImpl;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -45,6 +47,7 @@ public class FitbitApiClientService {
     private final FitbitSleepLogRepository fitbitSleepLogRepository;
     private final FitbitSleepDataLogRepository fitbitSleepDataLogRepository;
     private final FitbitSleepShortDataLogRepository fitbitSleepShortDataLogRepository;
+    private final FitbitApiClientServiceHelper clientServiceHelper;
 
     public FitbitApiClientService(FitbitApiClient fitbitApiClient,
                                   UserRepository userRepository,
@@ -60,7 +63,9 @@ public class FitbitApiClientService {
                                   FitbitSleepLogRepository fitbitSleepLogRepository,
                                   FitbitSleepDataLogRepository fitbitSleepDataLogRepository,
                                   FitbitSleepShortDataLogRepository fitbitSleepShortDataLogRepository,
-                                  FitbitServiceImpl fitbitService) {
+                                  FitbitServiceImpl fitbitService,
+                                  FitbitApiClientServiceHelper clientServiceHelper
+    ) {
         this.fitbitApiClient = fitbitApiClient;
         this.userRepository = userRepository;
         this.fitbitActivitiesHeartLogRepository = fitbitActivitiesHeartLogRepository;
@@ -76,6 +81,7 @@ public class FitbitApiClientService {
         this.fitbitSleepDataLogRepository = fitbitSleepDataLogRepository;
         this.fitbitSleepShortDataLogRepository = fitbitSleepShortDataLogRepository;
         this.fitbitService = fitbitService;
+        this.clientServiceHelper = clientServiceHelper;
     }
 
     @Transactional
@@ -89,7 +95,7 @@ public class FitbitApiClientService {
         JsonNode goals = root.get("goals");
 
         if ((activities == null || activities.isEmpty()) && (summary == null || summary.isEmpty()) && (goals == null || goals.isEmpty())) {
-            log.info("No activities data found for user {} on date {}: ", user.getId(), date);
+            log.info("No activities data found for user public ID: {} on date {}: ", user.getPublicId(), date);
             return root;
         }
 
@@ -101,8 +107,22 @@ public class FitbitApiClientService {
                 Long logId = activity.has("logId") ? activity.get("logId").asLong() : null;
 
                 if (logId != null && fitbitActivitiesLogRepository.existsByUserAndLogId(user, logId)) {
-                    log.info("Skipping duplicate activity log {} for user {}", logId, user.getId());
-                    continue;
+                    //I should compare here for update in this block, rest remains same:
+                    //First get the old logId object:
+                    FitbitActivitiesLog existing = fitbitActivitiesLogRepository.findByUserAndLogId(user, logId).orElse(null);
+
+                    //If existing is not null then compare and update:
+                    if (existing != null) {
+                        boolean updated = clientServiceHelper.checkForUpdateOfActivitiesLog(existing, activity);
+
+                        if (updated) {
+                            fitbitActivitiesLogRepository.save(existing);
+                            log.info("Updated activity log {} for user {}", logId, user.getPublicId());
+                        } else {
+                            log.info("No changes for activity log {} for user {}", logId, user.getPublicId());
+                            continue;
+                        }
+                    }
                 }
 
                 FitbitActivitiesLog activitiesLog = new FitbitActivitiesLog();
@@ -137,6 +157,8 @@ public class FitbitApiClientService {
 
         //Save Goals:
         if (goals != null && goals.isObject()) {
+
+            //Create:
             if (!fitbitActivityGoalsLogRepository.existsByUserAndLogDate(user, logDate)) {
                 FitbitActivityGoalsLog goalsLog = new FitbitActivityGoalsLog();
                 goalsLog.setUser(user);
@@ -150,13 +172,27 @@ public class FitbitApiClientService {
 
                 fitbitActivityGoalsLogRepository.save(goalsLog);
             } else {
-                log.info("Skipping duplicate goals log for user {} on date {}", user.getId(), logDate);
+                //Update:
+                //Get existing FitbitActivityGoalsLog:
+                FitbitActivityGoalsLog existing = fitbitActivityGoalsLogRepository.findByUserAndLogDate(user, logDate).orElse(null);
 
+                if (existing != null) {
+                    boolean updated = clientServiceHelper.checkForUpdateOfActivitiesGoalsLog(existing, goals);
+
+                    if (updated) {
+                        fitbitActivityGoalsLogRepository.save(existing);
+                        log.info("Updated activity goals log for user {}", user.getPublicId());
+                    } else {
+                        log.info("No changes for goals log for user {}", user.getPublicId());
+                    }
+                }
             }
         }
 
+
         //Save Summary and distances:
         if (summary != null && summary.isObject()) {
+            //Create NEW:
             if (!fitbitActivitySummariesLogRepository.existsByUserAndLogDate(user, logDate)) {
                 FitbitActivitySummariesLog summariesLog = new FitbitActivitySummariesLog();
                 summariesLog.setUser(user);
@@ -186,8 +222,41 @@ public class FitbitApiClientService {
                     }
                 }
             } else {
-                log.info("Skipping duplicate summary log for user {} on date {}", user.getId(), logDate);
+                //Update:
+                //Get existing FitbitActivitySummariesLog:
+                FitbitActivitySummariesLog existing = fitbitActivitySummariesLogRepository.findByUserAndLogDate(user, logDate).orElse(null);
 
+                //Compare and update:
+                if (existing != null) {
+                    boolean updated = clientServiceHelper.checkForUpdateOfActivitySummaryLog(existing, summary);
+
+                    if (updated) {
+                        //Set raw json:
+                        existing.setRawJson(summary.toString());
+
+                        fitbitActivitySummariesLogRepository.save(existing);
+                        log.info("Updated summaries log for user public ID: {} for date: {}", user.getPublicId(), logDate);
+
+                        //Delete distances:
+                        fitbitActivitySummariesDistancesLogRepository.deleteByFitbitActivitySummariesLog(existing);
+                        log.info("Deleted summaries distances because the summaries log was updated");
+
+                        //Recreate new distances:
+                        JsonNode distances = summary.get("distances");
+                        if (distances != null && distances.isArray()) {
+                            for (JsonNode d : distances) {
+                                FitbitActivitySummariesDistancesLog distancesLog = new FitbitActivitySummariesDistancesLog();
+                                distancesLog.setFitbitActivitySummariesLog(existing);
+                                distancesLog.setActivity(d.has("activity") ? d.get("activity").asText() : null);
+                                distancesLog.setDistance(d.has("distance") ? d.get("distance").asDouble() : null);
+                                fitbitActivitySummariesDistancesLogRepository.save(distancesLog);
+                                log.info("Recreated new distance for summaries log on update");
+                            }
+                        }
+                    } else {
+                        log.info("No summary changes for user {} on {}", user.getPublicId(), logDate);
+                    }
+                }
             }
         }
 
@@ -204,7 +273,7 @@ public class FitbitApiClientService {
         JsonNode summary = root.get("summary");
 
         if ((sleep == null || sleep.isEmpty()) && (summary == null || summary.isEmpty())) {
-            log.warn("No sleep data found for user {} on date {}: ", user.getId(), date);
+            log.warn("No sleep data found for user public ID: {} on date {}: ", user.getPublicId(), date);
             return root;
         }
 
@@ -214,7 +283,8 @@ public class FitbitApiClientService {
                 Long logId = s.get("logId").asLong();
 
                 if (fitbitSleepLogRepository.existsByUserAndLogId(user, logId)) {
-                    log.info("Skipping duplicate sleep log {} for user {}", logId, user.getId());
+                    //I should compare here for update in this block, rest remains same:
+                    log.info("Skipping duplicate sleep log {} for user public ID: {}", logId, user.getPublicId());
                     continue;
                 }
 
@@ -271,7 +341,8 @@ public class FitbitApiClientService {
             LocalDate logDate = LocalDate.parse(date);
 
             if (fitbitSleepSummaryLogRepository.existsByUserAndLogDate(user, logDate)) {
-                log.info("Skipping duplicate sleep summary for user {} on {}: ", user.getId(), logDate);
+                //I should compare here for update in this block, rest remains same:
+                log.info("Skipping duplicate sleep summary for user public ID: {} on {}: ", user.getPublicId(), logDate);
                 return root;
             }
 
@@ -330,7 +401,8 @@ public class FitbitApiClientService {
         JsonNode heartRateZonesArray = (valueArray != null) ? valueArray.get("heartRateZones") : null;
 
         if (fitbitActivitiesHeartLogRepository.existsByUserAndLogDate(user, logDate)) {
-            log.info("Skipping duplicate heart log for user {} on date {}", user.getId(), logDate);
+            //I should compare here for update in this block, rest remains same:
+            log.info("Skipping duplicate heart log for user Public ID: {} on date {}", user.getPublicId(), logDate);
             return root;
         }
 

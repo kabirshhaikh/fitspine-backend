@@ -13,4 +13,5 @@ public interface FitbitActivitiesLogRepository extends JpaRepository<FitbitActiv
 
     List<FitbitActivitiesLog> findByUserAndLogDate(User user, LocalDate logDate);
 
+    Optional<FitbitActivitiesLog> findByUserAndLogId(User user, Long logId);
 }
