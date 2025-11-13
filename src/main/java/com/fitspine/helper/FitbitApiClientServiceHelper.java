@@ -1,9 +1,7 @@
 package com.fitspine.helper;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fitspine.model.FitbitActivitiesLog;
-import com.fitspine.model.FitbitActivityGoalsLog;
-import com.fitspine.model.FitbitActivitySummariesLog;
+import com.fitspine.model.*;
 import jakarta.persistence.Column;
 import org.springframework.stereotype.Component;
 
@@ -201,6 +199,19 @@ public class FitbitApiClientServiceHelper {
         Integer newMarginalCalories = currentSummaryLog.has("marginalCalories") ? currentSummaryLog.get("marginalCalories").asInt() : null;
         if (!Objects.equals(existing.getMarginalCalories(), newMarginalCalories)) {
             existing.setMarginalCalories(newMarginalCalories);
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    public boolean checkForUpdateOfActivitiesHeartLogAndHeartValueLog(FitbitActivitiesHeartLog existingHeartLog, FitbitActivitiesHeartValueLog existingHeartValueLog, JsonNode currentHeartEntry, JsonNode currentValueArray) {
+        boolean changed = false;
+
+        Integer newRestingHeartRate = currentValueArray.has("restingHeartRate") ? currentValueArray.get("restingHeartRate").asInt() : null;
+
+        if (!Objects.equals(existingHeartValueLog.getRestingHeartRate(), newRestingHeartRate)) {
+            existingHeartValueLog.setRestingHeartRate(newRestingHeartRate);
             changed = true;
         }
 

@@ -400,12 +400,49 @@ public class FitbitApiClientService {
 
         JsonNode heartRateZonesArray = (valueArray != null) ? valueArray.get("heartRateZones") : null;
 
+        //For UPDATE:
         if (fitbitActivitiesHeartLogRepository.existsByUserAndLogDate(user, logDate)) {
-            //I should compare here for update in this block, rest remains same:
-            log.info("Skipping duplicate heart log for user Public ID: {} on date {}", user.getPublicId(), logDate);
+            //Get FitbitActivitiesHeartLog:
+            FitbitActivitiesHeartLog existingHeartLog = fitbitActivitiesHeartLogRepository.findByUserAndLogDate(user, logDate).orElse(null);
+            FitbitActivitiesHeartValueLog existingHeartValueLog = fitbitActivitiesHeartValueLogRepository.findByFitbitActivitiesHeartLog(existingHeartLog);
+
+            if (existingHeartLog != null && existingHeartValueLog != null) {
+                boolean updated = clientServiceHelper.checkForUpdateOfActivitiesHeartLogAndHeartValueLog(existingHeartLog, existingHeartValueLog, heartEntry, valueArray);
+
+                if (updated) {
+                    existingHeartLog.setRawJson(root.toString());
+                    fitbitActivitiesHeartLogRepository.save(existingHeartLog);
+                    log.info("Updated FitbitActivitiesHeartLog for user public ID {} on date: {}", user.getPublicId(), logDate);
+
+                    fitbitActivitiesHeartValueLogRepository.save(existingHeartValueLog);
+                    log.info("Updated FitbitActivitiesHeartValueLog for user public ID {} on date: {}", user.getPublicId(), logDate);
+
+                    //Delete old FitbitActivitiesHeartValueLog:
+                    fitbitActivitiesHeartValueHeartRateZonesLogRepository.deleteByFitbitActivitiesHeartValuesLog(existingHeartValueLog);
+                    log.info("Deleted old FitbitActivitiesHeartValueHeartRateZonesLog for user public ID {} on date: {} during update", user.getPublicId(), logDate);
+
+                    //Create new ones: FitbitActivitiesHeartValueLog
+                    if (heartRateZonesArray != null && heartRateZonesArray.isArray()) {
+                        for (JsonNode zone : heartRateZonesArray) {
+                            FitbitActivitiesHeartValueHeartRateZonesLog zonesLog = new FitbitActivitiesHeartValueHeartRateZonesLog();
+                            zonesLog.setFitbitActivitiesHeartValuesLog(existingHeartValueLog);
+                            zonesLog.setName(zone.has("name") ? zone.get("name").asText() : null);
+                            zonesLog.setMin(zone.has("min") ? zone.get("min").asInt() : null);
+                            zonesLog.setMax(zone.has("max") ? zone.get("max").asInt() : null);
+                            zonesLog.setMinutes(zone.has("minutes") ? zone.get("minutes").asInt() : null);
+                            zonesLog.setCaloriesOut(zone.has("caloriesOut") ? zone.get("caloriesOut").asDouble() : null);
+                            fitbitActivitiesHeartValueHeartRateZonesLogRepository.save(zonesLog);
+                        }
+                        log.info("Created new FitbitActivitiesHeartValueHeartRateZonesLog for user public ID {} on date: {} during update", user.getPublicId(), logDate);
+
+                    }
+                }
+            }
+
             return root;
         }
 
+        //FOR CREATE:
         //Save heart log:
         FitbitActivitiesHeartLog activitiesHeartLog = new FitbitActivitiesHeartLog();
         activitiesHeartLog.setUser(user);
