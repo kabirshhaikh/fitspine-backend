@@ -14,5 +14,7 @@ public interface FitbitSleepLogRepository extends JpaRepository<FitbitSleepLog, 
 
     Optional<FitbitSleepLog> findByUserAndLogDate(User user, LocalDate logDate);
 
+    Optional<FitbitSleepLog> findByUserAndLogId(User user, Long logId);
+
     List<FitbitSleepLog> findByUserAndLogDateBetween(User user, LocalDate startDate, LocalDate endDate);
 }

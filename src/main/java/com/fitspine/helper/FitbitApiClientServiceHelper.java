@@ -5,6 +5,8 @@ import com.fitspine.model.*;
 import jakarta.persistence.Column;
 import org.springframework.stereotype.Component;
 
+import java.io.ObjectInputStream;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -212,6 +214,133 @@ public class FitbitApiClientServiceHelper {
 
         if (!Objects.equals(existingHeartValueLog.getRestingHeartRate(), newRestingHeartRate)) {
             existingHeartValueLog.setRestingHeartRate(newRestingHeartRate);
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    public boolean checkForUpdateOfSleepLog(FitbitSleepLog existingSleepLog, JsonNode s) {
+        boolean changed = false;
+
+        //To check:
+        //efficiency
+        Integer newEfficiency = s.has("efficiency") ? s.get("efficiency").asInt() : null;
+        if (!Objects.equals(existingSleepLog.getEfficiency(), newEfficiency)) {
+            existingSleepLog.setEfficiency(newEfficiency);
+            changed = true;
+        }
+
+        //minutesAfterWakeup
+        Integer newMinutesAfterWakeup = s.has("minutesAfterWakeup") ? s.get("minutesAfterWakeup").asInt() : null;
+        if (!Objects.equals(existingSleepLog.getMinutesAfterWakeup(), newMinutesAfterWakeup)) {
+            existingSleepLog.setMinutesAfterWakeup(newMinutesAfterWakeup);
+            changed = true;
+        }
+
+        //minutesAwake
+        Integer newMinutesAwake = s.has("minutesAwake") ? s.get("minutesAwake").asInt() : null;
+        if (!Objects.equals(existingSleepLog.getMinutesAwake(), newMinutesAwake)) {
+            existingSleepLog.setMinutesAwake(newMinutesAwake);
+            changed = true;
+        }
+
+        //minutesAsleep
+        Integer newMinutesAsleep = s.has("minutesAsleep") ? s.get("minutesAsleep").asInt() : null;
+        if (!Objects.equals(existingSleepLog.getMinutesAsleep(), newMinutesAsleep)) {
+            existingSleepLog.setMinutesAsleep(newMinutesAsleep);
+            changed = true;
+        }
+
+        //minutesToFallAsleep
+        Integer newMinutesToFallAsleep = s.has("minutesToFallAsleep") ? s.get("minutesToFallAsleep").asInt() : null;
+        if (!Objects.equals(existingSleepLog.getMinutesToFallAsleep(), newMinutesToFallAsleep)) {
+            existingSleepLog.setMinutesToFallAsleep(newMinutesToFallAsleep);
+            changed = true;
+        }
+
+        //timeInBed
+        Integer newTimeInBed = s.has("timeInBed") ? s.get("timeInBed").asInt() : null;
+        if (!Objects.equals(existingSleepLog.getTimeInBed(), newTimeInBed)) {
+            existingSleepLog.setTimeInBed(newTimeInBed);
+            changed = true;
+        }
+
+        //startTime
+        LocalDateTime newStartTime = s.has("startTime") ? LocalDateTime.parse(s.get("startTime").asText()) : null;
+        if (!Objects.equals(existingSleepLog.getStartTime(), newStartTime)) {
+            existingSleepLog.setStartTime(newStartTime);
+            changed = true;
+        }
+
+        //endTime
+        LocalDateTime newEndTime = s.has("endTime") ? LocalDateTime.parse(s.get("endTime").asText()) : null;
+        if (!Objects.equals(existingSleepLog.getEndTime(), newEndTime)) {
+            existingSleepLog.setEndTime(newEndTime);
+            changed = true;
+        }
+
+        //infoCode
+        Integer newInfoCode = s.has("infoCode") ? s.get("infoCode").asInt() : null;
+        if (!Objects.equals(existingSleepLog.getInfoCode(), newInfoCode)) {
+            existingSleepLog.setInfoCode(newInfoCode);
+            changed = true;
+        }
+
+        //isMainSleep
+        Boolean newIsMainSleep = s.has("isMainSleep") ? s.get("isMainSleep").asBoolean() : null;
+        if (!Objects.equals(existingSleepLog.getIsMainSleep(), newIsMainSleep)) {
+            existingSleepLog.setIsMainSleep(newIsMainSleep);
+            changed = true;
+        }
+
+        //dateOfSleep
+        LocalDate newDateOfSleep = s.has("dateOfSleep") ? LocalDate.parse(s.get("dateOfSleep").asText()) : null;
+        if (!Objects.equals(existingSleepLog.getDateOfSleep(), newDateOfSleep)) {
+            existingSleepLog.setDateOfSleep(newDateOfSleep);
+            changed = true;
+        }
+
+        //logType
+        String newLogType = s.has("logType") ? s.get("logType").asText() : null;
+        if (!Objects.equals(existingSleepLog.getLogType(), newLogType)) {
+            existingSleepLog.setLogType(newLogType);
+            changed = true;
+        }
+
+        //type
+        String newType = s.has("type") ? s.get("type").asText() : null;
+        if (!Objects.equals(existingSleepLog.getType(), newType)) {
+            existingSleepLog.setType(newType);
+            changed = true;
+        }
+
+        return changed;
+    }
+
+
+    public boolean checkForUpdateOfSleepSummary(FitbitSleepSummaryLog existingSleepSummary, JsonNode currentSummary) {
+        boolean changed = false;
+
+        //To check:
+        //totalMinutesAsleep
+        Integer newTotalMinutesAsleep = currentSummary.has("totalMinutesAsleep") ? currentSummary.get("totalMinutesAsleep").asInt() : null;
+        if (!Objects.equals(existingSleepSummary.getTotalMinutesAsleep(), newTotalMinutesAsleep)) {
+            existingSleepSummary.setTotalMinutesAsleep(newTotalMinutesAsleep);
+            changed = true;
+        }
+
+        //totalSleepRecords
+        Integer newTotalSleepRecords = currentSummary.has("totalSleepRecords") ? currentSummary.get("totalSleepRecords").asInt() : null;
+        if (!Objects.equals(existingSleepSummary.getTotalSleepRecords(), newTotalSleepRecords)) {
+            existingSleepSummary.setTotalSleepRecords(newTotalSleepRecords);
+            changed = true;
+        }
+
+        //totalTimeInBed
+        Integer newTotalTimeInBed = currentSummary.has("totalTimeInBed") ? currentSummary.get("totalTimeInBed").asInt() : null;
+        if (!Objects.equals(existingSleepSummary.getTotalTimeInBed(), newTotalTimeInBed)) {
+            existingSleepSummary.setTotalTimeInBed(newTotalTimeInBed);
             changed = true;
         }
 

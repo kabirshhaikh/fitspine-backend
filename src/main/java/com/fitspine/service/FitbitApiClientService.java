@@ -282,12 +282,59 @@ public class FitbitApiClientService {
             for (JsonNode s : sleep) {
                 Long logId = s.get("logId").asLong();
 
+                //UPDATE:
                 if (fitbitSleepLogRepository.existsByUserAndLogId(user, logId)) {
-                    //I should compare here for update in this block, rest remains same:
-                    log.info("Skipping duplicate sleep log {} for user public ID: {}", logId, user.getPublicId());
+                    //Get FitbitSleepLog:
+                    FitbitSleepLog existingSleepLog = fitbitSleepLogRepository.findByUserAndLogId(user, logId).orElse(null);
+
+                    if (existingSleepLog != null) {
+                        boolean changed = clientServiceHelper.checkForUpdateOfSleepLog(existingSleepLog, s);
+
+                        if (changed) {
+                            //Save updated main sleep log:
+                            fitbitSleepLogRepository.save(existingSleepLog);
+                            log.info("Updated the FitbitSleepLog for user public ID: {}", user.getPublicId());
+
+                            //Delete FitbitSleepDataLog and FitbitSleepShortDataLog:
+                            fitbitSleepDataLogRepository.deleteByFitbitSleepLog(existingSleepLog);
+                            log.info("Deleted FitbitSleepDataLog for user public ID: {} during update of FitbitSleepLog:", user.getPublicId());
+
+                            fitbitSleepShortDataLogRepository.deleteByFitbitSleepLog(existingSleepLog);
+                            log.info("Deleted FitbitSleepShortDataLog for user public ID: {} during update of FitbitSleepLog:", user.getPublicId());
+
+                            //Create new levels data log:
+                            JsonNode levels = s.get("levels");
+                            if (levels != null && levels.has("data")) {
+                                for (JsonNode d : levels.get("data")) {
+                                    FitbitSleepDataLog dataLog = new FitbitSleepDataLog();
+                                    dataLog.setFitbitSleepLog(existingSleepLog);
+                                    dataLog.setDateTime(LocalDateTime.parse(d.get("dateTime").asText()));
+                                    dataLog.setLevel(d.get("level").asText());
+                                    dataLog.setSeconds(d.get("seconds").asInt());
+                                    fitbitSleepDataLogRepository.save(dataLog);
+                                    log.info("Created new FitbitSleepDataLog during update of FitbitSleepLog for user public ID: {}", user.getPublicId());
+                                }
+                            }
+
+                            //Create new levels short data log:
+                            if (levels != null && levels.has("shortData")) {
+                                for (JsonNode sd : levels.get("shortData")) {
+                                    FitbitSleepShortDataLog shortDataLog = new FitbitSleepShortDataLog();
+                                    shortDataLog.setFitbitSleepLog(existingSleepLog);
+                                    shortDataLog.setDateTime(LocalDateTime.parse(sd.get("dateTime").asText()));
+                                    shortDataLog.setLevel(sd.get("level").asText());
+                                    shortDataLog.setSeconds(sd.get("seconds").asInt());
+                                    fitbitSleepShortDataLogRepository.save(shortDataLog);
+                                    log.info("Created new FitbitSleepShortDataLog during update of FitbitSleepLog for user public ID: {}", user.getPublicId());
+                                }
+                            }
+                        }
+                    }
+
                     continue;
                 }
 
+                //CREATE:
                 FitbitSleepLog sleepLog = new FitbitSleepLog();
                 sleepLog.setUser(user);
                 sleepLog.setProvider(fitbitService.getProvider());
@@ -340,12 +387,48 @@ public class FitbitApiClientService {
         if (summary != null && summary.isObject()) {
             LocalDate logDate = LocalDate.parse(date);
 
+            //UPDATE:
             if (fitbitSleepSummaryLogRepository.existsByUserAndLogDate(user, logDate)) {
-                //I should compare here for update in this block, rest remains same:
-                log.info("Skipping duplicate sleep summary for user public ID: {} on {}: ", user.getPublicId(), logDate);
+                FitbitSleepSummaryLog existingSleepSummary = fitbitSleepSummaryLogRepository.findByUserAndLogDate(user, logDate).orElse(null);
+
+                if (existingSleepSummary != null) {
+                    boolean changed = clientServiceHelper.checkForUpdateOfSleepSummary(existingSleepSummary, summary);
+
+                    if (changed) {
+                        //Set raw json:
+                        existingSleepSummary.setRawJson(root.toString());
+                        log.info("Replaced Raw json for FitbitSleepSummaryLog during update for user public ID: {}", user.getPublicId());
+
+                        //Save summary:
+                        fitbitSleepSummaryLogRepository.save(existingSleepSummary);
+
+                        log.info("Updated the FitbitSleepSummaryLog for user public ID: {}", user.getPublicId());
+
+                        //Delete old stages:
+                        fitbitSleepSummaryStagesLogRepository.deleteByFitbitSleepSummaryLog(existingSleepSummary);
+                        log.info("Deleted FitbitSleepSummaryStagesLog during update of FitbitSleepSummaryLog for user public ID: {}", user.getPublicId());
+
+                        JsonNode stages = summary.get("stages");
+                        if (stages != null && stages.isObject()) {
+                            FitbitSleepSummaryStagesLog stagesLog = new FitbitSleepSummaryStagesLog();
+                            stagesLog.setFitbitSleepSummaryLog(existingSleepSummary);
+                            stagesLog.setDeep(stages.has("deep") ? stages.get("deep").asInt() : null);
+                            stagesLog.setLight(stages.has("light") ? stages.get("light").asInt() : null);
+                            stagesLog.setRem(stages.has("rem") ? stages.get("rem").asInt() : null);
+                            stagesLog.setWake(stages.has("wake") ? stages.get("wake").asInt() : null);
+                            fitbitSleepSummaryStagesLogRepository.save(stagesLog);
+                            log.info("Created new FitbitSleepSummaryStagesLog during update of FitbitSleepSummaryLog for user public ID: {} ", user.getPublicId());
+                        }
+                    } else {
+                        log.info("No changes in FitbitSleepSummaryLog for user public ID: {} on {}",
+                                user.getPublicId(), logDate);
+                    }
+                }
+
                 return root;
             }
 
+            //CREATE:
             FitbitSleepSummaryLog sleepSummaryLog = new FitbitSleepSummaryLog();
             sleepSummaryLog.setUser(user);
             sleepSummaryLog.setProvider(fitbitService.getProvider());
