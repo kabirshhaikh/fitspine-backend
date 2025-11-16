@@ -14,15 +14,15 @@ import com.fitspine.repository.ManualDailyLogRepository;
 import com.fitspine.repository.ManualDailyPainLocationLogRepository;
 import com.fitspine.repository.UserRepository;
 import com.fitspine.service.ManualDailyLogService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
+@Slf4j
 public class ManualDailyLogServiceImpl implements ManualDailyLogService {
     private final ManualDailyLogRepository manualDailyLogRepository;
     private final ManualDailyPainLocationLogRepository painLocationLogRepository;
@@ -46,40 +46,48 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
 
         ManualDailyLog logToSave;
 
+        //This section is for UPDATE:
         if (existingLog != null) {
             // Override existing
-            existingLog.setPainLevel(dto.getPainLevel());
-            existingLog.setFlareUpToday(dto.getFlareUpToday());
-            existingLog.setNumbnessTingling(dto.getNumbnessTingling());
-            existingLog.setSittingTime(dto.getSittingTime());
-            existingLog.setStandingTime(dto.getStandingTime());
-            existingLog.setStretchingDone(dto.getStretchingDone());
-            existingLog.setMorningStiffness(dto.getMorningStiffness());
-            existingLog.setStressLevel(dto.getStressLevel());
-            existingLog.setLiftingOrStrain(dto.getLiftingOrStrain());
-            existingLog.setNotes(dto.getNotes());
+            log.info("Starting override for daily manual log for the user public ID: {}", user.getPublicId());
+            Optional.ofNullable(dto.getPainLevel()).ifPresent(existingLog::setPainLevel);
+            Optional.ofNullable(dto.getFlareUpToday()).ifPresent(existingLog::setFlareUpToday);
+            Optional.ofNullable(dto.getNumbnessTingling()).ifPresent(existingLog::setNumbnessTingling);
+            Optional.ofNullable(dto.getSittingTime()).ifPresent(existingLog::setSittingTime);
+            Optional.ofNullable(dto.getStandingTime()).ifPresent(existingLog::setStandingTime);
+            Optional.ofNullable(dto.getStretchingDone()).ifPresent(existingLog::setStretchingDone);
+            Optional.ofNullable(dto.getMorningStiffness()).ifPresent(existingLog::setMorningStiffness);
+            Optional.ofNullable(dto.getStressLevel()).ifPresent(existingLog::setStressLevel);
+            Optional.ofNullable(dto.getLiftingOrStrain()).ifPresent(existingLog::setLiftingOrStrain);
+            Optional.ofNullable(dto.getNotes()).ifPresent(existingLog::setNotes);
+            log.info("Override Update complete for the daily manual log for the user public ID: {}", user.getPublicId());
 
             // Save parent first (update)
             ManualDailyLog savedParent = manualDailyLogRepository.save(existingLog);
 
-            // Replace child pain locations
-            painLocationLogRepository.deleteAll(savedParent.getManualDailyPainLocationLogs());
-            savedParent.getManualDailyPainLocationLogs().clear();
-
             if (dto.getPainLocations() != null) {
-                dto.getPainLocations().forEach(location -> {
-                    ManualDailyPainLocationLog painLog = ManualDailyPainLocationLog.builder()
-                            .manualDailyLog(savedParent) // parent now persisted
-                            .painLocation(location)
-                            .build();
-                    painLocationLogRepository.save(painLog);
-                    savedParent.getManualDailyPainLocationLogs().add(painLog);
-                });
+                // Replace child pain locations
+                painLocationLogRepository.deleteByManualDailyLog(savedParent);
+
+                //clear JPA in-memory collection
+                savedParent.getManualDailyPainLocationLogs().clear();
+
+                if (dto.getPainLocations() != null) {
+                    dto.getPainLocations().forEach(location -> {
+                        ManualDailyPainLocationLog painLog = ManualDailyPainLocationLog.builder()
+                                .manualDailyLog(savedParent) // parent now persisted
+                                .painLocation(location)
+                                .build();
+                        painLocationLogRepository.save(painLog);
+                        savedParent.getManualDailyPainLocationLogs().add(painLog);
+                    });
+                }
             }
 
             logToSave = savedParent;
 
         } else {
+            //This section is for CREATE:
             // Create new
             ManualDailyLog newLog = ManualDailyLog.builder()
                     .user(user)
