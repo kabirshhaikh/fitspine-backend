@@ -69,9 +69,6 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
                 // Replace child pain locations
                 painLocationLogRepository.deleteByManualDailyLog(savedParent);
 
-                //clear JPA in-memory collection
-                savedParent.getManualDailyPainLocationLogs().clear();
-
                 if (dto.getPainLocations() != null) {
                     dto.getPainLocations().forEach(location -> {
                         ManualDailyPainLocationLog painLog = ManualDailyPainLocationLog.builder()
@@ -79,7 +76,6 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
                                 .painLocation(location)
                                 .build();
                         painLocationLogRepository.save(painLog);
-                        savedParent.getManualDailyPainLocationLogs().add(painLog);
                     });
                 }
             }
@@ -110,15 +106,23 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
             if (dto.getPainLocations() != null) {
                 dto.getPainLocations().forEach(location -> {
                     ManualDailyPainLocationLog painLog = ManualDailyPainLocationLog.builder()
-                            .manualDailyLog(savedParent) // parent now persisted
+                            .manualDailyLog(savedParent)
                             .painLocation(location)
                             .build();
                     painLocationLogRepository.save(painLog);
-                    savedParent.getManualDailyPainLocationLogs().add(painLog);
                 });
             }
 
             logToSave = savedParent;
+        }
+
+        //Get list of pain locations for response DTO:
+        List<ManualDailyPainLocationLog> painLocations = painLocationLogRepository.findByManualDailyLog(logToSave);
+        List<PainLocation> locations = new ArrayList<>();
+
+        //Map pain locations to to locations array and return it into the response dto:
+        for (int i = 0; i < painLocations.size(); i++) {
+            locations.add(painLocations.get(i).getPainLocation());
         }
 
         //Map entity to response dto:
@@ -135,11 +139,7 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
                 .stressLevel(logToSave.getStressLevel())
                 .liftingOrStrain(logToSave.getLiftingOrStrain())
                 .notes(logToSave.getNotes())
-                .painLocations(
-                        logToSave.getManualDailyPainLocationLogs().stream()
-                                .map(ManualDailyPainLocationLog::getPainLocation)
-                                .toList()
-                )
+                .painLocations(locations)
                 .build();
     }
 

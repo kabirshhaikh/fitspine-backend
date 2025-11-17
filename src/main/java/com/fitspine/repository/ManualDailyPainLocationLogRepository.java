@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface ManualDailyPainLocationLogRepository extends JpaRepository<ManualDailyPainLocationLog, Long> {
     void deleteByManualDailyLog(ManualDailyLog manualDailyLog);
+
+    List<ManualDailyPainLocationLog> findByManualDailyLog(ManualDailyLog manualDailyLog);
 }
