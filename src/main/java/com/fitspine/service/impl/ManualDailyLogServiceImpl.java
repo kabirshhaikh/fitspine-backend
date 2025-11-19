@@ -255,6 +255,18 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
         //Find log:
         ManualDailyLog log = manualDailyLogRepository.findByUserAndLogDate(user, date).orElseThrow(() -> new ResourceNotFoundException("Log for date: " + date + " not found"));
 
+        //Get pain locations:
+        List<ManualDailyPainLocationLog> listOfPainLocations = painLocationLogRepository.findByManualDailyLog(log);
+
+        //List of Pain Locations that needs to be sent in the dto response:
+        List<PainLocation> locations = new ArrayList<>();
+
+        if (listOfPainLocations != null) {
+            for (int i = 0; i < listOfPainLocations.size(); i++) {
+                locations.add(listOfPainLocations.get(i).getPainLocation());
+            }
+        }
+
         return ManualDailyLogResponseDto.builder()
                 .id(log.getId())
                 .logDate(log.getLogDate())
@@ -268,11 +280,7 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
                 .stressLevel(log.getStressLevel())
                 .liftingOrStrain(log.getLiftingOrStrain())
                 .notes(log.getNotes())
-                .painLocations(
-                        log.getManualDailyPainLocationLogs().stream()
-                                .map(ManualDailyPainLocationLog::getPainLocation)
-                                .toList()
-                )
+                .painLocations(locations)
                 .build();
     }
 }
