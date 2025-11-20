@@ -149,9 +149,10 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
             sleepLog = sleepLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
 
             //log the data:
-            log.info("Fresh heart log data {} for user {} on date {}", heartLog, user.getId(), logDate);
-            log.info("Fresh activity summaries log data {} for user {} on date {}", activitySummariesLog, user.getId(), logDate);
-            log.info("Fresh sleep summary log data {} for user {} on date {}", sleepSummaryLog, user.getId(), logDate);
+            log.info("Fresh heart log id={} for user={} on date={}", heartLog != null ? heartLog.getId() : null, user.getId(), logDate);
+            log.info("Fresh activity summaries id={} for user={} on date={}", activitySummariesLog != null ? activitySummariesLog.getId() : null, user.getId(), logDate);
+            log.info("Fresh sleep summary id={} for user={} on date={}", sleepSummaryLog != null ? sleepSummaryLog.getId() : null, user.getId(), logDate);
+
 
             //Extract resting heart rate if available or not null:
             if (heartLog != null && heartLog.getValues() != null && !heartLog.getValues().isEmpty()) {
