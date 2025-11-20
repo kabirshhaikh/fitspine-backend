@@ -12,9 +12,12 @@ import com.fitspine.repository.*;
 import com.fitspine.service.FitbitAiDailyAggregationService;
 import com.fitspine.service.FitbitApiClientService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +36,8 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
     private final FitbitApiClientService fitbitApiClientService;
     private final DeIdentificationHelper deIdentificationHelper;
     private final AiInsightHelper helper;
+    private final RedisTemplate<String, Object> redis;
+
 
     public FitbitAiDailyAggregationServiceImpl(
             UserRepository userRepository,
@@ -45,7 +50,8 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
             FitbitSleepLogRepository sleepLogRepo,
             FitbitApiClientService fitbitApiClientService,
             DeIdentificationHelper deIdentificationHelper,
-            AiInsightHelper helper
+            AiInsightHelper helper,
+            RedisTemplate<String, Object> redis
     ) {
         this.userRepository = userRepository;
         this.manualDailyLogRepo = manualDailyLogRepo;
@@ -58,6 +64,7 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
         this.fitbitApiClientService = fitbitApiClientService;
         this.deIdentificationHelper = deIdentificationHelper;
         this.helper = helper;
+        this.redis = redis;
     }
 
     @Override
@@ -104,46 +111,54 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
         boolean hasFitbitConnection = Boolean.TRUE.equals(user.getIsWearableConnected()) && user.getWearableType() != null && user.getWearableType() == WearableType.FITBIT;
 
         if (hasFitbitConnection) {
-            log.info("User {} has Fitbit connected. Loading fitbit data for date {}:", user.getId(), logDate);
+            log.info("User {} has Fitbit connected. Refreshing fitbit data for date {}:", user.getId(), logDate);
 
-            //Heart:
-            heartLog = activitiesHeartLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
-            activitySummariesLog = activitySummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
-            sleepSummaryLog = sleepSummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+            //Set rate limiting and for that set redis key:
+            String key = "fitbit_last_sync:" + user.getPublicId();
+            Duration timeToLive = Duration.ofMinutes(5);
+            Boolean canSync = redis.opsForValue().setIfAbsent(key, String.valueOf(System.currentTimeMillis()), timeToLive);
 
-            if (heartLog == null && activitySummariesLog == null && sleepSummaryLog == null) {
-                log.info("No Fitbit data found for {}. Triggering on-demand sync for {}", user.getId(), logDate);
+            if (Boolean.TRUE.equals(canSync)) {
+                log.info("Rate limit OK");
+                log.info("First fitbit sync or Time To Live expired for user public ID: {} on date {}", user.getPublicId(), logDate);
 
-                //Fetch data:
+                //Sync the data:
                 try {
-                    log.info("Running try block fetch activity, heart and sleep data on demand..");
                     fitbitApiClientService.getActivity(user.getEmail(), logDate.toString());
                     fitbitApiClientService.getHeartRate(user.getEmail(), logDate.toString());
                     fitbitApiClientService.getSleep(user.getEmail(), logDate.toString());
-                    log.info("Fetching of data complete...");
-
-                    //Re-fetch and sync the data:
-                    heartLog = activitiesHeartLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
-                    activitySummariesLog = activitySummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
-                    sleepSummaryLog = sleepSummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
                 } catch (Exception e) {
                     log.error("Failed to fetch on-demand Fitbit data for user {}: {}", user.getId(), e.getMessage());
                 }
+            } else {
+                log.info("Rate limit blocked the sync of the user's fitbit data syn for user {} on date {}", user.getPublicId(), logDate);
             }
 
+
+            //Fetch fresh data from db:
+            //Heart:
+            heartLog = activitiesHeartLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+
+            //Activity:
+            activitySummariesLog = activitySummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+            activityGoalsLog = activityGoalsLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+            activitiesLog = activityLogRepo.findByUserAndLogDate(user, logDate);
+
+            //Sleep:
+            sleepSummaryLog = sleepSummaryLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+            sleepLog = sleepLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
+
+            //log the data:
+            log.info("Fresh heart log data {} for user {} on date {}", heartLog, user.getId(), logDate);
+            log.info("Fresh activity summaries log data {} for user {} on date {}", activitySummariesLog, user.getId(), logDate);
+            log.info("Fresh sleep summary log data {} for user {} on date {}", sleepSummaryLog, user.getId(), logDate);
+
+            //Extract resting heart rate if available or not null:
             if (heartLog != null && heartLog.getValues() != null && !heartLog.getValues().isEmpty()) {
                 restingHeartRate = heartLog.getValues().get(0).getRestingHeartRate();
             } else {
                 restingHeartRate = -1;
             }
-
-            //Activity:
-
-            activityGoalsLog = activityGoalsLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
-            activitiesLog = activityLogRepo.findByUserAndLogDate(user, logDate);
-
-            //Sleep:
-            sleepLog = sleepLogRepo.findByUserAndLogDate(user, logDate).orElse(null);
         } else {
             log.info("User {} does not have fitbit connected. Skipping Fitbit data fetch for log date {}:", user.getId(), logDate);
         }
@@ -153,10 +168,6 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
         String notes = deIdentificationHelper.sanitizeNotes(manualDailyLog.getNotes());
         HashMap<String, Integer> activityMap = helper.getActivityLogMap(activitiesLog);
         String humanReadableDescription = helper.getHumanReadableDescription(activityMap);
-
-        log.info("human description {}", humanReadableDescription);
-        log.info("De-Identified logDate {}, ", dayContext);
-        log.info("De-Identified notes {}, ", notes);
 
         return AiUserDailyInputDto.builder()
                 .dayContext(dayContext)
@@ -201,7 +212,6 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
 
                 // Activities
                 .description(humanReadableDescription)
-//                .description(activitiesLog != null ? activitiesLog.getDescription() : null)
 
                 // Sleep summary
                 .totalMinutesAsleep(sleepSummaryLog != null ? sleepSummaryLog.getTotalMinutesAsleep() : -1)
