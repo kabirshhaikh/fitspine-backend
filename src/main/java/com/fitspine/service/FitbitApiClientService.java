@@ -9,13 +9,11 @@ import com.fitspine.repository.*;
 import com.fitspine.service.impl.FitbitServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -48,6 +46,7 @@ public class FitbitApiClientService {
     private final FitbitSleepDataLogRepository fitbitSleepDataLogRepository;
     private final FitbitSleepShortDataLogRepository fitbitSleepShortDataLogRepository;
     private final FitbitApiClientServiceHelper clientServiceHelper;
+    private final RedisTemplate<String, Object> redis;
 
     public FitbitApiClientService(FitbitApiClient fitbitApiClient,
                                   UserRepository userRepository,
@@ -64,7 +63,8 @@ public class FitbitApiClientService {
                                   FitbitSleepDataLogRepository fitbitSleepDataLogRepository,
                                   FitbitSleepShortDataLogRepository fitbitSleepShortDataLogRepository,
                                   FitbitServiceImpl fitbitService,
-                                  FitbitApiClientServiceHelper clientServiceHelper
+                                  FitbitApiClientServiceHelper clientServiceHelper,
+                                  RedisTemplate<String, Object> redis
     ) {
         this.fitbitApiClient = fitbitApiClient;
         this.userRepository = userRepository;
@@ -82,6 +82,7 @@ public class FitbitApiClientService {
         this.fitbitSleepShortDataLogRepository = fitbitSleepShortDataLogRepository;
         this.fitbitService = fitbitService;
         this.clientServiceHelper = clientServiceHelper;
+        this.redis = redis;
     }
 
     @Transactional
@@ -89,6 +90,23 @@ public class FitbitApiClientService {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User with email: " + email + " not found"));
         log.info("Fetching Fitbit steps for user {} on date {}", user.getId(), date);
         JsonNode root = fitbitApiClient.getActivity(user.getId(), clientId, clientSecret, date);
+
+        String activityCacheKey = "fitbit_activity_call:" + user.getPublicId() + ":" + LocalDate.now();
+        Long count = redis.opsForValue().increment(activityCacheKey);
+
+        if (count != null && count == 1) {
+            //Current date time in UTC:
+            ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
+
+            //Calculate the start of next day in UTC: 12 am basically:
+            ZonedDateTime nextMidNightUtc = now.toLocalDate().atStartOfDay(ZoneOffset.UTC).plusDays(1);
+
+            //Calculate the different between now and then:
+            Duration timeUntilMidnight = Duration.between(now, nextMidNightUtc);
+
+            //Set redis expiry:
+            redis.expire(activityCacheKey, timeUntilMidnight);
+        }
 
         JsonNode activities = root.get("activities");
         JsonNode summary = root.get("summary");
@@ -268,6 +286,23 @@ public class FitbitApiClientService {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User with email: " + email + " not found"));
         log.info("Fetching Fitbit sleep for user {} on date {}", user.getId(), date);
         JsonNode root = fitbitApiClient.getSleep(user.getId(), clientId, clientSecret, date);
+
+        String sleepCacheKey = "fitbit_sleep_call:" + user.getPublicId() + ":" + LocalDate.now();
+        Long count = redis.opsForValue().increment(sleepCacheKey);
+
+        if (count != null && count == 1) {
+            //Current date time in UTC:
+            ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
+
+            //Calculate the start of next day in UTC: 12 am basically:
+            ZonedDateTime nextMidNightUtc = now.toLocalDate().atStartOfDay(ZoneOffset.UTC).plusDays(1);
+
+            //Calculate the different between now and then:
+            Duration timeUntilMidnight = Duration.between(now, nextMidNightUtc);
+
+            //Set redis expiry:
+            redis.expire(sleepCacheKey, timeUntilMidnight);
+        }
 
         JsonNode sleep = root.get("sleep");
         JsonNode summary = root.get("summary");
@@ -462,6 +497,23 @@ public class FitbitApiClientService {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User with email: " + email + " not found"));
         log.info("Fetching Fitbit heart rate for user {} on date {}", user.getId(), date);
         JsonNode root = fitbitApiClient.getHeartRate(user.getId(), clientId, clientSecret, date);
+
+        String heartCacheKey = "fitbit_heart_call:" + user.getPublicId() + ":" + LocalDate.now();
+        Long count = redis.opsForValue().increment(heartCacheKey);
+
+        if (count != null && count == 1) {
+            //Current date time in UTC:
+            ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
+
+            //Calculate the start of next day in UTC: 12 am basically:
+            ZonedDateTime nextMidNightUtc = now.toLocalDate().atStartOfDay(ZoneOffset.UTC).plusDays(1);
+
+            //Calculate the different between now and then:
+            Duration timeUntilMidnight = Duration.between(now, nextMidNightUtc);
+
+            //Set redis expiry:
+            redis.expire(heartCacheKey, timeUntilMidnight);
+        }
 
         JsonNode activitiesHeartArray = root.get("activities-heart");
         if (activitiesHeartArray == null || !activitiesHeartArray.isArray() || activitiesHeartArray.isEmpty()) {

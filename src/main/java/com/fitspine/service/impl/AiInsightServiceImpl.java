@@ -367,6 +367,7 @@ public class AiInsightServiceImpl implements AiInsightService {
 
             //Fetch existing hash key from redis:
             String existingHash = (String) redis.opsForValue().get(hashKey);
+            log.info("Existing HASH {}", existingHash);
 
             //If existing has equals new hash then return cache insights:
             if (existingHash != null && existingHash.equals(newHash)) {
