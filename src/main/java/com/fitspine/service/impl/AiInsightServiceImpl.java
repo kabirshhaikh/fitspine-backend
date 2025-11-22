@@ -19,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -332,7 +334,17 @@ public class AiInsightServiceImpl implements AiInsightService {
         Long count = redis.opsForValue().increment(limitKey);
 
         if (count != null && count == 1) {
-            redis.expire(limitKey, Duration.ofHours(24));
+            //Current date time in UTC:
+            ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
+
+            //Calculate the start of next day in UTC: 12 am basically:
+            ZonedDateTime nextMidNightUtc = now.toLocalDate().atStartOfDay(ZoneOffset.UTC).plusDays(1);
+
+            //Calculate the different between now and then:
+            Duration timeUntilMidnight = Duration.between(now, nextMidNightUtc);
+
+            //Set redis expiry:
+            redis.expire(limitKey, timeUntilMidnight);
         }
 
         if (count != null && count > DAILY_LIMIT) {
