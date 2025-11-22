@@ -291,6 +291,19 @@ public class AiInsightHelper {
         return response.getBody();
     }
 
+    public void validateStringArray(JsonNode json, String fieldName) {
+        JsonNode arr = json.get(fieldName);
+
+
+        if (arr == null || !arr.isArray()) {
+            return;
+        }
+
+        if (arr.size() > 0 && !arr.get(0).isTextual()) {
+            throw new AiServiceException("Invalid JSON format: '" + fieldName + "' must be an array of strings.");
+        }
+    }
+
     public AiInsightResponseDto saveDataForAiInsight(User user, LocalDate logDate, String responseBody) throws Exception {
         var root = objectMapper.readTree(responseBody);
         String modelUsed = root.path("model").asText("unknown");
@@ -315,6 +328,15 @@ public class AiInsightHelper {
                 .replaceAll("```json", "")
                 .replaceAll("```", "")
                 .trim();
+
+        JsonNode json = objectMapper.readTree(content);
+
+        //Validate the fields and check if they are array or not:
+        validateStringArray(json, "improved");
+        validateStringArray(json, "worsened");
+        validateStringArray(json, "possibleCauses");
+        validateStringArray(json, "actionableAdvice");
+        validateStringArray(json, "interventionsToday");
 
         AiInsightResponseDto insight = objectMapper.readValue(content, AiInsightResponseDto.class);
 

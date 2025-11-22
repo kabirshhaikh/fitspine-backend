@@ -2,6 +2,7 @@ package com.fitspine.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitspine.dto.*;
+import com.fitspine.exception.AiInsightApiLimitException;
 import com.fitspine.exception.AiServiceException;
 import com.fitspine.exception.ResourceNotFoundException;
 import com.fitspine.exception.UserNotFoundException;
@@ -51,6 +52,8 @@ public class AiInsightServiceImpl implements AiInsightService {
         this.fitbitContextAggregationService = fitbitContextAggregationService;
         this.redis = redis;
     }
+
+    public static final int DAILY_LIMIT = 3;
 
     private static final String FIELD_CONTEXT_EXTENDED = """
             Field Reference for FitSpine AI
@@ -303,7 +306,13 @@ public class AiInsightServiceImpl implements AiInsightService {
             You will receive two JSON objects:
             • todayJson
             • contextJson
-
+                
+            ---------------------------------------    
+            CRITICAL FORMAT RULE (MANDATORY):
+            The fields improved, worsened, possibleCauses, actionableAdvice, and interventionsToday MUST be arrays of plain strings ONLY.\s
+            If you attempt to output objects instead of strings, STOP and regenerate the entire JSON using the correct format.\s
+            Never output objects inside these arrays.
+                        
             Analyze them using ALL rules above and return ONLY the final JSON output in the exact schema shown above.
             """, FIELD_CONTEXT_EXTENDED);
 
@@ -317,6 +326,18 @@ public class AiInsightServiceImpl implements AiInsightService {
         //Redis keys:
         String insightKey = "ai_insight:" + user.getPublicId() + ":" + logDate;
         String hashKey = "ai_insight_hash:" + user.getPublicId() + ":" + logDate;
+        String limitKey = "ai_insight_api_call:" + user.getPublicId() + ":" + logDate;
+
+        //AI call limit check:
+        Long count = redis.opsForValue().increment(limitKey);
+
+        if (count != null && count == 1) {
+            redis.expire(limitKey, Duration.ofHours(24));
+        }
+
+        if (count != null && count > DAILY_LIMIT) {
+            throw new AiInsightApiLimitException("You have reached your AI Insight limit for the day.");
+        }
 
         //Build context:
         FitbitAiContextInsightDto contextDto = fitbitContextAggregationService.buildContext(email, logDate); //Here logDate is he currentDate meaning target date

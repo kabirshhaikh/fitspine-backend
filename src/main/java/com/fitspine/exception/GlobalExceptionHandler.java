@@ -198,6 +198,22 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(AiInsightApiLimitException.class)
+    public ResponseEntity<ApiError> handleAiInsightApiLimit(
+            AiInsightApiLimitException ex,
+            HttpServletRequest request) {
+
+        ApiError error = new ApiError(
+                LocalDateTime.now(),
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                "AI_DAILY_LIMIT_REACHED",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
 
     //Generic exceptions:
     @ExceptionHandler(Exception.class)
