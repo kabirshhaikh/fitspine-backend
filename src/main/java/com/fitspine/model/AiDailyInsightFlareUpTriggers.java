@@ -32,9 +32,6 @@ public class AiDailyInsightFlareUpTriggers {
     @Column(name = "value")
     private String value;
 
-    @Column(name = "deviation", columnDefinition = "TEXT")
-    private String deviation;
-
     @Column(name = "impact", columnDefinition = "TEXT")
     private String impact;
 

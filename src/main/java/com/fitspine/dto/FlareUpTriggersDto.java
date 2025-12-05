@@ -12,6 +12,5 @@ import lombok.NoArgsConstructor;
 public class FlareUpTriggersDto {
     private String metric;
     private String value;
-    private String deviation;
     private String impact;
 }

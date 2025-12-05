@@ -267,7 +267,7 @@ public class AiPrompt {
             - Must respect disc levels and surgery history (no heavy lifting, twisting, or extreme flexion).
 
             "flareUpTriggers":
-            - ARRAY of objects with fields { metric, value, deviation, impact }.
+            - ARRAY of objects with fields { metric, value, impact }.
             - Use both deviation from average and variability (standard deviation) wherever available:
               • Prefer triggers where today's value is clearly above or below the 7-day pattern.
             - Examples of patterns:
@@ -276,7 +276,6 @@ public class AiPrompt {
               • a spike in steps or activeMinutes after a quiet week,
               • higher restingHeartRate with higher stressLevel.
             - "value": describe today's value and the 7-day pattern in simple text.
-            - "deviation": describe how far today is from the user's typical range (e.g., "much higher than your usual range").
             - "impact": explain the biomechanical or physiological consequence
               (e.g., "likely increased disc compression at L5–S1" or "reduced overnight tissue recovery").
 
@@ -314,7 +313,7 @@ public class AiPrompt {
             - These keys MUST ALWAYS be arrays of plain strings:
               improved, worsened, possibleCauses, actionableAdvice, interventionsToday.
             - flareUpTriggers MUST ALWAYS be an array of objects with keys:
-              metric, value, deviation, impact.
+              metric, value, impact.
             - riskForecast MUST ALWAYS be an object with keys:
               risk, bucket.
             - Never rename keys, never add new keys, never omit required keys.
@@ -336,7 +335,6 @@ public class AiPrompt {
                 {
                   "metric": "",
                   "value": "",
-                  "deviation": "",
                   "impact": ""
                 }
               ],

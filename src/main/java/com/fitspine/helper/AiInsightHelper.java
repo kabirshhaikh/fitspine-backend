@@ -65,7 +65,6 @@ public class AiInsightHelper {
             flare.add(FlareUpTriggersDto.builder()
                     .metric(list.get(i).getMetric())
                     .value(list.get(i).getValue())
-                    .deviation(list.get(i).getDeviation())
                     .impact(list.get(i).getImpact())
                     .build()
             );
@@ -197,7 +196,6 @@ public class AiInsightHelper {
                             .aiDailyInsight(savedInsight)
                             .metric(flareUpTriggersDtos.get(i).getMetric())
                             .value(flareUpTriggersDtos.get(i).getValue())
-                            .deviation(flareUpTriggersDtos.get(i).getDeviation())
                             .impact(flareUpTriggersDtos.get(i).getImpact())
                             .build()
             );
