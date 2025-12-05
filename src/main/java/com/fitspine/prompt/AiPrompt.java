@@ -275,7 +275,16 @@ public class AiPrompt {
               • reduced sleep compared with usual,
               • a spike in steps or activeMinutes after a quiet week,
               • higher restingHeartRate with higher stressLevel.
-            - "value": describe today's value and the 7-day pattern in simple text.
+            - "value": MUST be a single plain string formatted EXACTLY as:
+              "{todayValue} today | {baselineValue} typical | {deltaValue}"
+              where:
+                  • todayValue = today's metric value
+                  • baselineValue = the 7-day average for the same metric
+                  • deltaValue = todayValue − baselineValue (use a "+" sign for positive numbers or use "-" sign for negative number)
+              NO sentences, NO extra text, NO units, NO explanations, NO trailing periods.
+                  • Only the three values separated by " | " exactly as shown.
+                  • Example: "798 today | 618 typical | +180" (Do not use example as the value)
+              
             - "impact": explain the biomechanical or physiological consequence
               (e.g., "likely increased disc compression at L5–S1" or "reduced overnight tissue recovery").
 
