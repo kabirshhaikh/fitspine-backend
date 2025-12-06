@@ -427,8 +427,9 @@ public class AiInsightHelper {
             riskForecastsRepository.save(
                     AiDailyInsightRiskForecasts.builder()
                             .aiDailyInsight(savedInsight)
-                            .risk(insight.getRiskForecast().getRisk())
-                            .bucket(insight.getRiskForecast().getBucket())
+                            .painRiskScore(insight.getRiskForecast().getPainRiskScore())
+                            .flareUpRiskScore(insight.getRiskForecast().getFlareUpRiskScore())
+                            .riskBucket(insight.getRiskForecast().getRiskBucket())
                             .build()
             );
         }

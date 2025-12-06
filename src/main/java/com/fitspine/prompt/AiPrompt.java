@@ -308,9 +308,14 @@ public class AiPrompt {
             - Each must include a rationale grounded in disc mechanics or neural recovery.
 
             "riskForecast":
-            - OBJECT with fields { "risk": number, "bucket": "LOW" | "MEDIUM" | "HIGH" }.
+            - OBJECT with fields {\s
+              "flareUpRiskScore": number,\s
+              "painRiskScore": number,\s
+              "riskBucket": "SAFE" | "CAUTION" | "ELEVATED" | "HIGH_RISK"
+              }.
+            - Both flareUpRiskScore and painRiskScore MUST be integers from 0–10, where 0 = minimal risk and 10 = highest risk.
             - If data are sparse (daysAvailable < 3 or many key metrics = -1),
-              set bucket = "LOW" and explain uncertainty in other sections.
+              set riskBucket = "SAFE" and explain uncertainty in other sections.
             - Otherwise:
               • combine trends in painLevel, flareUpToday, steps, sedentaryMinutes, sleep,
                 restingHeartRate, and daysSinceLastFlareUp to choose bucket.
@@ -324,7 +329,7 @@ public class AiPrompt {
             - flareUpTriggers MUST ALWAYS be an array of objects with keys:
               metric, value, impact.
             - riskForecast MUST ALWAYS be an object with keys:
-              risk, bucket.
+              flareUpRiskScore, painRiskScore, riskBucket.
             - Never rename keys, never add new keys, never omit required keys.
             - Never output nested objects where a plain string is required.
 
@@ -348,9 +353,10 @@ public class AiPrompt {
                 }
               ],
               "riskForecast": {
-                "risk": 0.0,
-                "bucket": "LOW"
-              },
+                "flareUpRiskScore": 0,
+                "painRiskScore": 0,
+                "riskBucket": "SAFE"
+              }
               "interventionsToday": []
             }
 

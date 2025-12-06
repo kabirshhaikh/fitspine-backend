@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RiskForecastDto {
-    private Double risk;
-    private String bucket;
+    private Integer flareUpRiskScore;
+    private Integer painRiskScore;
+
+    private String riskBucket;
 }

@@ -26,11 +26,14 @@ public class AiDailyInsightRiskForecasts {
     @JoinColumn(name = "id_ai_daily_insights", nullable = false)
     private AiDailyInsight aiDailyInsight;
 
-    @Column(name = "risk")
-    private Double risk;
+    @Column(name = "flareup_risk_score")
+    private Integer flareUpRiskScore;
 
-    @Column(name = "bucket")
-    private String bucket;
+    @Column(name = "pain_risk_score")
+    private Integer painRiskScore;
+
+    @Column(name = "risk_bucket")
+    private String riskBucket;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

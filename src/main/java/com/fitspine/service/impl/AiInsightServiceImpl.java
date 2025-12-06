@@ -144,8 +144,9 @@ public class AiInsightServiceImpl implements AiInsightService {
                     RiskForecastDto riskForecastDto = null;
                     if (insight.getRiskForecasts() != null) {
                         riskForecastDto = RiskForecastDto.builder()
-                                .risk(insight.getRiskForecasts().getRisk())
-                                .bucket(insight.getRiskForecasts().getBucket())
+                                .flareUpRiskScore(insight.getRiskForecasts().getFlareUpRiskScore())
+                                .painRiskScore(insight.getRiskForecasts().getPainRiskScore())
+                                .riskBucket(insight.getRiskForecasts().getRiskBucket())
                                 .build();
                     }
 
