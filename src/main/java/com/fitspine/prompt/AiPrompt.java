@@ -214,7 +214,7 @@ public class AiPrompt {
             ---------------------------------------
             SECTION-SPECIFIC RULES
             ---------------------------------------
-            
+                        
             "worsened":
             - ARRAY OF STRINGS ONLY.
             - Each string must:
@@ -324,7 +324,41 @@ public class AiPrompt {
               flareUpRiskScore, painRiskScore, riskBucket.
             - Never rename keys, never add new keys, never omit required keys.
             - Never output nested objects where a plain string is required.
-
+                        
+            ---------------------------------------
+            FALLBACK LOGIC (MANDATORY):
+            ---------------------------------------
+            If a section has no meaningful items based on today's data (for example: no worsened metrics, no flare-up triggers, no possible causes), you MUST still return a clinically meaningful placeholder item rather than leaving the array empty.
+            - worsened:
+              If nothing worsened, return one item:
+              "No metrics worsened today compared to your usual baseline; your spinal load and recovery markers remained stable."
+                        
+            - flareUpTriggers:
+              If no triggers exist, return one object:
+                {
+                  "metric": "none_detected",
+                  "value": "0 today | 0 typical | 0",
+                  "impact": "No specific flare-up triggers were identified based on today's activity and recovery patterns."
+                }
+                        
+            - possibleCauses:
+              If no causes exist, return one item:
+              "Your symptoms today are consistent with your baseline patterns, with no clear contributing factors."
+                        
+            - actionableAdvice:
+              Always return exactly 3 items.
+              If no corrective advice is needed, return stability-oriented advice such as:
+              "Maintain gentle daily mobility to support disc hydration and circulation."
+                        
+            - interventionsToday:
+              Always return 2–3 items.
+              If no specific intervention is required, return low-load, spine-safe interventions such as:
+              "Continue balancing sitting and standing to support spinal stability."
+                        
+            These fallback items MUST follow the array/object structure exactly.
+            Never leave an array empty.
+            Never omit keys.
+                              
             ---------------------------------------
             REQUIRED OUTPUT FORMAT (RETURN ONLY JSON)
             ---------------------------------------
@@ -347,7 +381,7 @@ public class AiPrompt {
                 "flareUpRiskScore": 0,
                 "painRiskScore": 0,
                 "riskBucket": "SAFE"
-              }
+              },
               "interventionsToday": []
             }
 
