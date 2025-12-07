@@ -26,7 +26,6 @@ public class AiInsightHelper {
     private final RestTemplate restTemplate;
     private final AiDailyInsightRepository insightRepository;
     private final AiDailyInsightFlareUpTriggersRepository flareUpTriggersRepository;
-    private final AiDailyInsightImprovedRepository improvedRepository;
     private final AiDailyInsightWorsenedRepository worsenedRepository;
     private final AiDailyInsightPossibleCausesRepository possibleCausesRepository;
     private final AiDailyInsightActionableAdviceRepository actionableAdviceRepository;
@@ -39,7 +38,6 @@ public class AiInsightHelper {
             RestTemplate restTemplate,
             AiDailyInsightRepository insightRepository,
             AiDailyInsightFlareUpTriggersRepository flareUpTriggersRepository,
-            AiDailyInsightImprovedRepository improvedRepository,
             AiDailyInsightWorsenedRepository worsenedRepository,
             AiDailyInsightPossibleCausesRepository possibleCausesRepository,
             AiDailyInsightActionableAdviceRepository actionableAdviceRepository,
@@ -50,7 +48,6 @@ public class AiInsightHelper {
         this.restTemplate = restTemplate;
         this.insightRepository = insightRepository;
         this.flareUpTriggersRepository = flareUpTriggersRepository;
-        this.improvedRepository = improvedRepository;
         this.worsenedRepository = worsenedRepository;
         this.possibleCausesRepository = possibleCausesRepository;
         this.actionableAdviceRepository = actionableAdviceRepository;
@@ -71,15 +68,6 @@ public class AiInsightHelper {
         }
 
         return flare;
-    }
-
-    public List<String> returnImprovedList(List<AiDailyInsightImproved> improvedList) {
-        List<String> improved = new ArrayList<>();
-        for (int i = 0; i < improvedList.size(); i++) {
-            improved.add(improvedList.get(i).getImproved());
-        }
-
-        return improved;
     }
 
     public List<String> returnWorsenedList(List<AiDailyInsightWorsened> worsenedList) {
@@ -115,21 +103,6 @@ public class AiInsightHelper {
             interventions.add(interventionsTodayList.get(i).getInterventions());
         }
         return interventions;
-    }
-
-    public List<AiDailyInsightImproved> getImprovedList(List<String> improved, AiDailyInsight savedInsight) {
-        List<AiDailyInsightImproved> improvedList = new ArrayList<>();
-
-        for (int i = 0; i < improved.size(); i++) {
-            improvedList.add(
-                    AiDailyInsightImproved.builder()
-                            .aiDailyInsight(savedInsight)
-                            .improved(improved.get(i))
-                            .build()
-            );
-        }
-
-        return improvedList;
     }
 
     public List<AiDailyInsightWorsened> getWorsened(List<String> worsened, AiDailyInsight savedInsight) {
@@ -330,7 +303,6 @@ public class AiInsightHelper {
         JsonNode json = objectMapper.readTree(content);
 
         //Validate the fields and check if they are array or not:
-        validateStringArray(json, "improved");
         validateStringArray(json, "worsened");
         validateStringArray(json, "possibleCauses");
         validateStringArray(json, "actionableAdvice");
@@ -363,7 +335,6 @@ public class AiInsightHelper {
             int count = riskForecastsRepository.countByAiDailyInsight_UserAndAiDailyInsight_LogDate(user, logDate);
 
             //Delete children entities after updating parent:
-            improvedRepository.deleteByAiDailyInsight(existingInsight);
             worsenedRepository.deleteByAiDailyInsight(existingInsight);
             flareUpTriggersRepository.deleteByAiDailyInsight(existingInsight);
 
@@ -401,10 +372,6 @@ public class AiInsightHelper {
 
         if (insight.getFlareUpTriggers() != null && !insight.getFlareUpTriggers().isEmpty()) {
             flareUpTriggersRepository.saveAll(getFlareUpTriggers(insight.getFlareUpTriggers(), savedInsight));
-        }
-
-        if (insight.getImproved() != null && !insight.getImproved().isEmpty()) {
-            improvedRepository.saveAll(getImprovedList(insight.getImproved(), savedInsight));
         }
 
         if (insight.getWorsened() != null && !insight.getWorsened().isEmpty()) {

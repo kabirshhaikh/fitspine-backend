@@ -77,9 +77,6 @@ public class AiDailyInsight {
     private AiDailyInsightRiskForecasts riskForecasts;
 
     @OneToMany(mappedBy = "aiDailyInsight", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AiDailyInsightImproved> improved = new ArrayList<>();
-
-    @OneToMany(mappedBy = "aiDailyInsight", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AiDailyInsightWorsened> worsened = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)

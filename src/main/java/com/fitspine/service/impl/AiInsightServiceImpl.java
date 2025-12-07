@@ -128,9 +128,6 @@ public class AiInsightServiceImpl implements AiInsightService {
                     List<AiDailyInsightFlareUpTriggers> flareUpTriggers = insight.getFlareUpTriggers();
                     List<FlareUpTriggersDto> triggers = aiHelper.returnTriggerText(flareUpTriggers);
 
-                    List<AiDailyInsightImproved> improvedList = insight.getImproved();
-                    List<String> improved = aiHelper.returnImprovedList(improvedList);
-
                     List<AiDailyInsightWorsened> worsenedList = insight.getWorsened();
                     List<String> worsened = aiHelper.returnWorsenedList(worsenedList);
 
@@ -157,7 +154,6 @@ public class AiInsightServiceImpl implements AiInsightService {
                             .discScoreExplanation(insight.getDiscScoreExplanation() != null ? insight.getDiscScoreExplanation() : "")
 
                             .flareUpTriggers(triggers != null ? triggers : new ArrayList<>())
-                            .improved(improved != null ? improved : new ArrayList<>())
                             .worsened(worsened != null ? worsened : new ArrayList<>())
                             .possibleCauses(possibleCauses != null ? possibleCauses : new ArrayList<>())
                             .actionableAdvice(actionableAdvice != null ? actionableAdvice : new ArrayList<>())

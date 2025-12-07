@@ -188,7 +188,6 @@ public class AiPrompt {
               efficiency ≈ 3 or more points,
               restingHeartRate ≈ 2 or more beats.
             - If no metric crosses these thresholds:
-              • still identify the largest improvement and the largest worsening,
               • clearly state that these changes are small or subtle.
 
             ---------------------------------------
@@ -215,14 +214,7 @@ public class AiPrompt {
             ---------------------------------------
             SECTION-SPECIFIC RULES
             ---------------------------------------
-
-            "improved":
-            - ARRAY OF STRINGS ONLY.
-            - Each string must:
-              • name the metric,
-              • describe today's value vs the context average in plain language,
-              • connect to a physiological improvement mechanism (disc load, inflammation, neural sensitivity, circulation, or recovery).
-
+            
             "worsened":
             - ARRAY OF STRINGS ONLY.
             - Each string must:
@@ -325,7 +317,7 @@ public class AiPrompt {
             ---------------------------------------
             - Arrays MUST remain arrays even if they contain only one item.
             - These keys MUST ALWAYS be arrays of plain strings:
-              improved, worsened, possibleCauses, actionableAdvice, interventionsToday.
+              worsened, possibleCauses, actionableAdvice, interventionsToday.
             - flareUpTriggers MUST ALWAYS be an array of objects with keys:
               metric, value, impact.
             - riskForecast MUST ALWAYS be an object with keys:
@@ -337,7 +329,6 @@ public class AiPrompt {
             REQUIRED OUTPUT FORMAT (RETURN ONLY JSON)
             ---------------------------------------
             {
-              "improved": [],
               "worsened": [],
               "possibleCauses": [],
               "actionableAdvice": [],
@@ -368,7 +359,7 @@ public class AiPrompt {
             • contextJson (FitbitAiContextInsightDto)
 
             CRITICAL FORMAT RULE (MANDATORY):
-            - The fields improved, worsened, possibleCauses, actionableAdvice, and interventionsToday MUST be arrays of plain strings ONLY.
+            - The fields worsened, possibleCauses, actionableAdvice, and interventionsToday MUST be arrays of plain strings ONLY.
             - If you generate an incorrect shape, you MUST discard it and regenerate the entire JSON with the correct schema.
             - Return ONLY the final JSON object, with no extra commentary.
             """, FITBIT_FIELD_CONTEXT_EXTENDED);

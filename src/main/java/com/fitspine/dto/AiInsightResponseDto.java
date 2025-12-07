@@ -18,7 +18,6 @@ public class AiInsightResponseDto {
     private String discScoreExplanation;
 
     private List<FlareUpTriggersDto> flareUpTriggers;
-    private List<String> improved;
     private List<String> worsened;
     private List<String> possibleCauses;
     private List<String> actionableAdvice;
