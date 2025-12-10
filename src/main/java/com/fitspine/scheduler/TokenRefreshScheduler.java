@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 @Slf4j
 @Component
 public class TokenRefreshScheduler {
@@ -24,9 +26,10 @@ public class TokenRefreshScheduler {
         this.tokenManager = tokenManager;
     }
 
-    @Scheduled(cron = "0 0 2 * * ?") // runs daily 2AM
+    @Scheduled(cron = "0 0 * * * ?") //runs every hour on the hour
     public void refreshExpiringTokens() {
         log.info("Running daily token refresh job...");
+        AtomicInteger refreshedCount = new AtomicInteger(0);
 
         userWearableTokenRepository.findAll().forEach(token -> {
             try {
@@ -37,10 +40,13 @@ public class TokenRefreshScheduler {
                             clientId,
                             clientSecret
                     );
+                    refreshedCount.incrementAndGet();
                 }
             } catch (Exception e) {
                 log.error("Failed to refresh token for user {}", token.getUser().getEmail(), e);
             }
         });
+
+        log.info("Cronjob -> count of refreshed tokens {}", refreshedCount);
     }
 }
