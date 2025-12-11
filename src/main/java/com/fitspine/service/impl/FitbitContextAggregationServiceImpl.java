@@ -12,9 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +58,16 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
     @Override
     public FitbitAiContextInsightDto buildContext(String email, LocalDate targetDate) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User with email not found: " + email));
+
+        //Redis cache key:
+        String cacheKey = "context:" + user.getPublicId() + ":" + targetDate;
+        FitbitAiContextInsightDto cachedData = (FitbitAiContextInsightDto) redis.opsForValue().get(cacheKey);
+        if (cachedData != null) {
+            log.info("Returning cached context for user: {} on date: {}", user.getPublicId(), targetDate);
+            return cachedData;
+        }
+
+        //If cached data is not present, then compute and store the data in redis at the end:
         LocalDate startDate = targetDate.minusDays(6);
         LocalDate endDate = targetDate.minusDays(1);
 
@@ -83,7 +91,7 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         String startDateContext = deIdentificationHelper.sanitizeTheDateForContextBuilding(startDate);
         String endDateContext = deIdentificationHelper.sanitizeTheDateForContextBuilding(endDate);
 
-        return FitbitAiContextInsightDto.builder()
+        FitbitAiContextInsightDto dto = FitbitAiContextInsightDto.builder()
                 // Metadata
                 .windowDays(7)
                 .daysAvailable(helper.calculateDaysAvailable(manualDailyLogs, heartLogs, activitySummariesLogs, activityGoalsLogs, sleepLogs, sleepSummaryLogs))
@@ -128,6 +136,21 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
                 .sedentaryStandardDeviation(helper.calculateSedentaryStandardDeviation(activitySummariesLogs))
 
                 .build();
+
+        //Cache the data:
+        ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
+
+        //Calculate the start of next day in UTC: 12 am basically:
+        ZonedDateTime midnight = now.toLocalDate().plusDays(1).atStartOfDay(ZoneOffset.UTC);
+
+        //Time to live:
+        Duration timeToLive = Duration.between(now, midnight);
+
+        //set the cache with key, dto and ttl:
+        redis.opsForValue().set(cacheKey, dto, timeToLive);
+        log.info("Cached context aggregation for user {} on date {}", user.getPublicId(), targetDate);
+
+        return dto;
     }
 
     @Override
