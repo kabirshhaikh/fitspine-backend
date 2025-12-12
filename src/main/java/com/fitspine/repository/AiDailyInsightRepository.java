@@ -18,13 +18,13 @@ public interface AiDailyInsightRepository extends JpaRepository<AiDailyInsight, 
     Optional<AiDailyInsight> findByUserAndLogDate(User user, LocalDate logDate);
 
     @Query("""
-            SELECT m.user
-            FROM ManualDailyLog m
-            LEFT JOIN AiDailyInsight i
-            ON i.user = m.user
-            AND i.logDate = m.logDate
-            WHERE m.logDate = :targetDate
-            AND i.id IS NULL
+                SELECT DISTINCT u.id
+                FROM ManualDailyLog m
+                JOIN m.user u
+                LEFT JOIN AiDailyInsight i
+                    ON i.user = u AND i.logDate = m.logDate
+                WHERE m.logDate = :targetDate
+                  AND i.id IS NULL
             """)
-    List<User> findUsersWithManualDailyLogsButNoInsights(@Param("targetDate") LocalDate targetDate);
+    List<Long> findUsersWithManualDailyLogsButNoInsights(@Param("targetDate") LocalDate targetDate);
 }
