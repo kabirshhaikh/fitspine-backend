@@ -34,8 +34,7 @@ public class FitbitAiInsightScheduler {
         this.insightRepository = insightRepository;
     }
 
-    //    @Scheduled(cron = "0 0 22 * * ?") //10 PM daily:
-    @Scheduled(cron = "0 57 23 * * ?")
+    @Scheduled(cron = "0 0 22 * * ?") //10 PM daily:
     public void generateDailyInsightForEligibleUsers() {
         LocalDate today = LocalDate.now();
         List<Long> ids = insightRepository.findUsersWithManualDailyLogsButNoInsights(today);
