@@ -1,6 +1,7 @@
 package com.fitspine.service.impl;
 
 import com.fitspine.dto.AiUserDailyInputDto;
+import com.fitspine.exception.AiInsightApiLimitException;
 import com.fitspine.exception.UserNotFoundException;
 import com.fitspine.model.User;
 import com.fitspine.repository.UserRepository;
@@ -49,6 +50,11 @@ public class AiInsightWorkerServiceImpl implements AiInsightWorkerService {
             insightService.generateDailyInsight(dto, user.getEmail(), date);
 
             log.info("CRONJOB -> Worker -> AI Insight generated for user {}", user.getPublicId());
+        } catch (AiInsightApiLimitException exception) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+
+            log.info("CRONJOB -> WORKER -> user: {} has reached rate limit for the day to generate AI insight", user.getPublicId());
         } catch (Exception ex) {
             log.error("CRONJOB -> Worker FAILED for user {}: {}", userId, ex.getMessage());
         }
