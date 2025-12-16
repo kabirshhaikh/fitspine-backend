@@ -4,6 +4,7 @@ import com.fitspine.dto.ManualDailyLogInputDto;
 import com.fitspine.dto.ManualDailyLogPatchDto;
 import com.fitspine.dto.ManualDailyLogResponseDto;
 import com.fitspine.service.ManualDailyLogService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,7 +24,7 @@ public class ManualDailyLogController {
     }
 
     @PostMapping
-    public ResponseEntity<ManualDailyLogResponseDto> createDailyLog(@RequestBody ManualDailyLogInputDto dto) {
+    public ResponseEntity<ManualDailyLogResponseDto> createDailyLog(@RequestBody @Valid ManualDailyLogInputDto dto) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
 
@@ -32,7 +33,7 @@ public class ManualDailyLogController {
     }
 
     @PatchMapping("/{id}") // this is manual log id
-    public ResponseEntity<ManualDailyLogResponseDto> updateDailyLog(@RequestBody ManualDailyLogPatchDto dto, @PathVariable Long id) {
+    public ResponseEntity<ManualDailyLogResponseDto> updateDailyLog(@RequestBody @Valid ManualDailyLogPatchDto dto, @PathVariable Long id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
         ManualDailyLogResponseDto response = manualDailyLogService.updateDailyLog(email, dto, id);

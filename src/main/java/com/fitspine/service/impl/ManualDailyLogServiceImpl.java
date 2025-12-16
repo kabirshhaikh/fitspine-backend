@@ -60,6 +60,9 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
             Optional.ofNullable(dto.getStressLevel()).ifPresent(existingLog::setStressLevel);
             Optional.ofNullable(dto.getLiftingOrStrain()).ifPresent(existingLog::setLiftingOrStrain);
             Optional.ofNullable(dto.getNotes()).ifPresent(existingLog::setNotes);
+            Optional.ofNullable(dto.getSleepDuration()).ifPresent(existingLog::setSleepDuration);
+            Optional.ofNullable(dto.getNightWakeUps()).ifPresent(existingLog::setNightWakeUps);
+            Optional.ofNullable(dto.getRestingHeartRate()).ifPresent(existingLog::setRestingHeartRate);
             log.info("Override Update complete for the daily manual log for the user public ID: {}", user.getPublicId());
 
             // Save parent first (update)
@@ -98,6 +101,9 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
                     .stressLevel(dto.getStressLevel())
                     .liftingOrStrain(dto.getLiftingOrStrain())
                     .notes(dto.getNotes())
+                    .sleepDuration(dto.getSleepDuration())
+                    .nightWakeUps(dto.getNightWakeUps())
+                    .restingHeartRate(dto.getRestingHeartRate())
                     .build();
 
             // Save parent first (so it gets an ID)
@@ -139,6 +145,9 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
                 .stressLevel(logToSave.getStressLevel())
                 .liftingOrStrain(logToSave.getLiftingOrStrain())
                 .notes(logToSave.getNotes())
+                .sleepDuration(logToSave.getSleepDuration())
+                .nightWakeUps(logToSave.getNightWakeUps())
+                .restingHeartRate(logToSave.getRestingHeartRate())
                 .painLocations(locations)
                 .build();
     }
@@ -199,6 +208,18 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
             log.setNotes(dto.getNotes());
         }
 
+        if (dto.getSleepDuration() != null) {
+            log.setSleepDuration(dto.getSleepDuration());
+        }
+
+        if (dto.getNightWakeUps() != null) {
+            log.setNightWakeUps(dto.getNightWakeUps());
+        }
+
+        if (dto.getRestingHeartRate() != null) {
+            log.setRestingHeartRate(dto.getRestingHeartRate());
+        }
+
         if (dto.getPainLocations() != null) {
             log.getManualDailyPainLocationLogs().clear();
             List<PainLocation> locations = dto.getPainLocations();
@@ -238,6 +259,9 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
                 .stressLevel(log.getStressLevel())
                 .liftingOrStrain(log.getLiftingOrStrain())
                 .notes(log.getNotes())
+                .sleepDuration(log.getSleepDuration())
+                .nightWakeUps(log.getNightWakeUps())
+                .restingHeartRate(log.getRestingHeartRate())
                 .painLocations(
                         log.getManualDailyPainLocationLogs().stream()
                                 .map(ManualDailyPainLocationLog::getPainLocation)
@@ -280,6 +304,9 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
                 .stressLevel(log.getStressLevel())
                 .liftingOrStrain(log.getLiftingOrStrain())
                 .notes(log.getNotes())
+                .sleepDuration(log.getSleepDuration())
+                .nightWakeUps(log.getNightWakeUps())
+                .restingHeartRate(log.getRestingHeartRate())
                 .painLocations(locations)
                 .build();
     }

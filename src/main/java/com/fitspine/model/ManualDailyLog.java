@@ -68,6 +68,17 @@ public class ManualDailyLog {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
+    @Column(name = "sleep_duration")
+    @Enumerated(EnumType.STRING)
+    private SleepDuration sleepDuration;
+
+    @Column(name = "night_wake_ups")
+    @Enumerated(EnumType.STRING)
+    private NightWakeUps nightWakeUps;
+
+    @Column(name = "resting_heart_rate")
+    private Integer restingHeartRate;
+
     @OneToMany(mappedBy = "manualDailyLog", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     List<ManualDailyPainLocationLog> manualDailyPainLocationLogs = new ArrayList<>();

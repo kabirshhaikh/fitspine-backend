@@ -22,6 +22,9 @@ public class ManualDailyLogResponseDto {
     private StressLevel stressLevel;
     private Boolean liftingOrStrain;
     private String notes;
+    private SleepDuration sleepDuration;
+    private NightWakeUps nightWakeUps;
+    private Integer restingHeartRate;
 
     private List<PainLocation> painLocations;
 }
