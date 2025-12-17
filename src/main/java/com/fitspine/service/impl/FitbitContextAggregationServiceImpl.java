@@ -109,9 +109,12 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
                 .daysWithFlareups(helper.calculateDaysWithFlareUp(manualDailyLogs))
                 .daysWithNumbnessTingling(helper.calculateDaysWithNumbnessTingling(manualDailyLogs))
                 .daysWithLiftingOrStrain(helper.calculateDaysWithLiftingOrStrain(manualDailyLogs))
+                .averageSleepingDuration(helper.calculateAverageSleepingDuration(manualDailyLogs))
+                .averageNightWakeUps(helper.calculateAverageNightWakeUps(manualDailyLogs))
+                .averageManualRestingHeartRate(helper.calculateAverageManualRestingHeartRate(manualDailyLogs))
 
                 // Fitbit Heart Data
-                .averageRestingHeartRate(helper.calculateAverageRestingHeartRate(restingHeartRates))
+                .averageFitbitRestingHeartRate(helper.calculateAverageRestingHeartRate(restingHeartRates))
 
                 // Fitbit Activity Data
                 .averageCaloriesOut(helper.calculateAverageCaloriesOut(activityMetrics))
@@ -125,9 +128,12 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
 
                 //Risk forecast:
                 .yesterdaySleepMinutes(helper.getYesterdaysSleep(sleepSummaryLogs))
-                .yesterdayRestingHeartRate(helper.getYesterdaysRestingHeartRate(heartLogs))
+                .yesterdayFitbitRestingHeartRate(helper.getYesterdaysRestingHeartRate(heartLogs))
                 .yesterdayPainLevel(helper.getYesterdaysPainLevel(manualDailyLogs))
                 .daysSinceLastFlareUp(helper.calculateDaysSinceLastFlareUp(manualDailyLogs))
+                .yesterdayManualRestingHeartRate(helper.getYesterdaysManualRestingHeartRate(manualDailyLogs))
+                .yesterdaySleepDuration(helper.getYesterdaysSleepDuration(manualDailyLogs))
+                .yesterdayNightWakeUps(helper.getYesterdaysNightWakeUps(manualDailyLogs))
 
                 //Standard Deviations:
                 .stepsStandardDeviation(helper.calculateStepsStandardDeviation(activitySummariesLogs))

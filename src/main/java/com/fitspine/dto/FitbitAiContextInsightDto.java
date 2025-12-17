@@ -30,10 +30,13 @@ public class FitbitAiContextInsightDto {
     private Integer daysWithFlareups;
     private Integer daysWithNumbnessTingling;
     private Integer daysWithLiftingOrStrain;
+    private Integer averageSleepingDuration;
+    private Integer averageNightWakeUps;
+    private Integer averageManualRestingHeartRate;
 
     //Fitbit Integration Data:
     //Heart
-    private Integer averageRestingHeartRate; //From FitbitActivitiesHeartLog -> FitbitActivitiesHeartValueLog
+    private Integer averageFitbitRestingHeartRate; //From FitbitActivitiesHeartLog -> FitbitActivitiesHeartValueLog
 
     //Activities:
     private Integer averageCaloriesOut; //From FitbitActivitySummariesLog
@@ -47,11 +50,14 @@ public class FitbitAiContextInsightDto {
 
     //New fields for risk forecast:
     private Integer yesterdaySleepMinutes;
-    private Integer yesterdayRestingHeartRate;
+    private Integer yesterdayFitbitRestingHeartRate;
     private Integer yesterdayPainLevel;
     private Integer daysSinceLastFlareUp;
     private Integer stepsStandardDeviation;
     private Integer restingHearRateStandardDeviation;
     private Integer sleepStandardDeviation;
     private Integer sedentaryStandardDeviation;
+    private Integer yesterdayManualRestingHeartRate;
+    private Integer yesterdaySleepDuration;
+    private Integer yesterdayNightWakeUps;
 }

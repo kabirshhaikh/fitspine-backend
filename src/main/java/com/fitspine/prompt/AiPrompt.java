@@ -29,6 +29,9 @@ public class AiPrompt {
             - morningStiffness: Mechanical status on first getting up [0=None → 3=Severe].
             - stressLevel: Psychological load [0=Very Low → 4=Very High]; high values drive central sensitization and muscle guarding.
             - notes: De-identified free text from user. Use this to explain outliers or unusual patterns (e.g., travel days, illness, poor sleep environment).
+            - sleepDuration: User-reported sleep duration score. Reflects perceived sleep adequacy and restfulness, even if objective data is missing.
+            - nightWakeUps: User-reported frequency of nighttime awakenings. Higher values suggest pain-related sleep fragmentation and impaired neural recovery.
+            - manualRestingHeartRate: User-reported resting heart rate; less precise but useful when Fitbit data is unavailable.
 
             -----------------------------------------------------------
             3. LIFESTYLE BEHAVIORS (THE "DRIVERS" - INDEPENDENT VARIABLES)
@@ -47,7 +50,8 @@ public class AiPrompt {
             *Physiological indicators of recovery capacity and load tolerance.*
 
             HEART:
-            - restingHeartRate: Sympathetic load and recovery status (beats per minute).
+            - fitbitRestingHeartRate: Device-measured resting heart rate. Preferred for physiological trend analysis and risk scoring when available.
+            - manualRestingHeartRate: User-reported resting heart rate. Use only when Fitbit data is unavailable, and interpret conservatively.
               • Lower than usual = better recovery.
               • Higher than usual = stress, fatigue, illness, or overload.
 
@@ -90,12 +94,16 @@ public class AiPrompt {
             - daysWithStretching, daysWithFlareups, daysWithNumbnessTingling, daysWithLiftingOrStrain.
 
             Objective context:
-            - averageRestingHeartRate, averageCaloriesOut, averageSteps,
+            - averageFitbitRestingHeartRate, averageCaloriesOut, averageSteps,
               averageSedentaryMinutes, averageActiveMinutes,
               averageTotalMinutesAsleep, averageEfficiency.
-
+              
+            Manual recovery context:
+            - averageSleepingDuration, averageNightWakeUps, averageManualRestingHeartRate:
+              • Subjective recovery baselines used when device data is limited or to explain symptom perception.
+              
             Temporal risk markers:
-            - yesterdaySleepMinutes, yesterdayRestingHeartRate, yesterdayPainLevel:
+            - yesterdaySleepMinutes, yesterdayFitbitRestingHeartRate, yesterdayPainLevel, yesterdayManualRestingHeartRate, yesterdaySleepDuration, yesterdayNightWakeUps:
               • Use these to connect "yesterday's recovery" to "today's symptoms".
             - daysSinceLastFlareUp:
               • Small values (0–2) = recent flare; tissues are still sensitive to load.
@@ -109,10 +117,17 @@ public class AiPrompt {
             -----------------------------------------------------------
             6. DATA RULES
             -----------------------------------------------------------
+            - If both fitbitRestingHeartRate and manualRestingHeartRate are present,
+              always prefer fitbitRestingHeartRate for comparisons, scoring, and risk estimation otherwise use manualRestingHeartRate.
+            - manualRestingHeartRate may be used qualitatively to support perceived stress or fatigue.
             - A value of -1 always means "no data available" and must be ignored in comparisons.
             - A value of 0 is valid data (e.g., 0 pain or 0 steps).
             - If both today's value and context value for a metric are -1, skip that metric entirely.
             - Never invent values; reason only from provided numbers and flags.
+            - Yesterday metrics follow the same precedence rules as today:
+              • Prefer yesterdayFitbitRestingHeartRate for physiological analysis.
+              • Use yesterdayManualRestingHeartRate only when Fitbit data is unavailable,
+                and interpret it conservatively.
             """;
 
 
@@ -134,7 +149,7 @@ public class AiPrompt {
               • disc load and compression,
               • inflammation and chemical irritation,
               • neural sensitivity and radiculopathy,
-              • sleep-driven recovery and autonomic balance (restingHeartRate),
+              • sleep-driven recovery and autonomic balance (averageFitbitRestingHeartRate),
               • deconditioning vs overuse (steps, sedentaryMinutes, activeMinutes).
             - Use phrases like "which may indicate", "suggesting", "consistent with", "likely due to".
             - Writing must be original and specific to the given data, not generic wellness advice.
@@ -164,15 +179,23 @@ public class AiPrompt {
             - Ordinal metrics where LOWER is better:
               • painLevel, morningStiffness, stressLevel, sittingTime, standingTime.
             - Quantitative metrics:
-              • lower = better: sedentaryMinutes, restingHeartRate.
+              • lower = better: sedentaryMinutes, averageFitbitRestingHeartRate.
               • higher = better: steps, activeMinutes, totalMinutesAsleep, efficiency.
             - Use window metadata (windowDays, daysAvailable, startDateContext, endDateContext, computedContext)
               when describing context (e.g., "compared with your last 7 days of data").
             - Use plain language numbers only; do not use percent signs or explicit math symbols.
-
+            - Manual sleep metrics:
+              • sleepDuration should be compared against averageSleepingDuration.
+              • nightWakeUps should be compared against averageNightWakeUps.
+              • These comparisons are valid even when Fitbit sleep metrics exist, as they reflect perceived recovery.
+                        
             ---------------------------------------
             DELTA & SIGNIFICANCE LOGIC
             ---------------------------------------
+            - Ordinal manual sleep metrics (sleepDuration, nightWakeUps) should be interpreted
+              as clinically meaningful even when numeric deltas are small.
+            - Higher nightWakeUps than usual indicates worsened sleep fragmentation.
+            - Lower sleepDuration than usual indicates reduced subjective recovery.                   
             - Lower-is-better metrics → think in terms of (contextAverage − todayValue).
             - Higher-is-better metrics → think in terms of (todayValue − contextAverage).
             - If the result is positive, today is IMPROVED vs baseline.
@@ -186,13 +209,18 @@ public class AiPrompt {
               sedentaryMinutes ≈ 30 or more,
               totalMinutesAsleep ≈ 30 or more,
               efficiency ≈ 3 or more points,
-              restingHeartRate ≈ 2 or more beats.
+              averageFitbitRestingHeartRate ≈ 2 or more beats.
             - If no metric crosses these thresholds:
               • clearly state that these changes are small or subtle.
 
             ---------------------------------------
             VARIABILITY & PATTERN DETECTION
             ---------------------------------------
+            - When Fitbit sleep data is missing (-1), use sleepDuration and nightWakeUps
+              to infer recovery quality and neural sensitization.
+            - When both manual and Fitbit sleep data exist:
+              • Prefer Fitbit metrics for physiological recovery assessment.
+              • Use manual sleep metrics to explain perceived fatigue or pain mismatch.                       
             - Use the standard deviation fields (stepsStandardDeviation, restingHearRateStandardDeviation,
               sleepStandardDeviation, sedentaryStandardDeviation) to detect patterns:
               • If today's value is far from the average AND variability is high → this suggests a boom–bust pattern (inconsistent loading).
@@ -200,13 +228,16 @@ public class AiPrompt {
             - Always consider:
               • sittingTime + sedentaryMinutes together (disc compression exposure),
               • steps + activeMinutes together (movement dosing),
-              • totalMinutesAsleep + efficiency + yesterdaySleepMinutes (recovery quality),
-              • restingHeartRate + stressLevel (autonomic stress),
+              • totalMinutesAsleep + efficiency + yesterdaySleepMinutes
+                (or yesterdaySleepDuration and yesterdayNightWakeUps when Fitbit sleep is missing)
+                for recovery quality assessment,            
+              • averageFitbitRestingHeartRate + stressLevel (autonomic stress),
               • daysSinceLastFlareUp + flareUpToday + painLevel (tissue sensitivity and relapse risk).
             - When flareUpToday is TRUE, search for combinations of:
               • higher than usual sittingTime or sedentaryMinutes,
-              • lower than usual totalMinutesAsleep,
-              • higher than usual restingHeartRate or stressLevel,
+              • lower than usual totalMinutesAsleep or yesterdaySleepDuration,
+              • higher than usual averageFitbitRestingHeartRate or yesterdayFitbitRestingHeartRate,
+              • elevated yesterdayManualRestingHeartRate when Fitbit data is missing,              
               • spikes or drops in steps / activeMinutes,
               • liftingOrStrain = TRUE,
               and treat these as likely triggers.
@@ -266,7 +297,7 @@ public class AiPrompt {
               • sudden extra sitting with lumbar disc issues,
               • reduced sleep compared with usual,
               • a spike in steps or activeMinutes after a quiet week,
-              • higher restingHeartRate with higher stressLevel.
+              • higher averageFitbitRestingHeartRate with higher stressLevel.
             - "value": MUST be a single plain string formatted EXACTLY as:
               "{todayValue} today | {baselineValue} typical | {deltaValue}"
               where:
@@ -284,9 +315,9 @@ public class AiPrompt {
             - Start conceptually at 70 and adjust in steps of about 5 up or down based on:
               • sittingTime and sedentaryMinutes,
               • steps and activeMinutes,
-              • sleep duration and efficiency,
+              • sleep duration, nightWakeUps, and efficiency,
               • flareUpToday, painLevel, numbnessTingling,
-              • restingHeartRate relative to average.
+              • averageFitbitRestingHeartRate relative to average.
             - Score must be between 0 and 100.
             - Higher scores = safer loading and better recovery conditions.
 
@@ -309,9 +340,11 @@ public class AiPrompt {
             - If data are sparse (daysAvailable < 3 or many key metrics = -1),
               set riskBucket = "SAFE" and explain uncertainty in other sections.
             - Otherwise:
-              • combine trends in painLevel, flareUpToday, steps, sedentaryMinutes, sleep,
-                restingHeartRate, and daysSinceLastFlareUp to choose bucket.
-
+              • combine trends in painLevel, flareUpToday, steps, sedentaryMinutes, sleep
+                (including yesterdaySleepMinutes or yesterdaySleepDuration / yesterdayNightWakeUps),
+                averageFitbitRestingHeartRate or yesterdayFitbitRestingHeartRate,
+                and daysSinceLastFlareUp
+              
             ---------------------------------------
             ABSOLUTE JSON SHAPE REQUIREMENTS (STRICT)
             ---------------------------------------

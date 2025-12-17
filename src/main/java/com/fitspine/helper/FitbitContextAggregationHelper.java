@@ -125,14 +125,14 @@ public class FitbitContextAggregationHelper {
     }
 
     public List<DailyGraphDto> getDailyDataBetweenDates(LocalDate startDate,
-                                                LocalDate endDate,
-                                                Map<LocalDate, Integer> restingHeartRate,
-                                                Map<LocalDate, Integer> painLevels,
-                                                Map<LocalDate, Integer> morningStiffness,
-                                                Map<LocalDate, Integer> sittingTime,
-                                                Map<LocalDate, Integer> standingTime,
-                                                Map<LocalDate, Integer> stressLevel,
-                                                Map<LocalDate, Double> sedentaryHours
+                                                        LocalDate endDate,
+                                                        Map<LocalDate, Integer> restingHeartRate,
+                                                        Map<LocalDate, Integer> painLevels,
+                                                        Map<LocalDate, Integer> morningStiffness,
+                                                        Map<LocalDate, Integer> sittingTime,
+                                                        Map<LocalDate, Integer> standingTime,
+                                                        Map<LocalDate, Integer> stressLevel,
+                                                        Map<LocalDate, Double> sedentaryHours
     ) {
         List<DailyGraphDto> dailyData = new ArrayList<>();
 
@@ -424,6 +424,74 @@ public class FitbitContextAggregationHelper {
     }
 
     //Helper functions to calculate average of Manual log:
+    public int calculateAverageSleepingDuration(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+
+            if (log == null) continue;
+
+            int score = EnumScoreHelper.sleepDuration(log.getSleepDuration());
+            if (score < 0) continue;
+            sum = sum + score;
+            count++;
+        }
+
+        return count == 0 ? -1 : sum / count;
+    }
+
+    public int calculateAverageNightWakeUps(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+            if (log == null) continue;
+
+            int score = EnumScoreHelper.nightWakeUps(log.getNightWakeUps());
+            if (score < 0) continue;
+            sum = sum + score;
+            count++;
+        }
+
+        return count == 0 ? -1 : sum / count;
+    }
+
+    public int calculateAverageManualRestingHeartRate(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        int sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+            if (log == null) continue;
+
+            Integer restingHeartRate = log.getRestingHeartRate();
+
+            if (restingHeartRate == null || restingHeartRate <= 0) {
+                continue;
+            }
+
+            sum = sum + restingHeartRate;
+            count++;
+        }
+
+        return count == 0 ? -1 : sum / count;
+    }
+
     public int calculateAveragePainLevel(List<ManualDailyLog> manualDailyLogs) {
         if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
             return -1;
@@ -715,6 +783,57 @@ public class FitbitContextAggregationHelper {
         }
 
         return EnumScoreHelper.pain(log.getPainLevel());
+    }
+
+    public int getYesterdaysManualRestingHeartRate(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        //Sort the list in ascending order of logDate:
+        manualDailyLogs.sort(Comparator.comparing(ManualDailyLog::getLogDate));
+
+        ManualDailyLog log = manualDailyLogs.get(manualDailyLogs.size() - 1);
+
+        if (log == null || log.getRestingHeartRate() == null) {
+            return -1;
+        }
+
+        return log.getRestingHeartRate();
+    }
+
+    public int getYesterdaysSleepDuration(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        //Sort the list in ascending order of logDate:
+        manualDailyLogs.sort(Comparator.comparing(ManualDailyLog::getLogDate));
+
+        ManualDailyLog log = manualDailyLogs.get(manualDailyLogs.size() - 1);
+
+        if (log == null || log.getSleepDuration() == null) {
+            return -1;
+        }
+
+        return EnumScoreHelper.sleepDuration(log.getSleepDuration());
+    }
+
+    public int getYesterdaysNightWakeUps(List<ManualDailyLog> manualDailyLogs) {
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return -1;
+        }
+
+        //Sort the list in ascending order of logDate:
+        manualDailyLogs.sort(Comparator.comparing(ManualDailyLog::getLogDate));
+
+        ManualDailyLog log = manualDailyLogs.get(manualDailyLogs.size() - 1);
+
+        if (log == null || log.getNightWakeUps() == null) {
+            return -1;
+        }
+
+        return EnumScoreHelper.nightWakeUps(log.getNightWakeUps());
     }
 
     public int calculateDaysSinceLastFlareUp(List<ManualDailyLog> manualDailyLogs) {

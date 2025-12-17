@@ -32,10 +32,13 @@ public class AiUserDailyInputDto {
     private Integer stressLevel;
     private Boolean liftingOrStrain;
     private String notes;
+    private Integer sleepDuration;
+    private Integer nightWakeUps;
+    private Integer manualRestingHeartRate;
 
     //Fitbit Integration Data:
     //Heart
-    private Integer restingHeartRate; //From FitbitActivitiesHeartValueLog
+    private Integer fitbitRestingHeartRate; //From FitbitActivitiesHeartValueLog
 
     //Activities:
     private Integer caloriesOut; //From FitbitActivitySummariesLog

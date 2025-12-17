@@ -75,4 +75,33 @@ public class EnumScoreHelper {
             default -> -1;
         };
     }
+
+    public static int sleepDuration(SleepDuration sleepDuration) {
+        if (sleepDuration == null) {
+            return -1;
+        }
+
+        return switch (sleepDuration) {
+            case LESS_THAN_5H -> 0;
+            case H5_TO_6 -> 1;
+            case H6_TO_7 -> 2;
+            case H7_TO_8 -> 3;
+            case MORE_THAN_8H -> 4;
+            default -> -1;
+        };
+    }
+
+    public static int nightWakeUps(NightWakeUps nightWakeUps) {
+        if (nightWakeUps == null) {
+            return -1;
+        }
+
+        return switch (nightWakeUps) {
+            case NONE -> 0;
+            case ONE -> 1;
+            case TWO -> 2;
+            case THREE_OR_MORE -> 3;
+            default -> -1;
+        };
+    }
 }

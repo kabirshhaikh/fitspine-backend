@@ -182,19 +182,22 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
                 .discLevels(discLevels)
 
                 // Manual
-                .painLevel(EnumScoreHelper.pain(manualDailyLog.getPainLevel()))
+                .painLevel(manualDailyLog.getPainLevel() != null ? EnumScoreHelper.pain(manualDailyLog.getPainLevel()) : -1)
                 .flareUpToday(manualDailyLog.getFlareUpToday())
                 .numbnessTingling(manualDailyLog.getNumbnessTingling())
-                .sittingTime(EnumScoreHelper.sittingTime(manualDailyLog.getSittingTime()))
-                .standingTime(EnumScoreHelper.standingTime(manualDailyLog.getStandingTime()))
+                .sittingTime(manualDailyLog.getSittingTime() != null ? EnumScoreHelper.sittingTime(manualDailyLog.getSittingTime()) : -1)
+                .standingTime(manualDailyLog.getStandingTime() != null ? EnumScoreHelper.standingTime(manualDailyLog.getStandingTime()) : -1)
                 .stretchingDone(manualDailyLog.getStretchingDone())
-                .morningStiffness(EnumScoreHelper.morningStiffness(manualDailyLog.getMorningStiffness()))
-                .stressLevel(EnumScoreHelper.stressLevel(manualDailyLog.getStressLevel()))
+                .morningStiffness(manualDailyLog.getMorningStiffness() != null ? EnumScoreHelper.morningStiffness(manualDailyLog.getMorningStiffness()) : -1)
+                .stressLevel(manualDailyLog.getStressLevel() != null ? EnumScoreHelper.stressLevel(manualDailyLog.getStressLevel()) : -1)
                 .liftingOrStrain(manualDailyLog.getLiftingOrStrain())
                 .notes(notes)
+                .sleepDuration(manualDailyLog.getSleepDuration() != null ? EnumScoreHelper.sleepDuration(manualDailyLog.getSleepDuration()) : -1)
+                .nightWakeUps(manualDailyLog.getNightWakeUps() != null ? EnumScoreHelper.nightWakeUps(manualDailyLog.getNightWakeUps()) : -1)
+                .manualRestingHeartRate(manualDailyLog.getRestingHeartRate() != null ? manualDailyLog.getRestingHeartRate() : -1)
 
                 // Heart
-                .restingHeartRate(restingHeartRate)
+                .fitbitRestingHeartRate(restingHeartRate)
 
                 // Activity summary
                 .caloriesOut(activitySummariesLog != null ? activitySummariesLog.getCaloriesOut() : -1)
