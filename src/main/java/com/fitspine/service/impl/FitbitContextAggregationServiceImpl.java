@@ -183,34 +183,39 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         List<ManualDailyLog> manualDailyLogs = manualDailyLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
         List<FitbitActivitiesHeartLog> heartLogs = heartLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
         List<FitbitActivitySummariesLog> activitySummariesLogs = activitySummariesLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
+        List<FitbitSleepSummaryLog> sleepSummaryLogs = sleepSummaryLogRepository.findByUserAndLogDateBetween(user, startDate, endDate);
 
         //Extract list of metrics using helper class:
-        Map<LocalDate, Integer> restingHeartRate = helper.getRestingHeartRateForWeeklyGraph(heartLogs);
+        //Manual:
         Map<LocalDate, Integer> painLevels = helper.getPainLevels(manualDailyLogs);
         Map<LocalDate, Integer> morningStiffness = helper.getMorningStiffness(manualDailyLogs);
         Map<LocalDate, Integer> sittingTime = helper.getSittingTime(manualDailyLogs);
         Map<LocalDate, Integer> standingTime = helper.getStandingTime(manualDailyLogs);
         Map<LocalDate, Integer> stressLevel = helper.getStressLevel(manualDailyLogs);
-        Map<LocalDate, Double> sedentaryHours = helper.getSedentaryHours(activitySummariesLogs);
-
         Map<LocalDate, Integer> sleepDuration = helper.getSleepDuration(manualDailyLogs);
         Map<LocalDate, Integer> nightWakeUps = helper.getNightWakeUps(manualDailyLogs);
         Map<LocalDate, Integer> manualRestingHeart = helper.getManualRestingHeartRate(manualDailyLogs);
+
+        //Fitbit:
+        Map<LocalDate, Integer> fitbitRestingHeartRate = helper.getRestingHeartRateForWeeklyGraph(heartLogs);
+        Map<LocalDate, Double> fitbitSedentaryHours = helper.getSedentaryHours(activitySummariesLogs);
+        Map<LocalDate, Integer> fitbitTotalMinutesAsleep = helper.getTotalMinutesAsleep(sleepSummaryLogs);
 
 
         List<DailyGraphDto> dailyData = helper.getDailyDataBetweenDates(
                 startDate,
                 endDate,
-                restingHeartRate,
+                fitbitRestingHeartRate,
                 painLevels,
                 morningStiffness,
                 sittingTime,
                 standingTime,
                 stressLevel,
-                sedentaryHours,
+                fitbitSedentaryHours,
                 sleepDuration,
                 nightWakeUps,
-                manualRestingHeart
+                manualRestingHeart,
+                fitbitTotalMinutesAsleep
         );
 
         WeeklyGraphDto dto = WeeklyGraphDto.builder()

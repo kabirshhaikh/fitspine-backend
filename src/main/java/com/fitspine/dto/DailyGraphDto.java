@@ -12,14 +12,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DailyGraphDto {
     private String date;
+
+    //Manual:
     private Integer painLevel;
     private Integer sittingTime;
     private Integer standingTime;
     private Integer morningStiffness;
     private Integer stressLevel;
-    private Integer fitbitRestingHeartRate;
-    private Double sedentaryHours;
     private Integer sleepDuration;
     private Integer nightWakeUps;
     private Integer manualRestingHeartRate;
+
+    //Fitbit:
+    private Integer fitbitTotalMinutesAsleep;
+    private Double fitbitSedentaryHours;
+    private Integer fitbitRestingHeartRate;
 }

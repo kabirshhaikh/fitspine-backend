@@ -182,18 +182,38 @@ public class FitbitContextAggregationHelper {
         return sedentaryHours;
     }
 
+    public Map<LocalDate, Integer> getTotalMinutesAsleep(List<FitbitSleepSummaryLog> sleepSummaryLogs) {
+        Map<LocalDate, Integer> totalMinutesAsleep = new HashMap<>();
+
+        if (sleepSummaryLogs == null || sleepSummaryLogs.isEmpty()) {
+            return totalMinutesAsleep;
+        }
+
+        for (int i = 0; i < sleepSummaryLogs.size(); i++) {
+            FitbitSleepSummaryLog log = sleepSummaryLogs.get(i);
+
+            if (log != null && log.getTotalMinutesAsleep() != null) {
+                LocalDate logDate = log.getLogDate();
+                totalMinutesAsleep.put(logDate, log.getTotalMinutesAsleep());
+            }
+        }
+
+        return totalMinutesAsleep;
+    }
+
     public List<DailyGraphDto> getDailyDataBetweenDates(LocalDate startDate,
                                                         LocalDate endDate,
-                                                        Map<LocalDate, Integer> restingHeartRate,
+                                                        Map<LocalDate, Integer> fitbitRestingHeartRate,
                                                         Map<LocalDate, Integer> painLevels,
                                                         Map<LocalDate, Integer> morningStiffness,
                                                         Map<LocalDate, Integer> sittingTime,
                                                         Map<LocalDate, Integer> standingTime,
                                                         Map<LocalDate, Integer> stressLevel,
-                                                        Map<LocalDate, Double> sedentaryHours,
+                                                        Map<LocalDate, Double> fitbitSedentaryHours,
                                                         Map<LocalDate, Integer> sleepDurations,
                                                         Map<LocalDate, Integer> nightWakeUps,
-                                                        Map<LocalDate, Integer> manualRestingHeartRate
+                                                        Map<LocalDate, Integer> manualRestingHeartRate,
+                                                        Map<LocalDate, Integer> fitbitTotalMinutesAsleep
     ) {
         List<DailyGraphDto> dailyData = new ArrayList<>();
 
@@ -208,11 +228,12 @@ public class FitbitContextAggregationHelper {
                             .sittingTime(sittingTime.getOrDefault(date, null))
                             .standingTime(standingTime.getOrDefault(date, null))
                             .stressLevel(stressLevel.getOrDefault(date, null))
-                            .fitbitRestingHeartRate(restingHeartRate.getOrDefault(date, null))
-                            .sedentaryHours(sedentaryHours.getOrDefault(date, null))
+                            .fitbitRestingHeartRate(fitbitRestingHeartRate.getOrDefault(date, null))
+                            .fitbitSedentaryHours(fitbitSedentaryHours.getOrDefault(date, null))
                             .sleepDuration(sleepDurations.getOrDefault(date, null))
                             .nightWakeUps(nightWakeUps.getOrDefault(date, null))
                             .manualRestingHeartRate(manualRestingHeartRate.getOrDefault(date, null))
+                            .fitbitTotalMinutesAsleep(fitbitTotalMinutesAsleep.getOrDefault(date, null))
                             .build()
             );
         }
