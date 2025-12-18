@@ -193,6 +193,11 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         Map<LocalDate, Integer> stressLevel = helper.getStressLevel(manualDailyLogs);
         Map<LocalDate, Double> sedentaryHours = helper.getSedentaryHours(activitySummariesLogs);
 
+        Map<LocalDate, Integer> sleepDuration = helper.getSleepDuration(manualDailyLogs);
+        Map<LocalDate, Integer> nightWakeUps = helper.getNightWakeUps(manualDailyLogs);
+        Map<LocalDate, Integer> manualRestingHeart = helper.getManualRestingHeartRate(manualDailyLogs);
+
+
         List<DailyGraphDto> dailyData = helper.getDailyDataBetweenDates(
                 startDate,
                 endDate,
@@ -202,10 +207,14 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
                 sittingTime,
                 standingTime,
                 stressLevel,
-                sedentaryHours
+                sedentaryHours,
+                sleepDuration,
+                nightWakeUps,
+                manualRestingHeart
         );
 
         WeeklyGraphDto dto = WeeklyGraphDto.builder()
+                .isFitbitConnected(user.getIsWearableConnected())
                 .dailyData(dailyData)
                 .build();
 

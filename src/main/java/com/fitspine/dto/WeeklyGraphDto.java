@@ -12,5 +12,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WeeklyGraphDto {
+    private Boolean isFitbitConnected;
     List<DailyGraphDto> dailyData;
 }

@@ -31,6 +31,64 @@ public class FitbitContextAggregationHelper {
         return painLevels;
     }
 
+    public Map<LocalDate, Integer> getSleepDuration(List<ManualDailyLog> manualDailyLogs) {
+        Map<LocalDate, Integer> sleepDuration = new HashMap<>();
+
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return sleepDuration;
+        }
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+
+            if (log != null && log.getSleepDuration() != null) {
+                LocalDate logDate = log.getLogDate();
+                sleepDuration.put(logDate, EnumScoreHelper.sleepDuration(log.getSleepDuration()));
+            }
+
+        }
+
+        return sleepDuration;
+    }
+
+    public Map<LocalDate, Integer> getNightWakeUps(List<ManualDailyLog> manualDailyLogs) {
+        Map<LocalDate, Integer> nightWakeUps = new HashMap<>();
+
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return nightWakeUps;
+        }
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+
+            if (log != null && log.getNightWakeUps() != null) {
+                LocalDate logDate = log.getLogDate();
+                nightWakeUps.put(logDate, EnumScoreHelper.nightWakeUps(log.getNightWakeUps()));
+            }
+        }
+
+        return nightWakeUps;
+    }
+
+    public Map<LocalDate, Integer> getManualRestingHeartRate(List<ManualDailyLog> manualDailyLogs) {
+        Map<LocalDate, Integer> manualRestingHeartRate = new HashMap<>();
+
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return manualRestingHeartRate;
+        }
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+
+            if (log != null && log.getRestingHeartRate() != null) {
+                LocalDate logDate = log.getLogDate();
+                manualRestingHeartRate.put(logDate, log.getRestingHeartRate());
+            }
+        }
+
+        return manualRestingHeartRate;
+    }
+
     public Map<LocalDate, Integer> getMorningStiffness(List<ManualDailyLog> manualDailyLogs) {
         Map<LocalDate, Integer> morningStiffness = new HashMap<>();
 
@@ -132,7 +190,10 @@ public class FitbitContextAggregationHelper {
                                                         Map<LocalDate, Integer> sittingTime,
                                                         Map<LocalDate, Integer> standingTime,
                                                         Map<LocalDate, Integer> stressLevel,
-                                                        Map<LocalDate, Double> sedentaryHours
+                                                        Map<LocalDate, Double> sedentaryHours,
+                                                        Map<LocalDate, Integer> sleepDurations,
+                                                        Map<LocalDate, Integer> nightWakeUps,
+                                                        Map<LocalDate, Integer> manualRestingHeartRate
     ) {
         List<DailyGraphDto> dailyData = new ArrayList<>();
 
@@ -147,8 +208,11 @@ public class FitbitContextAggregationHelper {
                             .sittingTime(sittingTime.getOrDefault(date, null))
                             .standingTime(standingTime.getOrDefault(date, null))
                             .stressLevel(stressLevel.getOrDefault(date, null))
-                            .restingHeartRate(restingHeartRate.getOrDefault(date, null))
+                            .fitbitRestingHeartRate(restingHeartRate.getOrDefault(date, null))
                             .sedentaryHours(sedentaryHours.getOrDefault(date, null))
+                            .sleepDuration(sleepDurations.getOrDefault(date, null))
+                            .nightWakeUps(nightWakeUps.getOrDefault(date, null))
+                            .manualRestingHeartRate(manualRestingHeartRate.getOrDefault(date, null))
                             .build()
             );
         }

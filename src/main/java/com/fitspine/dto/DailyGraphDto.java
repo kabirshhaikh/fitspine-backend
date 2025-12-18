@@ -17,6 +17,9 @@ public class DailyGraphDto {
     private Integer standingTime;
     private Integer morningStiffness;
     private Integer stressLevel;
-    private Integer restingHeartRate;
+    private Integer fitbitRestingHeartRate;
     private Double sedentaryHours;
+    private Integer sleepDuration;
+    private Integer nightWakeUps;
+    private Integer manualRestingHeartRate;
 }
