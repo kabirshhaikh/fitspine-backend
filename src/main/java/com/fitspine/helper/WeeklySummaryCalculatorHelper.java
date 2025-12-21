@@ -70,7 +70,7 @@ public class WeeklySummaryCalculatorHelper {
         return count == 0 ? null : (double) sum / count;
     }
 
-    public List<Double> addComponentsToSpineOverLoadArray(Double painLevel, Double morningStiffness, Double sittingTime, Double stressLevel, Double fitbitSedentary) {
+    public List<Double> addComponentsToSpineOverLoadArray(Double painLevel, Double morningStiffness, Double sittingTime, Double fitbitSedentary) {
         List<Double> spineLoadComponents = new ArrayList<>();
 
         if (painLevel != null) {
@@ -83,10 +83,6 @@ public class WeeklySummaryCalculatorHelper {
 
         if (sittingTime != null) {
             spineLoadComponents.add(sittingTime);
-        }
-
-        if (stressLevel != null) {
-            spineLoadComponents.add(stressLevel);
         }
 
         //normalize sedentary hours into the same 0–4

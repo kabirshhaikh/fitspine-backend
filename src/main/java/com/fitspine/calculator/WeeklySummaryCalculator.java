@@ -64,7 +64,7 @@ public class WeeklySummaryCalculator {
         Double fitbitSedentary = helper.calculateDoubleAverage(sedentaryValues);
 
         //Now i add components to an array called spine load components which i will use later to calculate overall spine load:
-        List<Double> spineLoadComponents = helper.addComponentsToSpineOverLoadArray(painLevel, morningStiffness, sittingTime, stressLevel, fitbitSedentary);
+        List<Double> spineLoadComponents = helper.addComponentsToSpineOverLoadArray(painLevel, morningStiffness, sittingTime, fitbitSedentary);
 
         //Now i run a for loop on the spineLoadComponents and take the average:
         Double overAllSpineLoad = null;
