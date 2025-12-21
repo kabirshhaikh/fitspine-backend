@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DashboardInsightDto {
-    private WeeklySummaryResultDto weeklySummaryResultDto;
-    private PainStiffnessResultDto painStiffnessResultDto;
+public class ExplanationDto {
+    private String cause;
+    private String explanation;
 }

@@ -5,11 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DashboardInsightDto {
-    private WeeklySummaryResultDto weeklySummaryResultDto;
-    private PainStiffnessResultDto painStiffnessResultDto;
+public class DaySummaryDto {
+    private String date;
+    private Integer value;
 }

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DashboardInsightDto {
-    private WeeklySummaryResultDto weeklySummaryResultDto;
-    private PainStiffnessResultDto painStiffnessResultDto;
+public class TrendResultDto {
+    private String direction;
+    private double changePercentage;
 }
