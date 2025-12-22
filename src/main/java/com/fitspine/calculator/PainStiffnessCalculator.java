@@ -73,8 +73,11 @@ public class PainStiffnessCalculator {
         //Now i calculate the co-relations:
         List<String> correlations = helper.detectPainCorrelation(loggedDays, dto.getIsFitbitConnected());
 
-        //Now i get the explanations:
-        List<ExplanationDto> explanations = helper.explainPainChange(bestPainDay, worstPainDay, loggedDays, dto.getIsFitbitConnected());
+        //Now i get the pain explanations:
+        List<ExplanationDto> painExplanations = helper.explainPainChange(bestPainDay, worstPainDay, loggedDays, dto.getIsFitbitConnected());
+
+        //Now i get the stiffness explanations:
+        List<ExplanationDto> stiffnessExplanations = helper.explainStiffnessChange(bestMorningStiffnessDay, worstMorningStiffnessDay, loggedDays, dto.getIsFitbitConnected());
 
         return PainStiffnessResultDto.builder()
                 .painAverage(painAverage)
@@ -86,7 +89,8 @@ public class PainStiffnessCalculator {
                 .bestStiffnessDay(bestMorningStiffnessDay)
                 .worstStiffnessDay(worstMorningStiffnessDay)
                 .correlations(correlations)
-                .explanations(explanations)
+                .painExplanations(painExplanations)
+                .stiffnessExplanation(stiffnessExplanations)
                 .build();
     }
 }

@@ -401,4 +401,122 @@ public class PainStiffnessCalculatorHelper {
 
         return explanations;
     }
+
+    public List<ExplanationDto> explainStiffnessChange(
+            DaySummaryDto bestMorningStiffnessDay,
+            DaySummaryDto worstMorningStiffnessDay,
+            List<DailyGraphDto> loggedDays,
+            boolean isFitbitConnected
+    ) {
+        List<ExplanationDto> explanations = new ArrayList<>();
+
+        if (bestMorningStiffnessDay == null || worstMorningStiffnessDay == null) {
+            return explanations;
+        }
+
+        DailyGraphDto best = findDayByDate(loggedDays, bestMorningStiffnessDay.getDate());
+        DailyGraphDto worst = findDayByDate(loggedDays, worstMorningStiffnessDay.getDate());
+
+        if (best == null || worst == null) {
+            return explanations;
+        }
+
+        //Sedentary hours if fitbit is connected:
+        if (isFitbitConnected
+                && best.getFitbitSedentaryHours() != null
+                && worst.getFitbitSedentaryHours() != null
+                && worst.getFitbitSedentaryHours() > best.getFitbitSedentaryHours() + 1) {
+
+            explanations.add(
+                    ExplanationDto.builder()
+                            .cause(String.format(
+                                    "Sedentary hours was %.1fhrs (vs %.1fhrs on best day)",
+                                    worst.getFitbitSedentaryHours(),
+                                    best.getFitbitSedentaryHours()
+                            ))
+                            .explanation(
+                                    "Prolonged sedentary time increases spinal load and reduces circulation, "
+                                            + "which can contribute to increased stiffness."
+                            )
+                            .build()
+            );
+        }
+
+
+        //Standing time:
+        if (isValid(best.getStandingTime())
+                && isValid(worst.getStandingTime())
+                && worst.getStandingTime() < best.getStandingTime()) {
+
+            explanations.add(
+                    ExplanationDto.builder()
+                            .cause(String.format(
+                                    "Standing time was %s (vs %s on best day)",
+                                    EnumScoreHelper.enumToTimeLabel(worst.getStandingTime()),
+                                    EnumScoreHelper.enumToTimeLabel(best.getStandingTime())
+                            ))
+                            .explanation(
+                                    "Reduced standing time decreases muscle activation and circulation, "
+                                            + "which can lead to increased stiffness."
+                            )
+                            .build()
+            );
+        }
+
+        //Stress level:
+        if (isValid(best.getStressLevel())
+                && isValid(worst.getStressLevel())
+                && worst.getStressLevel() > best.getStressLevel()) {
+
+            explanations.add(
+                    ExplanationDto.builder()
+                            .cause(String.format(
+                                    "Stress level was %s (vs %s on best day)",
+                                    EnumScoreHelper.enumToStressLabel(worst.getStressLevel()),
+                                    EnumScoreHelper.enumToStressLabel(best.getStressLevel())
+                            ))
+                            .explanation(
+                                    "Higher stress levels increase muscle tension, which can worsen stiffness."
+                            )
+                            .build()
+            );
+        }
+
+        //Sleep duration:
+        Double bestSleepHours = null;
+        Double worstSleepHours = null;
+
+        if (isFitbitConnected) {
+            if (best.getFitbitTotalMinutesAsleep() != null) {
+                bestSleepHours = best.getFitbitTotalMinutesAsleep() / 60.0;
+            }
+            if (worst.getFitbitTotalMinutesAsleep() != null) {
+                worstSleepHours = worst.getFitbitTotalMinutesAsleep() / 60.0;
+            }
+        } else if (isValid(best.getSleepDuration()) && isValid(worst.getSleepDuration())) {
+            double[] sleepMap = {4.5, 5.5, 6.5, 7.5, 8.5};
+            bestSleepHours = sleepMap[best.getSleepDuration()];
+            worstSleepHours = sleepMap[worst.getSleepDuration()];
+        }
+
+        if (bestSleepHours != null
+                && worstSleepHours != null
+                && worstSleepHours < bestSleepHours - 0.5) {
+
+            explanations.add(
+                    ExplanationDto.builder()
+                            .cause(String.format(
+                                    "Sleep duration was %.1fh (vs %.1fh on best day)",
+                                    worstSleepHours,
+                                    bestSleepHours
+                            ))
+                            .explanation(
+                                    "Insufficient sleep reduces tissue recovery and increases morning stiffness."
+                            )
+                            .build()
+            );
+        }
+
+        return explanations;
+    }
 }

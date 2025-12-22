@@ -25,5 +25,6 @@ public class PainStiffnessResultDto {
     private DaySummaryDto worstStiffnessDay;
 
     private List<String> correlations;
-    private List<ExplanationDto> explanations;
+    private List<ExplanationDto> painExplanations;
+    private List<ExplanationDto> stiffnessExplanation;
 }

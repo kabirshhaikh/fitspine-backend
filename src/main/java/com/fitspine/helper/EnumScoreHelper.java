@@ -104,4 +104,34 @@ public class EnumScoreHelper {
             default -> -1;
         };
     }
+
+    public static String enumToStressLabel(Integer value) {
+        if (value == null || value == -1) {
+            return null;
+        }
+
+        return switch (value) {
+            case 0 -> "Very Low";
+            case 1 -> "Low";
+            case 2 -> "Moderate";
+            case 3 -> "High";
+            case 4 -> "Very High";
+            default -> null;
+        };
+    }
+
+    public static String enumToTimeLabel(Integer value) {
+        if (value == null || value == -1) {
+            return null;
+        }
+
+        return switch (value) {
+            case 0 -> "Less than 2h";
+            case 1 -> "2–4 hours";
+            case 2 -> "4–6 hours";
+            case 3 -> "6–8 hours";
+            case 4 -> "More than 8h";
+            default -> null;
+        };
+    }
 }
