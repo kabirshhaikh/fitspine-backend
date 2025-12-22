@@ -107,9 +107,9 @@ public class PainStiffnessCalculatorHelper {
         //Otherwise determine the direction:
         String direction;
         if (lowerIsBetter) {
-            direction = difference < 0 ? "improving" : "worsening";
+            direction = difference < 0 ? "better" : "worse";
         } else {
-            direction = difference > 0 ? "improving" : "worsening";
+            direction = difference > 0 ? "better" : "worse";
         }
 
         return TrendResultDto.builder()
