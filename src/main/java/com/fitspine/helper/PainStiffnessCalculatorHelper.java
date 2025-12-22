@@ -193,31 +193,33 @@ public class PainStiffnessCalculatorHelper {
             standingPainDays.sort((a, b) ->
                     Integer.compare(a.getStandingTime(), b.getStandingTime()));
 
-            int mid = (standingPainDays.size() + 1) / 2;
+            int firstHalfSize = (int) Math.ceil(standingPainDays.size() / 2.0);
+            int secondHalfSize = standingPainDays.size() - firstHalfSize;
 
             double lowPain = 0, highPain = 0;
-            int lowCount = 0, highCount = 0;
 
             for (int j = 0; j < standingPainDays.size(); j++) {
-                if (j < mid) {
+                if (j < firstHalfSize) {
                     lowPain = lowPain + standingPainDays.get(j).getPainLevel();
-                    lowCount++;
+
                 } else {
                     highPain = highPain + standingPainDays.get(j).getPainLevel();
-                    highCount++;
+
                 }
             }
 
-            lowPain /= lowCount;
-            highPain /= highCount;
+            if (firstHalfSize > 0 && secondHalfSize > 0) {
+                double avgPainLow = lowPain / firstHalfSize;
+                double avgPainHigh = highPain / secondHalfSize;
 
-            if (lowPain > highPain + 0.3) {
-                double percentReduction = ((lowPain - highPain) / lowPain) * 100;
+                if (avgPainLow > avgPainHigh + 0.3) {
+                    double percentReduction = ((avgPainLow - avgPainHigh) / avgPainLow) * 100;
 
-                correlations.add(
-                        "Pain was " + Math.round(percentReduction)
-                                + "% lower on days with more standing time"
-                );
+                    correlations.add(String.format(
+                            "Pain was %d%% lower on days with more standing time",
+                            Math.round(percentReduction)
+                    ));
+                }
             }
         }
 
@@ -238,27 +240,33 @@ public class PainStiffnessCalculatorHelper {
                                 b.getFitbitSedentaryHours()
                         ));
 
-                int mid = (sedentaryPainDays.size() + 1) / 2;
+                int firstHalfSize = (int) Math.ceil(sedentaryPainDays.size() / 2.0);
+                int secondHalfSize = sedentaryPainDays.size() - firstHalfSize;
+
                 double lowPain = 0, highPain = 0;
-                int lowCount = 0, highCount = 0;
+                double sedentarySum = 0;
 
                 for (int j = 0; j < sedentaryPainDays.size(); j++) {
-                    if (j < mid) {
+                    if (j < firstHalfSize) {
                         lowPain += sedentaryPainDays.get(j).getPainLevel();
-                        lowCount++;
                     } else {
                         highPain += sedentaryPainDays.get(j).getPainLevel();
-                        highCount++;
+                        sedentarySum = sedentarySum + sedentaryPainDays.get(j).getFitbitSedentaryHours();
                     }
                 }
 
-                lowPain /= lowCount;
-                highPain /= highCount;
+                if (firstHalfSize > 0 && secondHalfSize > 0) {
+                    double avgPainLow = lowPain / firstHalfSize;
+                    double avgPainHigh = highPain / secondHalfSize;
 
-                if (highPain > lowPain + 0.3) {
-                    correlations.add(
-                            "Higher sedentary hours appeared to align with increased pain levels"
-                    );
+                    if (avgPainHigh > avgPainLow + 0.3) {
+                        double threshold = sedentarySum / secondHalfSize;
+
+                        correlations.add(String.format(
+                                "Pain increased when sedentary hours exceeded %.1fhrs",
+                                threshold
+                        ));
+                    }
                 }
             }
         }
