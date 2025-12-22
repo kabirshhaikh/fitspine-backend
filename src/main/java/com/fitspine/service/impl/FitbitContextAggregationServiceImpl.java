@@ -13,9 +13,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -164,6 +162,21 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         LocalDate startDate = targetDate.minusDays(7);
         LocalDate endDate = targetDate.minusDays(1);
 
+        List<String> discLevels =
+                Optional.ofNullable(user.getUserDiscIssueList())
+                        .orElse(List.of())
+                        .stream()
+                        .map(issue -> issue.getDiscLevel().name())
+                        .toList();
+
+        List<String> injuries =
+                Optional.ofNullable(user.getUserInjuryList())
+                        .orElse(List.of())
+                        .stream()
+                        .map(injury -> injury.getInjuryType().name())
+                        .toList();
+
+
         log.info("Target date for weekly graph: {}", targetDate);
         log.info("Start date for weekly graph: {}", startDate);
         log.info("End date for weekly graph: {}", endDate);
@@ -221,6 +234,8 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         WeeklyGraphDto dto = WeeklyGraphDto.builder()
                 .isFitbitConnected(user.getIsWearableConnected())
                 .dailyData(dailyData)
+                .userDiscIssues(discLevels)
+                .userInjuryList(injuries)
                 .build();
 
         if (cachedResponse == null) {
