@@ -289,11 +289,18 @@ public class PainStiffnessCalculatorHelper {
             DaySummaryDto bestPainDay,
             DaySummaryDto worstPainDay,
             List<DailyGraphDto> loggedDays,
-            boolean isFitbitConnected
+            boolean isFitbitConnected,
+            List<String> userDiscIssues,
+            List<String> userInjuries
     ) {
         List<ExplanationDto> explanations = new ArrayList<>();
 
         if (bestPainDay == null || worstPainDay == null) {
+            return explanations;
+        }
+
+        //Only explain if pain actually worsened
+        if (worstPainDay.getValue() <= bestPainDay.getValue()) {
             return explanations;
         }
 
@@ -304,6 +311,20 @@ public class PainStiffnessCalculatorHelper {
             return explanations;
         }
 
+        String discContextSuffix = "";
+        String injuryContextSuffix = "";
+
+        if (userDiscIssues != null && !userDiscIssues.isEmpty()) {
+            discContextSuffix =
+                    " In individuals with disc-related conditions such as "
+                            + String.join(", ", userDiscIssues)
+                            + ", pain sensitivity may be higher during periods of increased load or inactivity.";
+        }
+
+        if (userInjuries != null && !userInjuries.isEmpty()) {
+            injuryContextSuffix =
+                    " A history of spinal injury can further increase vulnerability to pain flare-ups.";
+        }
 
         //Sedentary hours if fitbit is connected:
         if (isFitbitConnected
@@ -321,6 +342,8 @@ public class PainStiffnessCalculatorHelper {
                             .explanation(
                                     "Prolonged sedentary time increases spinal load and reduces circulation, "
                                             + "which can contribute to increased discomfort."
+                                            + discContextSuffix
+                                            + injuryContextSuffix
                             )
                             .build()
             );
@@ -338,6 +361,8 @@ public class PainStiffnessCalculatorHelper {
                             .explanation(
                                     "Reduced standing time decreases muscle activation and circulation, "
                                             + "which can increase stiffness and discomfort."
+                                            + discContextSuffix
+                                            + injuryContextSuffix
                             )
                             .build()
             );
@@ -354,6 +379,8 @@ public class PainStiffnessCalculatorHelper {
                             .explanation(
                                     "Elevated stress increases muscle tension and lowers pain tolerance, "
                                             + "which can amplify discomfort."
+                                            + discContextSuffix
+                                            + injuryContextSuffix
                             )
                             .build()
             );
@@ -394,6 +421,8 @@ public class PainStiffnessCalculatorHelper {
                             .explanation(
                                     "Insufficient sleep reduces the body's ability to recover and increases "
                                             + "sensitivity to discomfort."
+                                            + discContextSuffix
+                                            + injuryContextSuffix
                             )
                             .build()
             );
@@ -406,11 +435,18 @@ public class PainStiffnessCalculatorHelper {
             DaySummaryDto bestMorningStiffnessDay,
             DaySummaryDto worstMorningStiffnessDay,
             List<DailyGraphDto> loggedDays,
-            boolean isFitbitConnected
+            boolean isFitbitConnected,
+            List<String> userDiscIssues,
+            List<String> userInjuries
     ) {
         List<ExplanationDto> explanations = new ArrayList<>();
 
         if (bestMorningStiffnessDay == null || worstMorningStiffnessDay == null) {
+            return explanations;
+        }
+
+        //Only explain if stiffness actually worsened
+        if (worstMorningStiffnessDay.getValue() <= bestMorningStiffnessDay.getValue()) {
             return explanations;
         }
 
@@ -419,6 +455,21 @@ public class PainStiffnessCalculatorHelper {
 
         if (best == null || worst == null) {
             return explanations;
+        }
+
+        String discContextSuffix = "";
+        String injuryContextSuffix = "";
+
+        if (userDiscIssues != null && !userDiscIssues.isEmpty()) {
+            discContextSuffix =
+                    " In individuals with disc-related conditions such as "
+                            + String.join(", ", userDiscIssues)
+                            + ", symptom sensitivity may be higher.";
+        }
+
+        if (userInjuries != null && !userInjuries.isEmpty()) {
+            injuryContextSuffix =
+                    " A history of spinal injury can further increase susceptibility to stiffness.";
         }
 
         //Sedentary hours if fitbit is connected:
@@ -437,6 +488,8 @@ public class PainStiffnessCalculatorHelper {
                             .explanation(
                                     "Prolonged sedentary time increases spinal load and reduces circulation, "
                                             + "which can contribute to increased stiffness."
+                                            + discContextSuffix
+                                            + injuryContextSuffix
                             )
                             .build()
             );
@@ -458,6 +511,8 @@ public class PainStiffnessCalculatorHelper {
                             .explanation(
                                     "Reduced standing time decreases muscle activation and circulation, "
                                             + "which can lead to increased stiffness."
+                                            + discContextSuffix
+                                            + injuryContextSuffix
                             )
                             .build()
             );
@@ -477,6 +532,8 @@ public class PainStiffnessCalculatorHelper {
                             ))
                             .explanation(
                                     "Higher stress levels increase muscle tension, which can worsen stiffness."
+                                            + discContextSuffix
+                                            + injuryContextSuffix
                             )
                             .build()
             );
@@ -512,6 +569,8 @@ public class PainStiffnessCalculatorHelper {
                             ))
                             .explanation(
                                     "Insufficient sleep reduces tissue recovery and increases morning stiffness."
+                                            + discContextSuffix
+                                            + injuryContextSuffix
                             )
                             .build()
             );

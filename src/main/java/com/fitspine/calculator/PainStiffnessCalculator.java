@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @Slf4j
@@ -73,11 +74,19 @@ public class PainStiffnessCalculator {
         //Now i calculate the co-relations:
         List<String> correlations = helper.detectPainCorrelation(loggedDays, dto.getIsFitbitConnected());
 
+        List<String> userDiscIssues =
+                Optional.ofNullable(dto.getUserDiscIssues())
+                        .orElse(List.of());
+
+        List<String> userInjuries =
+                Optional.ofNullable(dto.getUserInjuryList())
+                        .orElse(List.of());
+
         //Now i get the pain explanations:
-        List<ExplanationDto> painExplanations = helper.explainPainChange(bestPainDay, worstPainDay, loggedDays, dto.getIsFitbitConnected());
+        List<ExplanationDto> painExplanations = helper.explainPainChange(bestPainDay, worstPainDay, loggedDays, dto.getIsFitbitConnected(), userDiscIssues, userInjuries);
 
         //Now i get the stiffness explanations:
-        List<ExplanationDto> stiffnessExplanations = helper.explainStiffnessChange(bestMorningStiffnessDay, worstMorningStiffnessDay, loggedDays, dto.getIsFitbitConnected());
+        List<ExplanationDto> stiffnessExplanations = helper.explainStiffnessChange(bestMorningStiffnessDay, worstMorningStiffnessDay, loggedDays, dto.getIsFitbitConnected(), userDiscIssues, userInjuries);
 
         return PainStiffnessResultDto.builder()
                 .painAverage(painAverage)
