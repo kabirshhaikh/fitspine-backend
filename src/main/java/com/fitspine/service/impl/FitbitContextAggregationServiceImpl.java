@@ -166,14 +166,21 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
                 Optional.ofNullable(user.getUserDiscIssueList())
                         .orElse(List.of())
                         .stream()
-                        .map(issue -> issue.getDiscLevel().name())
+                        .filter(Objects::nonNull)
+                        .map(UserDiscIssue::getDiscLevel)
+                        .filter(Objects::nonNull)
+                        .map(Enum::name)
                         .toList();
+
 
         List<String> injuries =
                 Optional.ofNullable(user.getUserInjuryList())
                         .orElse(List.of())
                         .stream()
-                        .map(injury -> injury.getInjuryType().name())
+                        .filter(Objects::nonNull)
+                        .map(UserInjury::getInjuryType)
+                        .filter(Objects::nonNull)
+                        .map(Enum::name)
                         .toList();
 
 
