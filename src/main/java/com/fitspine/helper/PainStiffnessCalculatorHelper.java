@@ -107,9 +107,9 @@ public class PainStiffnessCalculatorHelper {
         //Otherwise determine the direction:
         String direction;
         if (lowerIsBetter) {
-            direction = difference < 0 ? "better" : "worse";
+            direction = difference < 0 ? "improving" : "worsening";
         } else {
-            direction = difference > 0 ? "better" : "worse";
+            direction = difference > 0 ? "improving" : "worsening";
         }
 
         return TrendResultDto.builder()
@@ -193,7 +193,7 @@ public class PainStiffnessCalculatorHelper {
             standingPainDays.sort((a, b) ->
                     Integer.compare(a.getStandingTime(), b.getStandingTime()));
 
-            int mid = standingPainDays.size() / 2;
+            int mid = (standingPainDays.size() + 1) / 2;
 
             double lowPain = 0, highPain = 0;
             int lowCount = 0, highCount = 0;
@@ -212,8 +212,11 @@ public class PainStiffnessCalculatorHelper {
             highPain /= highCount;
 
             if (lowPain > highPain + 0.3) {
+                double percentReduction = ((lowPain - highPain) / lowPain) * 100;
+
                 correlations.add(
-                        "Pain levels were lower on days with more standing time"
+                        "Pain was " + Math.round(percentReduction)
+                                + "% lower on days with more standing time"
                 );
             }
         }
@@ -235,7 +238,7 @@ public class PainStiffnessCalculatorHelper {
                                 b.getFitbitSedentaryHours()
                         ));
 
-                int mid = sedentaryPainDays.size() / 2;
+                int mid = (sedentaryPainDays.size() + 1) / 2;
                 double lowPain = 0, highPain = 0;
                 int lowCount = 0, highCount = 0;
 

@@ -58,6 +58,18 @@ public class PainStiffnessCalculator {
         DaySummaryDto bestMorningStiffnessDay = helper.getBestDay(loggedDays, DailyGraphDto::getMorningStiffness);
         DaySummaryDto worstMorningStiffnessDay = helper.getWorstDay(loggedDays, DailyGraphDto::getMorningStiffness);
 
+        //i am doing this because if best pain day and worst pain day are equal then set them as null:
+        if (bestPainDay != null && worstPainDay != null && bestPainDay.getValue().equals(worstPainDay.getValue())) {
+            bestPainDay = null;
+            worstPainDay = null;
+        }
+
+        //i am doing this because if best morning stiffness day and worst morning stiffness are equal then set them as null:
+        if (bestMorningStiffnessDay != null && worstMorningStiffnessDay != null && bestMorningStiffnessDay.getValue().equals(worstMorningStiffnessDay.getValue())) {
+            bestMorningStiffnessDay = null;
+            worstMorningStiffnessDay = null;
+        }
+
         //Now i calculate the co-relations:
         List<String> correlations = helper.detectPainCorrelation(loggedDays, dto.getIsFitbitConnected());
 
