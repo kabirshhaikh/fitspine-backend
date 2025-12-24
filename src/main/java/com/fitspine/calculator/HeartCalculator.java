@@ -76,7 +76,7 @@ public class HeartCalculator {
             worstHeartRateDay = null;
         }
 
-        // 9. Build explanations
+        //Build explanations
         DailyGraphDto bestDay = null;
         DailyGraphDto worstDay = null;
 
