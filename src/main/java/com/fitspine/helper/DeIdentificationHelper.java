@@ -75,30 +75,24 @@ public class DeIdentificationHelper {
     }
 
     //Used in FitbitContextAggregationServiceImpl:
-    public String sanitizeTheDateForContextBuilding(LocalDate startDate) {
+    public String sanitizeTheDateForContextBuilding(LocalDate startDate, String metric) {
         if (startDate == null) {
             return "Undefined start date";
         }
 
         LocalDate today = LocalDate.now();
+        long daysAgo = today.toEpochDay() - startDate.toEpochDay();
 
-        // If today:
-        if (startDate.equals(today)) {
-            return "Start date is Today";
-        }
-
-        Period difference = Period.between(startDate, today);
-
-        int totalDaysAgo = difference.getYears() * 365 + difference.getMonths() * 30 + difference.getDays();
-
-        if (totalDaysAgo == 1) {
-            return "Start date was yesterday";
-        } else if (totalDaysAgo > 1 && totalDaysAgo <= 10) {
-            return "Start date was " + totalDaysAgo + " ago";
-        } else if (totalDaysAgo > 10) {
-            return "Start date was more than 10 days ago";
+        if (daysAgo < 0) {
+            return metric.equals("start") ? "Start date is in the future" : "End date is in the future";
+        } else if (daysAgo == 0) {
+            return metric.equals("start") ? "Start date is today" : "End date is today";
+        } else if (daysAgo == 1) {
+            return metric.equals("start") ? "Start date was yesterday" : "End date was yesterday";
+        } else if (daysAgo <= 10) {
+            return metric.equals("start") ? "Start date was " + daysAgo + " days ago" : "End date was " + daysAgo + " days ago";
         } else {
-            return "Start date is in the future";
+            return metric.equals("start") ? "Start date was more than 10 days ago" : "End date was more than 10 days ago";
         }
     }
 }

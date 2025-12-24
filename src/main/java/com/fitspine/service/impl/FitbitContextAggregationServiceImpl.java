@@ -86,8 +86,8 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
 
         //De-Identified data:
         String computedContext = deIdentificationHelper.sanitizeTheDate(LocalDate.now());
-        String startDateContext = deIdentificationHelper.sanitizeTheDateForContextBuilding(startDate);
-        String endDateContext = deIdentificationHelper.sanitizeTheDateForContextBuilding(endDate);
+        String startDateContext = deIdentificationHelper.sanitizeTheDateForContextBuilding(startDate, "start");
+        String endDateContext = deIdentificationHelper.sanitizeTheDateForContextBuilding(endDate, "end");
 
         FitbitAiContextInsightDto dto = FitbitAiContextInsightDto.builder()
                 // Metadata
