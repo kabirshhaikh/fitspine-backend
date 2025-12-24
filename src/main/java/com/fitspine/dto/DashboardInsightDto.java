@@ -13,4 +13,5 @@ public class DashboardInsightDto {
     private WeeklySummaryResultDto weeklySummaryResultDto;
     private PainStiffnessResultDto painStiffnessResultDto;
     private ActivityResultDto activityResultDto;
+    private HeartResultDto heartResultDto;
 }

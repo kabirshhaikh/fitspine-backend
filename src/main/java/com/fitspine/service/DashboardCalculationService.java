@@ -1,6 +1,7 @@
 package com.fitspine.service;
 
 import com.fitspine.calculator.ActivityCalculator;
+import com.fitspine.calculator.HeartCalculator;
 import com.fitspine.calculator.PainStiffnessCalculator;
 import com.fitspine.calculator.WeeklySummaryCalculator;
 import com.fitspine.dto.DashboardInsightDto;
@@ -14,15 +15,18 @@ public class DashboardCalculationService {
     private final WeeklySummaryCalculator weeklySummaryCalculator;
     private final PainStiffnessCalculator painStiffnessCalculator;
     private final ActivityCalculator activityCalculator;
+    private final HeartCalculator heartCalculator;
 
     public DashboardCalculationService(
             WeeklySummaryCalculator weeklySummaryCalculator,
             PainStiffnessCalculator painStiffnessCalculator,
-            ActivityCalculator activityCalculator
+            ActivityCalculator activityCalculator,
+            HeartCalculator heartCalculator
     ) {
         this.weeklySummaryCalculator = weeklySummaryCalculator;
         this.painStiffnessCalculator = painStiffnessCalculator;
         this.activityCalculator = activityCalculator;
+        this.heartCalculator = heartCalculator;
     }
 
     public DashboardInsightDto calculate(WeeklyGraphDto weeklyGraph) {
@@ -31,6 +35,7 @@ public class DashboardCalculationService {
                 .weeklySummaryResultDto(weeklySummaryCalculator.calculate(weeklyGraph))
                 .painStiffnessResultDto(painStiffnessCalculator.calculate(weeklyGraph))
                 .activityResultDto(activityCalculator.calculate(weeklyGraph))
+                .heartResultDto(heartCalculator.calculate(weeklyGraph))
                 .build();
     }
 }
