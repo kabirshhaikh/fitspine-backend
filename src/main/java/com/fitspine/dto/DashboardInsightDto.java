@@ -14,4 +14,5 @@ public class DashboardInsightDto {
     private PainStiffnessResultDto painStiffnessResultDto;
     private ActivityResultDto activityResultDto;
     private HeartResultDto heartResultDto;
+    private SleepResultDto sleepResultDto;
 }
