@@ -215,6 +215,7 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         Map<LocalDate, Integer> sleepDuration = helper.getSleepDuration(manualDailyLogs);
         Map<LocalDate, Integer> nightWakeUps = helper.getNightWakeUps(manualDailyLogs);
         Map<LocalDate, Integer> manualRestingHeart = helper.getManualRestingHeartRate(manualDailyLogs);
+        Map<LocalDate, Boolean> flareUps = helper.getFlareUps(manualDailyLogs);
 
         //Fitbit:
         Map<LocalDate, Integer> fitbitRestingHeartRate = helper.getRestingHeartRateForWeeklyGraph(heartLogs);
@@ -235,7 +236,8 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
                 sleepDuration,
                 nightWakeUps,
                 manualRestingHeart,
-                fitbitTotalMinutesAsleep
+                fitbitTotalMinutesAsleep,
+                flareUps
         );
 
         WeeklyGraphDto dto = WeeklyGraphDto.builder()

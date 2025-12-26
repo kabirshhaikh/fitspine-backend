@@ -22,6 +22,7 @@ public class DailyGraphDto {
     private Integer sleepDuration;
     private Integer nightWakeUps;
     private Integer manualRestingHeartRate;
+    private Boolean flareUp;
 
     //Fitbit:
     private Integer fitbitTotalMinutesAsleep;

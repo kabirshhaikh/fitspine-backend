@@ -31,6 +31,23 @@ public class FitbitContextAggregationHelper {
         return painLevels;
     }
 
+    public Map<LocalDate, Boolean> getFlareUps(List<ManualDailyLog> manualDailyLogs) {
+        Map<LocalDate, Boolean> flareups = new HashMap<>();
+        if (manualDailyLogs == null || manualDailyLogs.isEmpty()) {
+            return flareups;
+        }
+
+        for (int i = 0; i < manualDailyLogs.size(); i++) {
+            ManualDailyLog log = manualDailyLogs.get(i);
+
+            if (log != null && log.getFlareUpToday() != null) {
+                flareups.put(log.getLogDate(), log.getFlareUpToday());
+            }
+        }
+
+        return flareups;
+    }
+
     public Map<LocalDate, Integer> getSleepDuration(List<ManualDailyLog> manualDailyLogs) {
         Map<LocalDate, Integer> sleepDuration = new HashMap<>();
 
@@ -213,7 +230,8 @@ public class FitbitContextAggregationHelper {
                                                         Map<LocalDate, Integer> sleepDurations,
                                                         Map<LocalDate, Integer> nightWakeUps,
                                                         Map<LocalDate, Integer> manualRestingHeartRate,
-                                                        Map<LocalDate, Integer> fitbitTotalMinutesAsleep
+                                                        Map<LocalDate, Integer> fitbitTotalMinutesAsleep,
+                                                        Map<LocalDate, Boolean> flareUps
     ) {
         List<DailyGraphDto> dailyData = new ArrayList<>();
 
@@ -234,6 +252,7 @@ public class FitbitContextAggregationHelper {
                             .nightWakeUps(nightWakeUps.getOrDefault(date, null))
                             .manualRestingHeartRate(manualRestingHeartRate.getOrDefault(date, null))
                             .fitbitTotalMinutesAsleep(fitbitTotalMinutesAsleep.getOrDefault(date, null))
+                            .flareUp(flareUps.getOrDefault(date, null))
                             .build()
             );
         }
