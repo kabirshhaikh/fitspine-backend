@@ -82,6 +82,34 @@ public class PainStiffnessCalculator {
                 Optional.ofNullable(dto.getUserInjuryList())
                         .orElse(List.of());
 
+        //Now i calculate the flare up days:
+        List<DailyGraphDto> flareUpDays = helper.getFlareUpDays(loggedDays);
+
+        //Now i get flareup pain days:
+        List<DailyGraphDto> flareUpPainDays = helper.filterDaysWithValidMetric(flareUpDays, DailyGraphDto::getPainLevel);
+
+        //Now i get best pain flareup day and worst pain flareup day:
+        DaySummaryDto bestPainFlareUpDay = helper.getBestDay(flareUpPainDays, DailyGraphDto::getPainLevel);
+        DaySummaryDto worstPainFlareUpDay = helper.getWorstDay(flareUpPainDays, DailyGraphDto::getPainLevel);
+
+        if (bestPainFlareUpDay != null && worstPainFlareUpDay != null && bestPainFlareUpDay.getValue().equals(worstPainFlareUpDay.getValue())) {
+            bestPainFlareUpDay = null;
+            worstPainFlareUpDay = null;
+        }
+
+        //Now i get flareup stiffness days:
+        List<DailyGraphDto> flareUpStiffnessDays = helper.filterDaysWithValidMetric(flareUpDays, DailyGraphDto::getMorningStiffness);
+
+        //Now i get best stiffness flareup day and worst stiffness flareup day:
+        DaySummaryDto bestStiffnessFlareUpDay = helper.getBestDay(flareUpStiffnessDays, DailyGraphDto::getMorningStiffness);
+        DaySummaryDto worstStiffnessFlareUpDay = helper.getWorstDay(flareUpStiffnessDays, DailyGraphDto::getMorningStiffness);
+
+        if (bestStiffnessFlareUpDay != null && worstStiffnessFlareUpDay != null && bestStiffnessFlareUpDay.getValue().equals(worstStiffnessFlareUpDay.getValue())) {
+            bestStiffnessFlareUpDay = null;
+            worstStiffnessFlareUpDay = null;
+        }
+
+
         //Now i get the pain explanations:
         List<ExplanationDto> painExplanations = helper.explainPainChange(bestPainDay, worstPainDay, loggedDays, dto.getIsFitbitConnected(), userDiscIssues, userInjuries);
 
@@ -100,6 +128,10 @@ public class PainStiffnessCalculator {
                 .correlations(correlations)
                 .painExplanations(painExplanations)
                 .stiffnessExplanation(stiffnessExplanations)
+                .bestPainFlareUpDay(bestPainFlareUpDay)
+                .worstPainFlareUpDay(worstPainFlareUpDay)
+                .bestStiffnessFlareUpDay(bestStiffnessFlareUpDay)
+                .worstStiffnessFlareUpDay(worstStiffnessFlareUpDay)
                 .build();
     }
 }

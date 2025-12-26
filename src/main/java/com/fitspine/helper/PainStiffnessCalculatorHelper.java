@@ -37,7 +37,8 @@ public class PainStiffnessCalculatorHelper {
                 || isValid(day.getStandingTime())
                 || day.getManualRestingHeartRate() != null
                 || day.getFitbitRestingHeartRate() != null
-                || day.getFitbitSedentaryHours() != null;
+                || day.getFitbitSedentaryHours() != null
+                || day.getFlareUp() != null;
     }
 
     public boolean isValid(Integer value) {
@@ -326,6 +327,28 @@ public class PainStiffnessCalculatorHelper {
                     " A history of spinal injury can further increase vulnerability to pain flare-ups.";
         }
 
+        //Flare up:
+        if (Boolean.TRUE.equals(worst.getFlareUp())) {
+            String compare = "";
+
+            if (Boolean.FALSE.equals(best.getFlareUp())) {
+                compare = " The best day was not marked as a flare-up, so this is a meaningful difference.";
+            }
+
+            explanations.add(
+                    ExplanationDto.builder()
+                            .cause("A flare-up was recorded on the high-pain day")
+                            .explanation(
+                                    "During flare-ups, pain can become more sensitive and easier to trigger. "
+                                            + "This can amplify pain even with small changes in activity, sleep, or stress."
+                                            + compare
+                                            + discContextSuffix
+                                            + injuryContextSuffix
+                            )
+                            .build()
+            );
+        }
+
         //Sedentary hours if fitbit is connected:
         if (isFitbitConnected
                 && best.getFitbitSedentaryHours() != null
@@ -472,6 +495,28 @@ public class PainStiffnessCalculatorHelper {
                     " A history of spinal injury can further increase susceptibility to stiffness.";
         }
 
+        //Flare up:
+        if (Boolean.TRUE.equals(worst.getFlareUp())) {
+            String compare = "";
+
+            if (Boolean.FALSE.equals(best.getFlareUp())) {
+                compare = " The best day was not marked as a flare-up, so this is a meaningful difference.";
+            }
+
+            explanations.add(
+                    ExplanationDto.builder()
+                            .cause("A flare-up was recorded on the high-stiffness day")
+                            .explanation(
+                                    "During flare-ups, stiffness can increase due to protective muscle guarding and reduced movement. "
+                                            + "Gentle movement and reducing long sitting blocks usually help."
+                                            + compare
+                                            + discContextSuffix
+                                            + injuryContextSuffix
+                            )
+                            .build()
+            );
+        }
+
         //Sedentary hours if fitbit is connected:
         if (isFitbitConnected
                 && best.getFitbitSedentaryHours() != null
@@ -577,5 +622,43 @@ public class PainStiffnessCalculatorHelper {
         }
 
         return explanations;
+    }
+
+    public List<DailyGraphDto> getFlareUpDays(List<DailyGraphDto> loggedDays) {
+        List<DailyGraphDto> flareUpDays = new ArrayList<>();
+
+        if (loggedDays == null || loggedDays.isEmpty()) {
+            return flareUpDays;
+        }
+
+        for (int i = 0; i < loggedDays.size(); i++) {
+            DailyGraphDto day = loggedDays.get(i);
+
+            if (day != null && Boolean.TRUE.equals(day.getFlareUp())) {
+                flareUpDays.add(day);
+            }
+        }
+
+        return flareUpDays;
+    }
+
+    public List<DailyGraphDto> filterDaysWithValidMetric(List<DailyGraphDto> days, Function<DailyGraphDto, Integer> extractor) {
+        List<DailyGraphDto> valid = new ArrayList<>();
+
+        if (days == null || days.isEmpty()) {
+            return valid;
+        }
+
+        for (int i = 0; i < days.size(); i++) {
+            DailyGraphDto currentDay = days.get(i);
+            if (currentDay == null) continue;
+
+            Integer value = extractor.apply(currentDay);
+            if (isValid(value) && currentDay.getDate() != null) {
+                valid.add(currentDay);
+            }
+        }
+
+        return valid;
     }
 }

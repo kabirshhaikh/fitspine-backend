@@ -24,6 +24,12 @@ public class PainStiffnessResultDto {
     private DaySummaryDto bestStiffnessDay;
     private DaySummaryDto worstStiffnessDay;
 
+    private DaySummaryDto bestPainFlareUpDay;
+    private DaySummaryDto worstPainFlareUpDay;
+
+    private DaySummaryDto bestStiffnessFlareUpDay;
+    private DaySummaryDto worstStiffnessFlareUpDay;
+
     private List<String> correlations;
     private List<ExplanationDto> painExplanations;
     private List<ExplanationDto> stiffnessExplanation;
