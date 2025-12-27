@@ -50,6 +50,44 @@ public class ActivityCalculator {
 
         List<ExplanationDto> explanations = helper.explainWhyActivityDecreased(bestStandingDay, worstStandingDay, allDays, dto.getIsFitbitConnected());
 
+        Integer flareUpDays = helper.calculateFlareUpDays(allDays);
+        FlareUpActivitySummaryDto flareUpDto = null;
+
+        if (flareUpDays > 0) {
+            Integer nonFlareUpDays = helper.calculateNonFlareUpDays(allDays);
+            Double flareAvgStanding = helper.calculateFlareAvgStanding(allDays, true);
+            Double flareAvgSitting = helper.calculateFlareAvgSitting(allDays, true);
+            Double flareAvgSedentaryHours = helper.calculateFlareAvgSedentaryHours(allDays, dto.getIsFitbitConnected(), true);
+
+            Double nonFlareAvgStanding = helper.calculateFlareAvgStanding(allDays, false);
+            Double nonFlareAvgSitting = helper.calculateFlareAvgSitting(allDays, false);
+            Double nonFlareAvgSedentaryHours = helper.calculateFlareAvgSedentaryHours(allDays, dto.getIsFitbitConnected(), false);
+
+            Double standingDeltaPercent = helper.calculateDeltaPercent(flareAvgStanding, nonFlareAvgStanding);
+            Double sedentaryDeltaPercent = helper.calculateDeltaPercent(flareAvgSedentaryHours, nonFlareAvgSedentaryHours);
+
+            String summaryText = helper.buildFlareUpActivitySummaryText(standingDeltaPercent, sedentaryDeltaPercent, dto.getIsFitbitConnected());
+
+            flareUpDto = FlareUpActivitySummaryDto.builder()
+                    .flareUpDays(flareUpDays)
+                    .nonFlareUpDays(nonFlareUpDays)
+
+                    .flareAvgStanding(flareAvgStanding)
+                    .flareAvgSitting(flareAvgSitting)
+                    .flareAvgSedentaryHours(flareAvgSedentaryHours)
+
+                    .nonFlareAvgStanding(nonFlareAvgStanding)
+                    .nonFlareAvgSitting(nonFlareAvgSitting)
+                    .nonFlareAvgSedentaryHours(nonFlareAvgSedentaryHours)
+
+                    .standingDeltaPercent(standingDeltaPercent)
+                    .sedentaryDeltaPercent(sedentaryDeltaPercent)
+
+                    .summaryText(summaryText)
+                    .build();
+        }
+
+
         return ActivityResultDto.builder()
                 .activityBalancePercent(activityBalancePercent)
                 .standingGoalMetPercent(standingGoalMetPercent)
@@ -58,6 +96,7 @@ public class ActivityCalculator {
                 .bestStandingDay(bestStandingDay)
                 .worstStandingDay(worstStandingDay)
                 .explanations(explanations)
+                .flareUpDto(flareUpDto)
                 .build();
     }
 }

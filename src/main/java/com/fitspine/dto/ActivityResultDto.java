@@ -26,4 +26,7 @@ public class ActivityResultDto {
 
     //Explanations:
     private List<ExplanationDto> explanations;
+
+    //Activity related flare ups:
+    private FlareUpActivitySummaryDto flareUpDto;
 }

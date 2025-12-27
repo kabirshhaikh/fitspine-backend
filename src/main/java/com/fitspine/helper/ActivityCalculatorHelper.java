@@ -15,8 +15,14 @@ public class ActivityCalculatorHelper {
     public List<DailyGraphDto> getLoggedDaysWithActivityData(List<DailyGraphDto> allDays) {
         List<DailyGraphDto> loggedDays = new ArrayList<>();
 
+        if (allDays == null || allDays.isEmpty()) {
+            return loggedDays;
+        }
+
         for (int i = 0; i < allDays.size(); i++) {
             DailyGraphDto day = allDays.get(i);
+            if (day == null) continue;
+
             if ((day.getStandingTime() != null && day.getStandingTime() != -1) && (day.getSittingTime() != null && day.getSittingTime() != -1)) {
                 loggedDays.add(day);
             }
@@ -35,6 +41,7 @@ public class ActivityCalculatorHelper {
         //Here i calculate balance percentage:
         for (int i = 0; i < loggedDays.size(); i++) {
             DailyGraphDto day = loggedDays.get(i);
+            if (day == null) continue;
 
             if (day.getStandingTime() == null || day.getStandingTime() == -1 || day.getSittingTime() == null || day.getSittingTime() == -1) {
                 continue;
@@ -75,6 +82,9 @@ public class ActivityCalculatorHelper {
 
         for (int i = 0; i < allDays.size(); i++) {
             DailyGraphDto day = allDays.get(i);
+
+            if (day == null) continue;
+
             Integer standing = day.getStandingTime();
 
             if (standing == null || standing == -1) {
@@ -108,6 +118,9 @@ public class ActivityCalculatorHelper {
 
         for (int i = 0; i < allDays.size(); i++) {
             DailyGraphDto day = allDays.get(i);
+
+            if (day == null) continue;
+
             Double fitbitSedentaryHours = day.getFitbitSedentaryHours();
 
             if (fitbitSedentaryHours == null) {
@@ -140,6 +153,9 @@ public class ActivityCalculatorHelper {
 
         for (int i = 0; i < allDays.size(); i++) {
             DailyGraphDto day = allDays.get(i);
+
+            if (day == null) continue;
+
             Integer standing = day.getStandingTime();
             Integer sitting = day.getSittingTime();
 
@@ -179,6 +195,9 @@ public class ActivityCalculatorHelper {
 
         for (int i = 0; i < allDays.size(); i++) {
             DailyGraphDto day = allDays.get(i);
+
+            if (day == null) continue;
+
             Integer standing = day.getStandingTime();
 
             if (standing == null || standing == -1) {
@@ -209,6 +228,9 @@ public class ActivityCalculatorHelper {
 
         for (int i = 0; i < allDays.size(); i++) {
             DailyGraphDto day = allDays.get(i);
+
+            if (day == null) continue;
+
             Integer standing = day.getStandingTime();
 
             if (standing == null || standing == -1) {
@@ -230,25 +252,51 @@ public class ActivityCalculatorHelper {
                 .build();
     }
 
-    public List<ExplanationDto> explainWhyActivityDecreased(DaySummaryDto bestStandingDay, DaySummaryDto worstStandingDay, List<DailyGraphDto> allDays, boolean isFitbitConnected) {
+    public List<ExplanationDto> explainWhyActivityDecreased(
+            DaySummaryDto bestStandingDay,
+            DaySummaryDto worstStandingDay,
+            List<DailyGraphDto> allDays,
+            boolean isFitbitConnected
+    ) {
         List<ExplanationDto> explanations = new ArrayList<>();
 
+        // Guard clauses (production-safe)
         if (bestStandingDay == null || worstStandingDay == null) {
             return explanations;
         }
+        if (allDays == null || allDays.isEmpty()) {
+            return explanations;
+        }
 
+        String bestDate = bestStandingDay.getDate();
+        String worstDate = worstStandingDay.getDate();
+
+        if (bestDate == null || worstDate == null) {
+            return explanations;
+        }
 
         DailyGraphDto bestDay = null;
         DailyGraphDto worstDay = null;
 
+        // Find matching days by date (null-safe)
         for (int i = 0; i < allDays.size(); i++) {
             DailyGraphDto day = allDays.get(i);
-            if (day.getDate().equals(bestStandingDay.getDate())) {
+            if (day == null) continue;
+
+            String date = day.getDate();
+            if (date == null) continue;
+
+            if (date.equals(bestDate)) {
                 bestDay = day;
             }
 
-            if (day.getDate().equals(worstStandingDay.getDate())) {
+            if (date.equals(worstDate)) {
                 worstDay = day;
+            }
+
+            // Small optimization: break once both found
+            if (bestDay != null && worstDay != null) {
+                break;
             }
         }
 
@@ -256,12 +304,13 @@ public class ActivityCalculatorHelper {
             return explanations;
         }
 
-
-        //Pain comparison:
+        // Pain comparison
         Integer worstPain = worstDay.getPainLevel();
         Integer bestPain = bestDay.getPainLevel();
 
-        if (worstPain != null && worstPain != -1 && bestPain != null && bestPain != -1 && worstPain > bestPain) {
+        if (worstPain != null && worstPain != -1
+                && bestPain != null && bestPain != -1
+                && worstPain > bestPain) {
             explanations.add(
                     ExplanationDto.builder()
                             .cause("Pain level was higher on the low-activity day")
@@ -273,14 +322,13 @@ public class ActivityCalculatorHelper {
             );
         }
 
-        //Stress level comparison:
+        // Stress level comparison
         Integer worstStress = worstDay.getStressLevel();
         Integer bestStress = bestDay.getStressLevel();
 
         if (worstStress != null && worstStress != -1
                 && bestStress != null && bestStress != -1
                 && worstStress > bestStress) {
-
             explanations.add(
                     ExplanationDto.builder()
                             .cause("Stress levels were higher on the low-activity day")
@@ -292,13 +340,12 @@ public class ActivityCalculatorHelper {
             );
         }
 
-        //Sleep comparison:
+        // Sleep comparison
         Double worstSleepHours = getSleepHours(worstDay, isFitbitConnected);
         Double bestSleepHours = getSleepHours(bestDay, isFitbitConnected);
 
         if (worstSleepHours != null && bestSleepHours != null
                 && worstSleepHours < bestSleepHours - 0.5) {
-
             explanations.add(
                     ExplanationDto.builder()
                             .cause(
@@ -342,6 +389,153 @@ public class ActivityCalculatorHelper {
             case 4 -> 8.5;
             default -> null;
         };
+    }
+
+    public Integer calculateFlareUpDays(List<DailyGraphDto> allDays) {
+        if (allDays == null || allDays.isEmpty()) {
+            return 0;
+        }
+
+        int countOfFlareUpDays = 0;
+
+        for (int i = 0; i < allDays.size(); i++) {
+            DailyGraphDto currentDay = allDays.get(i);
+            if (currentDay != null && Boolean.TRUE.equals(currentDay.getFlareUp())) {
+                countOfFlareUpDays++;
+            }
+        }
+
+        return countOfFlareUpDays;
+    }
+
+    public Integer calculateNonFlareUpDays(List<DailyGraphDto> allDays) {
+        if (allDays == null || allDays.isEmpty()) {
+            return 0;
+        }
+
+        int countOfNonFlareUpDays = 0;
+
+        for (int i = 0; i < allDays.size(); i++) {
+            DailyGraphDto currentDay = allDays.get(i);
+            if (currentDay != null && !Boolean.TRUE.equals(currentDay.getFlareUp())) {
+                countOfNonFlareUpDays++;
+            }
+        }
+
+        return countOfNonFlareUpDays;
+    }
+
+    public Double calculateFlareAvgStanding(List<DailyGraphDto> allDays, boolean isFlareUp) {
+        if (allDays == null || allDays.isEmpty()) {
+            return null;
+        }
+
+        double sum = 0.0;
+        int count = 0;
+
+        for (int i = 0; i < allDays.size(); i++) {
+            DailyGraphDto day = allDays.get(i);
+
+            if (day == null) continue;
+            boolean isDayFlareUp = Boolean.TRUE.equals(day.getFlareUp());
+
+            if (isFlareUp == isDayFlareUp) {
+                Integer standing = day.getStandingTime();
+                if (standing != null && standing != -1) {
+                    sum = sum + standing;
+                    count++;
+                }
+            }
+        }
+
+        return count == 0 ? null : sum / count;
+    }
+
+    public Double calculateFlareAvgSitting(List<DailyGraphDto> allDays, boolean isFlareUp) {
+        if (allDays == null || allDays.isEmpty()) {
+            return null;
+        }
+
+        double sum = 0.0;
+        int count = 0;
+
+        for (int i = 0; i < allDays.size(); i++) {
+            DailyGraphDto day = allDays.get(i);
+
+            if (day == null) continue;
+            boolean isDayFlareUp = Boolean.TRUE.equals(day.getFlareUp());
+
+            if (isFlareUp == isDayFlareUp) {
+                Integer sitting = day.getSittingTime();
+                if (sitting != null && sitting != -1) {
+                    sum = sum + sitting;
+                    count++;
+                }
+            }
+        }
+
+        return count == 0 ? null : sum / count;
+    }
+
+    public Double calculateFlareAvgSedentaryHours(List<DailyGraphDto> allDays, boolean isFitbitConnected, boolean isFlareUp) {
+        if (!isFitbitConnected || allDays == null || allDays.isEmpty()) {
+            return null;
+        }
+
+        double sum = 0.0;
+        int count = 0;
+
+        for (int i = 0; i < allDays.size(); i++) {
+            DailyGraphDto day = allDays.get(i);
+
+            if (day == null) continue;
+
+            boolean isDayFlareUp = Boolean.TRUE.equals(day.getFlareUp());
+
+            if (isFlareUp == isDayFlareUp) {
+                Double sedentary = day.getFitbitSedentaryHours();
+                if (sedentary != null) {
+                    sum = sum + sedentary;
+                    count++;
+                }
+            }
+        }
+
+        return count == 0 ? null : sum / count;
+    }
+
+    public Double calculateDeltaPercent(Double flareAvg, Double nonFlareAvg) {
+        if (flareAvg == null || nonFlareAvg == null) {
+            return null;
+        }
+
+        if (nonFlareAvg <= 0.0) {
+            return null;
+        }
+
+        return ((flareAvg - nonFlareAvg) / nonFlareAvg) * 100.0;
+    }
+
+    public String buildFlareUpActivitySummaryText(Double standingDeltaPercent, Double sedentaryDeltaPercent, boolean isFitbitConnected) {
+        if (standingDeltaPercent != null) {
+            double abs = Math.abs(standingDeltaPercent);
+            if (abs >= 10.0) {
+                return standingDeltaPercent < 0
+                        ? String.format("On flare-up days, standing drops by ~%.0f%%.", abs)
+                        : String.format("On flare-up days, standing increases by ~%.0f%%.", abs);
+            }
+        }
+
+        if (isFitbitConnected && sedentaryDeltaPercent != null) {
+            double abs = Math.abs(sedentaryDeltaPercent);
+            if (abs >= 10.0) {
+                return sedentaryDeltaPercent > 0
+                        ? String.format("On flare-up days, sedentary time rises by ~%.0f%%.", abs)
+                        : String.format("On flare-up days, sedentary time drops by ~%.0f%%.", abs);
+            }
+        }
+
+        return "Not enough data this week to quantify flare-up impact.";
     }
 
 }
