@@ -271,6 +271,18 @@ public class HeartCalculatorHelper {
             return explanations;
         }
 
+        //Flare up explanation:
+        Boolean worstFlare = worstDay.getFlareUp();
+        Boolean bestFlare = bestDay.getFlareUp();
+
+        if (Boolean.TRUE.equals(worstFlare) && !Boolean.TRUE.equals(bestFlare)) {
+            explanations.add(ExplanationDto.builder()
+                    .cause("A flare-up was reported on the worst heart rate day")
+                    .explanation("Flare-ups can temporarily increase nervous system activation, "
+                            + "which may raise resting heart rate.")
+                    .build());
+        }
+
         //Stress comparison:
         Integer worstStress = worstDay.getStressLevel();
         Integer bestStress = bestDay.getStressLevel();
