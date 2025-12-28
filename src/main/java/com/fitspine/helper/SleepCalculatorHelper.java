@@ -309,6 +309,20 @@ public class SleepCalculatorHelper {
             return explanations;
         }
 
+        //Flare up explanation:
+        Boolean worstFlare = worstDay.getFlareUp();
+        Boolean bestFlare = bestDay.getFlareUp();
+
+        if (Boolean.TRUE.equals(worstFlare) && !Boolean.TRUE.equals(bestFlare)) {
+            explanations.add(ExplanationDto.builder()
+                    .cause("A flare-up was reported on the worst sleep day")
+                    .explanation(
+                            "Flare-ups can increase nervous system arousal and physical discomfort, "
+                                    + "making it harder to fall asleep and maintain restful sleep."
+                    )
+                    .build());
+        }
+
         //Stress comparison
         Integer bestStress = bestDay.getStressLevel();
         Integer worstStress = worstDay.getStressLevel();
