@@ -270,7 +270,7 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
                 .build();
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     @Override
     public ManualDailyLogResponseDto getLog(String email, LocalDate date) {
         //Find user:
@@ -279,17 +279,11 @@ public class ManualDailyLogServiceImpl implements ManualDailyLogService {
         //Find log:
         ManualDailyLog log = manualDailyLogRepository.findByUserAndLogDate(user, date).orElseThrow(() -> new ResourceNotFoundException("Log for date: " + date + " not found"));
 
-        //Get pain locations:
-        List<ManualDailyPainLocationLog> listOfPainLocations = painLocationLogRepository.findByManualDailyLog(log);
-
         //List of Pain Locations that needs to be sent in the dto response:
-        List<PainLocation> locations = new ArrayList<>();
-
-        if (listOfPainLocations != null) {
-            for (int i = 0; i < listOfPainLocations.size(); i++) {
-                locations.add(listOfPainLocations.get(i).getPainLocation());
-            }
-        }
+        List<PainLocation> locations = log.getManualDailyPainLocationLogs()
+                .stream()
+                .map(ManualDailyPainLocationLog::getPainLocation)
+                .toList();
 
         return ManualDailyLogResponseDto.builder()
                 .id(log.getId())

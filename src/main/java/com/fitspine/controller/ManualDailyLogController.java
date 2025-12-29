@@ -40,8 +40,8 @@ public class ManualDailyLogController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/date/{date}")
-    public ResponseEntity<ManualDailyLogResponseDto> getLog(@PathVariable LocalDate date) {
+    @GetMapping("/date")
+    public ResponseEntity<ManualDailyLogResponseDto> getLog(@RequestParam LocalDate date) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
         ManualDailyLogResponseDto response = manualDailyLogService.getLog(email, date);
