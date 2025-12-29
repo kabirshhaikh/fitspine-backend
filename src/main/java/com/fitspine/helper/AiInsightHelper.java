@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitspine.dto.AiInsightResponseDto;
 import com.fitspine.dto.FlareUpTriggersDto;
+import com.fitspine.dto.RiskForecastDto;
 import com.fitspine.exception.AiServiceException;
 import com.fitspine.model.*;
 import com.fitspine.repository.*;
@@ -404,5 +405,58 @@ public class AiInsightHelper {
         log.info("Updating the children entities for AI Insight for user {} on date {} finished", user.getPublicId(), logDate);
 
         return insight;
+    }
+    public AiInsightResponseDto mapToAiInsightResponse(AiDailyInsight insight) {
+        return AiInsightResponseDto.builder()
+                .todaysInsight(insight.getTodaysInsights())
+                .recoveryInsights(insight.getRecoveryInsights())
+                .discProtectionScore(insight.getDiscProtectionScore())
+                .discScoreExplanation(insight.getDiscScoreExplanation())
+                .flareUpTriggers(
+                        insight.getFlareUpTriggers()
+                                .stream()
+                                .map(trigger -> FlareUpTriggersDto.builder()
+                                        .metric(trigger.getMetric())
+                                        .value(trigger.getValue())
+                                        .impact(trigger.getImpact())
+                                        .build()
+                                )
+                                .toList()
+                )
+                .worsened(
+                        insight.getWorsened()
+                                .stream()
+                                .map(AiDailyInsightWorsened::getWorsened)
+                                .toList()
+                )
+                .possibleCauses(
+                        insight.getPossibleCausesList()
+                                .stream()
+                                .map(AiDailyInsightPossibleCauses::getPossibleCauses)
+                                .toList()
+                )
+                .actionableAdvice(
+                        insight.getActionableAdvices()
+                                .stream()
+                                .map(AiDailyInsightActionableAdvice::getAdvice)
+                                .toList()
+                )
+                .interventionsToday(
+                        insight.getInterventionsToday()
+                                .stream()
+                                .map(AiDailyInsightInterventionsToday::getInterventions)
+                                .toList()
+                )
+                .riskForecast(
+                        insight.getRiskForecasts() != null
+                                ? RiskForecastDto.builder()
+                                .flareUpRiskScore(insight.getRiskForecasts().getFlareUpRiskScore())
+                                .painRiskScore(insight.getRiskForecasts().getPainRiskScore())
+                                .riskBucket(insight.getRiskForecasts().getRiskBucket())
+                                .build()
+                                : null
+                )
+
+                .build();
     }
 }

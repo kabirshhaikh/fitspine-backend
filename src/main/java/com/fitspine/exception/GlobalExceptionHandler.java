@@ -294,6 +294,23 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    //Ai insight not found:
+    @ExceptionHandler(AiInsightNotFoundException.class)
+    public ResponseEntity<ApiError> handleAiInsightNotFound(
+            AiInsightNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        ApiError error = new ApiError(
+                LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
     //Generic exceptions:
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAllExceptions(Exception exception, HttpServletRequest request) {

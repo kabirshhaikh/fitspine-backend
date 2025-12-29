@@ -2,10 +2,7 @@ package com.fitspine.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitspine.dto.*;
-import com.fitspine.exception.AiInsightApiLimitException;
-import com.fitspine.exception.AiServiceException;
-import com.fitspine.exception.ResourceNotFoundException;
-import com.fitspine.exception.UserNotFoundException;
+import com.fitspine.exception.*;
 import com.fitspine.helper.AiInsightHelper;
 import com.fitspine.model.*;
 import com.fitspine.prompt.AiPrompt;
@@ -197,5 +194,13 @@ public class AiInsightServiceImpl implements AiInsightService {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
         return fitbitContextAggregationService.generateWeeklyGraph(date, user);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public AiInsightResponseDto getAiInsightForDay(LocalDate date, String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+        AiDailyInsight insight = insightRepository.findByUserAndLogDate(user, date).orElseThrow(() -> new AiInsightNotFoundException("Ai insight  not found for date: " + date));
+        return aiHelper.mapToAiInsightResponse(insight);
     }
 }

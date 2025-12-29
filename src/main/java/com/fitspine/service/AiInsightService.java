@@ -10,4 +10,6 @@ public interface AiInsightService {
     AiInsightResponseDto generateDailyInsight(AiUserDailyInputDto dto, String email, LocalDate logDate);
 
     WeeklyGraphDto weeklyGraph(LocalDate date, String email);
+
+    AiInsightResponseDto getAiInsightForDay(LocalDate date, String email);
 }
