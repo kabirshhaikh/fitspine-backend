@@ -45,11 +45,8 @@ public class FitbitAiInsightScheduler {
             return;
         }
 
-        int generatedCount = 0;
         for (int i = 0; i < ids.size(); i++) {
             workerService.processUserForCronjob(ids.get(i), today);
-            generatedCount++;
         }
-        log.info("AI Insight Scheduler completed. Insights generated = {}", generatedCount);
     }
 }

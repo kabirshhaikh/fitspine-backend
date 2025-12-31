@@ -3,7 +3,6 @@ package com.fitspine.service.impl;
 import com.fitspine.dto.AiUserDailyInputDto;
 import com.fitspine.exception.AiInsightApiLimitException;
 import com.fitspine.exception.UserNotFoundException;
-import com.fitspine.model.User;
 import com.fitspine.repository.UserRepository;
 import com.fitspine.service.AiInsightService;
 import com.fitspine.service.AiInsightWorkerService;
@@ -37,24 +36,22 @@ public class AiInsightWorkerServiceImpl implements AiInsightWorkerService {
     @Override
     public void processUserForCronjob(Long userId, LocalDate date) {
         try {
-            User user = userRepository.findById(userId)
+            String userEmail = userRepository.findEmailById(userId)
                     .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
 
-            //Lazy loads succeed because we are in a transaction/session
-            user.getUserInjuryList().size();
-            user.getUserSurgeryList().size();
-            user.getUserDiscIssueList().size();
+            String userPublicId = userRepository.findPublicIdById(userId).orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
 
-            AiUserDailyInputDto dto = dailyAggregationService.buildAiInput(user.getEmail(), date);
+            AiUserDailyInputDto dto = dailyAggregationService.buildAiInput(userEmail, date);
 
-            insightService.generateDailyInsight(dto, user.getEmail(), date);
+            insightService.generateDailyInsight(dto, userEmail, date);
 
-            log.info("CRONJOB -> Worker -> AI Insight generated for user {}", user.getPublicId());
+            log.info("CRONJOB -> Worker -> AI Insight generated for user {}", userPublicId);
         } catch (AiInsightApiLimitException exception) {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+            String userPublicId = userRepository.findPublicIdById(userId).orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
 
-            log.info("CRONJOB -> WORKER -> user: {} has reached rate limit for the day to generate AI insight", user.getPublicId());
+            log.info("CRONJOB -> WORKER -> user: {} has reached rate limit for the day to generate AI insight", userPublicId);
+
+            return;
         } catch (Exception ex) {
             log.error("CRONJOB -> Worker FAILED for user {}: {}", userId, ex.getMessage());
         }
