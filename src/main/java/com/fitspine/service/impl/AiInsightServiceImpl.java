@@ -200,7 +200,12 @@ public class AiInsightServiceImpl implements AiInsightService {
     @Override
     public AiInsightResponseDto getAiInsightForDay(LocalDate date, String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
-        AiDailyInsight insight = insightRepository.findByUserAndLogDate(user, date).orElseThrow(() -> new AiInsightNotFoundException("Ai insight  not found for date: " + date));
-        return aiHelper.mapToAiInsightResponse(insight);
+        List<AiDailyInsight> insight = insightRepository.findAllByUserAndLogDate(user, date);
+
+        if (insight.isEmpty()) {
+            throw new AiInsightNotFoundException("Ai insight not found for date: " + date);
+        }
+
+        return aiHelper.mapToAiInsightResponse(insight.get(0));
     }
 }

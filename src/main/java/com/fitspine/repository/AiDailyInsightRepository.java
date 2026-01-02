@@ -17,6 +17,8 @@ public interface AiDailyInsightRepository extends JpaRepository<AiDailyInsight, 
 
     Optional<AiDailyInsight> findByUserAndLogDate(User user, LocalDate logDate);
 
+    List<AiDailyInsight> findAllByUserAndLogDate(User user, LocalDate logDate);
+
     @Query("""
                 SELECT DISTINCT u.id
                 FROM ManualDailyLog m
