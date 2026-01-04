@@ -1,0 +1,14 @@
+CREATE TABLE audit_logs (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+
+    entity_name VARCHAR(255) DEFAULT NULL,
+    entity_id BIGINT DEFAULT NULL,
+
+    action VARCHAR(255) DEFAULT NULL,
+    user_email VARCHAR(255) DEFAULT NULL,
+    details VARCHAR(255) DEFAULT NULL,
+
+    timestamp DATETIME(6) NOT NULL,
+
+    CONSTRAINT pk_audit_logs PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
