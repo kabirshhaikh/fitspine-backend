@@ -311,6 +311,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(InvalidUserRegistrationException.class)
+    public ResponseEntity<ApiError> handleInvalidUserRegistration(
+            InvalidUserRegistrationException ex,
+            HttpServletRequest request) {
+
+        ApiError apiError = new ApiError(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+    }
+
+
     //Generic exceptions:
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAllExceptions(Exception exception, HttpServletRequest request) {

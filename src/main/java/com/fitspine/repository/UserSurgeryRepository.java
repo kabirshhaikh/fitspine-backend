@@ -11,4 +11,6 @@ public interface UserSurgeryRepository extends JpaRepository<UserSurgery, Long> 
     void deleteAllByUserId(Long userId);
 
     List<UserSurgery> findAllByUserId(Long id);
+
+    boolean existsByUserId(Long userId);
 }

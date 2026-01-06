@@ -2,6 +2,7 @@ package com.fitspine.service.impl;
 
 import com.fitspine.dto.*;
 import com.fitspine.enums.Role;
+import com.fitspine.exception.InvalidUserRegistrationException;
 import com.fitspine.exception.UserAlreadyExistsException;
 import com.fitspine.exception.UserNotFoundException;
 import com.fitspine.helper.UserHelper;
@@ -87,6 +88,14 @@ public class UserServiceImp implements UserService {
             throw new UserAlreadyExistsException("User already exists with email: " + dto.getEmail());
         }
 
+        if (!Boolean.TRUE.equals(dto.getSurgeryHistory()) && dto.getUserSurgeries() != null && !dto.getUserSurgeries().isEmpty()) {
+            throw new InvalidUserRegistrationException("Surgery details cannot be provided when surgery history checkbox is checked");
+        }
+
+        if (Boolean.TRUE.equals(dto.getSurgeryHistory()) && (dto.getUserSurgeries() == null || dto.getUserSurgeries().isEmpty())) {
+            throw new InvalidUserRegistrationException("Surgery details must be provided when surgery history is true");
+        }
+
         //Build and save user:
         User user = User.builder()
                 .fullName(dto.getFullName())
@@ -157,6 +166,29 @@ public class UserServiceImp implements UserService {
     public UserResponseDto updateUser(UserUpdateDto dto, String email) {
         //Extract user using email and check if the authorized user is requesting the update endpoint:
         User existingUser = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        Boolean effectiveSurgeryHistory = dto.getSurgeryHistory() != null ? dto.getSurgeryHistory() : existingUser.getSurgeryHistory();
+
+        if (!Boolean.TRUE.equals(effectiveSurgeryHistory)
+                && dto.getUserSurgeries() != null
+                && !dto.getUserSurgeries().isEmpty()) {
+            throw new InvalidUserRegistrationException("Surgery details cannot be provided when surgery history is false");
+        }
+
+        if (Boolean.TRUE.equals(effectiveSurgeryHistory)) {
+
+            boolean hasSurgeriesInRequest =
+                    dto.getUserSurgeries() != null && !dto.getUserSurgeries().isEmpty();
+
+            boolean hasExistingSurgeries =
+                    userSurgeryRepository.existsByUserId(existingUser.getId());
+
+            if (!hasSurgeriesInRequest && !hasExistingSurgeries) {
+                throw new InvalidUserRegistrationException(
+                        "Surgery details must be provided when surgery history is true"
+                );
+            }
+        }
 
         //Extract id to send to helper functions:
         Long id = existingUser.getId();
@@ -247,7 +279,6 @@ public class UserServiceImp implements UserService {
                 .userDiscIssues(userHelper.returnMappedUserDiscIssueDto(userDiscIssues))
                 .build();
     }
-
 
     @Transactional(readOnly = true)
     @Override
