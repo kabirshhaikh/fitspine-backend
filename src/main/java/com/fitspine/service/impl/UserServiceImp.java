@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -164,30 +165,30 @@ public class UserServiceImp implements UserService {
     @Transactional
     @Override
     public UserResponseDto updateUser(UserUpdateDto dto, String email) {
+        log.info("Update user profile data sent by frontend: {}", dto);
         //Extract user using email and check if the authorized user is requesting the update endpoint:
         User existingUser = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
         Boolean effectiveSurgeryHistory = dto.getSurgeryHistory() != null ? dto.getSurgeryHistory() : existingUser.getSurgeryHistory();
 
-        if (!Boolean.TRUE.equals(effectiveSurgeryHistory)
-                && dto.getUserSurgeries() != null
-                && !dto.getUserSurgeries().isEmpty()) {
-            throw new InvalidUserRegistrationException("Surgery details cannot be provided when surgery history is false");
+        List<UserSurgeryDto> validSurgeries =
+                dto.getUserSurgeries() == null
+                        ? List.of()
+                        : dto.getUserSurgeries().stream()
+                        .filter(s -> s.getSurgeryType() != null).toList();
+
+        //Surgery history = false -> NO valid surgeries allowed
+        if (!Boolean.TRUE.equals(effectiveSurgeryHistory) && !validSurgeries.isEmpty()) {
+            throw new InvalidUserRegistrationException(
+                    "Surgery details cannot be provided when surgery history checkbox is not checked."
+            );
         }
 
-        if (Boolean.TRUE.equals(effectiveSurgeryHistory)) {
-
-            boolean hasSurgeriesInRequest =
-                    dto.getUserSurgeries() != null && !dto.getUserSurgeries().isEmpty();
-
-            boolean hasExistingSurgeries =
-                    userSurgeryRepository.existsByUserId(existingUser.getId());
-
-            if (!hasSurgeriesInRequest && !hasExistingSurgeries) {
-                throw new InvalidUserRegistrationException(
-                        "Surgery details must be provided when surgery history is true"
-                );
-            }
+        //Surgery history = true -> AT LEAST ONE valid surgery required
+        if (Boolean.TRUE.equals(effectiveSurgeryHistory) && validSurgeries.isEmpty()) {
+            throw new InvalidUserRegistrationException(
+                    "Surgery details must be provided when surgery history checkbox is checked."
+            );
         }
 
         //Extract id to send to helper functions:
@@ -234,25 +235,53 @@ public class UserServiceImp implements UserService {
         userRepository.save(existingUser);
 
         //Update the list of User Surgeries, User Disc Issue and User Injury Type:
+        //Update the list of User Surgeries, User Disc Issue and User Injury Type:
         List<UserInjury> userInjuries = new ArrayList<>();
         if (dto.getUserInjuries() != null) {
             userInjuryRepository.deleteAllByUserId(existingUser.getId());
-            userInjuries = userHelper.returnUserInjuryList(dto.getUserInjuries(), existingUser);
-            userInjuryRepository.saveAll(userInjuries);
+
+            // Filter out null values - frontend sends empty strings which become null for ENUMs
+            List<UserInjuryDto> filteredInjuries = dto.getUserInjuries().stream()
+                    .filter(injury -> injury.getInjuryType() != null)
+                    .collect(Collectors.toList());
+
+            if (!filteredInjuries.isEmpty()) {
+                userInjuries = userHelper.returnUserInjuryList(filteredInjuries, existingUser);
+                userInjuryRepository.saveAll(userInjuries);
+            }
+            // If filtered list is empty, we've already deleted all - this clears the data
         }
 
         List<UserSurgery> userSurgeries = new ArrayList<>();
         if (dto.getUserSurgeries() != null) {
             userSurgeryRepository.deleteAllByUserId(existingUser.getId());
-            userSurgeries = userHelper.returnUserSurgeryList(dto.getUserSurgeries(), existingUser);
-            userSurgeryRepository.saveAll(userSurgeries);
+
+            // Filter out null values
+            List<UserSurgeryDto> filteredSurgeries = dto.getUserSurgeries().stream()
+                    .filter(surgery -> surgery.getSurgeryType() != null)
+                    .collect(Collectors.toList());
+
+            if (!filteredSurgeries.isEmpty()) {
+                userSurgeries = userHelper.returnUserSurgeryList(filteredSurgeries, existingUser);
+                userSurgeryRepository.saveAll(userSurgeries);
+            }
+            // If filtered list is empty, we've already deleted all - this clears the data
         }
 
         List<UserDiscIssue> userDiscIssues = new ArrayList<>();
         if (dto.getUserDiscIssues() != null) {
             userDiscIssueRepository.deleteAllByUserId(existingUser.getId());
-            userDiscIssues = userHelper.returnUserDiscIssueList(dto.getUserDiscIssues(), existingUser);
-            userDiscIssueRepository.saveAll(userDiscIssues);
+
+            // Filter out null values
+            List<UserDiscIssueDto> filteredDiscIssues = dto.getUserDiscIssues().stream()
+                    .filter(issue -> issue.getDiscLevel() != null)
+                    .collect(Collectors.toList());
+
+            if (!filteredDiscIssues.isEmpty()) {
+                userDiscIssues = userHelper.returnUserDiscIssueList(filteredDiscIssues, existingUser);
+                userDiscIssueRepository.saveAll(userDiscIssues);
+            }
+            // If filtered list is empty, we've already deleted all - this clears the data
         }
 
         //Get pre-signed url of profile picture if exists:
