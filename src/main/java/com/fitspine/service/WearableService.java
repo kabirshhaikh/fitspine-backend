@@ -6,4 +6,6 @@ public interface WearableService {
     void exchangeCodeForToken(String code, Long userId);
 
     String getProvider();
+
+    void revoke(String email);
 }

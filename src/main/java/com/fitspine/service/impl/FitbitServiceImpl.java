@@ -10,18 +10,21 @@ import com.fitspine.model.UserWearableToken;
 import com.fitspine.repository.UserRepository;
 import com.fitspine.repository.UserWearableTokenRepository;
 import com.fitspine.service.WearableService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class FitbitServiceImpl implements WearableService {
     @Value("${FITBIT_CLIENT_ID}")
@@ -125,5 +128,45 @@ public class FitbitServiceImpl implements WearableService {
     @Override
     public String getProvider() {
         return "FITBIT";
+    }
+
+    @Transactional
+    @Override
+    public void revoke(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        Optional<UserWearableToken> tokenOptional = userWearableTokenRepository.findByUserIdAndProvider(user.getId(), getProvider());
+
+        if (tokenOptional.isEmpty()) {
+            user.setIsWearableConnected(false);
+            user.setWearableType(null);
+            userRepository.save(user);
+            return;
+        }
+
+        UserWearableToken token = tokenOptional.get();
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(token.getAccessToken());
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            HttpEntity<Void> request = new HttpEntity<>(headers);
+
+            restTemplate.postForEntity(
+                    "https://api.fitbit.com/oauth2/revoke",
+                    request,
+                    Void.class
+            );
+        } catch (Exception exception) {
+            log.warn("Fitbit revoke call failed, doing local cleanup", exception);
+        }
+
+        //Clean up locally:
+        userWearableTokenRepository.deleteByUserIdAndProvider(user.getId(), getProvider());
+        user.setIsWearableConnected(false);
+        user.setWearableType(null);
+        userRepository.save(user);
     }
 }

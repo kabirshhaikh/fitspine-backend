@@ -4,6 +4,8 @@ import com.fitspine.service.WearableService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -27,5 +29,13 @@ public class OauthCallBackController {
         return ResponseEntity.status(HttpStatus.FOUND)
                 .header("Location", "http://localhost:5173/dashboard?fitbit=connected")
                 .build();
+    }
+
+    @GetMapping("/fitbit/revoke")
+    public ResponseEntity<Void> revokeFitbit() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        wearableService.revoke(email);
+        return ResponseEntity.noContent().build();
     }
 }
