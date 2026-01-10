@@ -33,4 +33,5 @@ public class PainStiffnessResultDto {
     private List<String> correlations;
     private List<ExplanationDto> painExplanations;
     private List<ExplanationDto> stiffnessExplanation;
+    private List<PainDailyBreakDownDto> dailyBreakDown;
 }

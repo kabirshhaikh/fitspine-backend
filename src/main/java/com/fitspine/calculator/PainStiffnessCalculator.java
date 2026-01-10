@@ -116,6 +116,9 @@ public class PainStiffnessCalculator {
         //Now i get the stiffness explanations:
         List<ExplanationDto> stiffnessExplanations = helper.explainStiffnessChange(bestMorningStiffnessDay, worstMorningStiffnessDay, loggedDays, dto.getIsFitbitConnected(), userDiscIssues, userInjuries);
 
+        //Lastly i calculate the daily break down:
+        List<PainDailyBreakDownDto> dailyBreakDown = helper.getDailyBreakDown(allDays);
+
         return PainStiffnessResultDto.builder()
                 .painAverage(painAverage)
                 .stiffnessAverage(morningStiffnessAverage)
@@ -132,6 +135,7 @@ public class PainStiffnessCalculator {
                 .worstPainFlareUpDay(worstPainFlareUpDay)
                 .bestStiffnessFlareUpDay(bestStiffnessFlareUpDay)
                 .worstStiffnessFlareUpDay(worstStiffnessFlareUpDay)
+                .dailyBreakDown(dailyBreakDown)
                 .build();
     }
 }

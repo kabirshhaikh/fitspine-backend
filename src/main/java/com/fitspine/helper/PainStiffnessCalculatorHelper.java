@@ -1,9 +1,6 @@
 package com.fitspine.helper;
 
-import com.fitspine.dto.DailyGraphDto;
-import com.fitspine.dto.DaySummaryDto;
-import com.fitspine.dto.ExplanationDto;
-import com.fitspine.dto.TrendResultDto;
+import com.fitspine.dto.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -661,4 +658,37 @@ public class PainStiffnessCalculatorHelper {
 
         return valid;
     }
+
+    public List<PainDailyBreakDownDto> getDailyBreakDown(List<DailyGraphDto> allDays) {
+        List<PainDailyBreakDownDto> list = new ArrayList<>();
+
+        if (allDays == null || allDays.isEmpty()) {
+            return list;
+        }
+
+        for (int i = 0; i < allDays.size(); i++) {
+            DailyGraphDto day = allDays.get(i);
+            if (day != null && day.getPainLevel() != null && day.getMorningStiffness() != null) {
+                String pain = EnumScoreHelper.painLabel(day.getPainLevel());
+                String stiffness = EnumScoreHelper.morningStiffnessLabel(day.getMorningStiffness());
+                list.add(
+                        PainDailyBreakDownDto.builder()
+                                .logDate(day.getDate())
+                                .painLevel(pain)
+                                .stiffnessLevel(stiffness)
+                                .build());
+            } else {
+                list.add(
+                        PainDailyBreakDownDto.builder()
+                                .logDate(day.getDate())
+                                .painLevel(null)
+                                .stiffnessLevel(null)
+                                .build());
+            }
+        }
+
+
+        return list;
+    }
+
 }

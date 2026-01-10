@@ -17,6 +17,21 @@ public class EnumScoreHelper {
         };
     }
 
+    //Reverse mapping for pain:
+    public static String painLabel(Integer value) {
+        if (value == null || value < 0) {
+            return null;
+        }
+
+        return switch (value) {
+            case 0 -> "None";
+            case 1 -> "Mild";
+            case 2 -> "Moderate";
+            case 3 -> "Severe";
+            default -> null;
+        };
+    }
+
     public static int sittingTime(SittingTime sitting) {
         if (sitting == null) {
             return -1;
@@ -58,6 +73,21 @@ public class EnumScoreHelper {
             case MODERATE -> 2;
             case SEVERE -> 3;
             default -> -1;
+        };
+    }
+
+    //Reverse mapping for stiffness level:
+    public static String morningStiffnessLabel(Integer value) {
+        if (value == null || value < 0) {
+            return null;
+        }
+
+        return switch (value) {
+            case 0 -> "None";
+            case 1 -> "Mild";
+            case 2 -> "Moderate";
+            case 3 -> "Severe";
+            default -> null;
         };
     }
 
