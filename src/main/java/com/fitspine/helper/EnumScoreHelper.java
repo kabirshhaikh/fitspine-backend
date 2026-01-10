@@ -62,6 +62,22 @@ public class EnumScoreHelper {
         };
     }
 
+    //Reverse mapping for sitting and standing time:
+    public static String timeDurationLabel(Integer value) {
+        if (value == null || value < 0) {
+            return null;
+        }
+
+        return switch (value) {
+            case 0 -> "Less than 2 hours";
+            case 1 -> "2–4 hours";
+            case 2 -> "4–6 hours";
+            case 3 -> "6–8 hours";
+            case 4 -> "More than 8 hours";
+            default -> null;
+        };
+    }
+
     public static int morningStiffness(MorningStiffness stiffness) {
         if (stiffness == null) {
             return -1;

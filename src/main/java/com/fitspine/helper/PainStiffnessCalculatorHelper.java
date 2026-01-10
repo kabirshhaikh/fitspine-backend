@@ -668,23 +668,25 @@ public class PainStiffnessCalculatorHelper {
 
         for (int i = 0; i < allDays.size(); i++) {
             DailyGraphDto day = allDays.get(i);
-            if (day != null && day.getPainLevel() != null && day.getMorningStiffness() != null) {
-                String pain = EnumScoreHelper.painLabel(day.getPainLevel());
-                String stiffness = EnumScoreHelper.morningStiffnessLabel(day.getMorningStiffness());
-                list.add(
-                        PainDailyBreakDownDto.builder()
-                                .logDate(day.getDate())
-                                .painLevel(pain)
-                                .stiffnessLevel(stiffness)
-                                .build());
-            } else {
-                list.add(
-                        PainDailyBreakDownDto.builder()
-                                .logDate(day.getDate())
-                                .painLevel(null)
-                                .stiffnessLevel(null)
-                                .build());
+            if (day == null) {
+                continue;
             }
+
+            String pain = day.getPainLevel() != null
+                    ? EnumScoreHelper.painLabel(day.getPainLevel())
+                    : null;
+
+            String stiffness = day.getMorningStiffness() != null
+                    ? EnumScoreHelper.morningStiffnessLabel(day.getMorningStiffness())
+                    : null;
+
+            list.add(
+                    PainDailyBreakDownDto.builder()
+                            .logDate(day.getDate())
+                            .painLevel(pain)
+                            .stiffnessLevel(stiffness)
+                            .build()
+            );
         }
 
 

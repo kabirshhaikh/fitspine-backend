@@ -29,4 +29,16 @@ public class ActivityResultDto {
 
     //Activity related flare ups:
     private FlareUpActivitySummaryDto flareUpDto;
+
+    List<ActivityBreakDownDto> dailyBreakDown;
+
+    private Double standingAvg;
+    private Double sittingAvg;
+    private Double sedentaryAvg;
+
+    private TrendResultDto standingTrend;
+    private TrendResultDto sittingTrend;
+    private TrendResultDto sedentaryTrend;
+
+    private List<String> painCorrelations;
 }

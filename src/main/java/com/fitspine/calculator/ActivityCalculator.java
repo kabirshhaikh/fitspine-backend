@@ -50,6 +50,18 @@ public class ActivityCalculator {
 
         List<ExplanationDto> explanations = helper.explainWhyActivityDecreased(bestStandingDay, worstStandingDay, allDays, dto.getIsFitbitConnected());
 
+        List<ActivityBreakDownDto> dailyBreakDown = helper.getDailyBreakDown(allDays, dto.getIsFitbitConnected());
+
+        Double standingAvg = helper.calculateStandingAvg(allDays);
+        Double sittingAvg = helper.calculateSittingAvg(allDays);
+        Double sedentaryAvg = helper.calculateSedentaryAvg(allDays, dto.getIsFitbitConnected());
+
+        TrendResultDto standingTrend = helper.calculateStandingTrend(allDays);
+        TrendResultDto sittingTrend = helper.calculateSittingTrend(allDays);
+        TrendResultDto sedentaryTrend = helper.calculateSedentaryTrend(allDays, dto.getIsFitbitConnected());
+
+        List<String> painCorrelations = helper.detectPainActivityCorrelation(allDays, dto.getIsFitbitConnected());
+
         Integer flareUpDays = helper.calculateFlareUpDays(allDays);
         FlareUpActivitySummaryDto flareUpDto = null;
 
@@ -87,7 +99,6 @@ public class ActivityCalculator {
                     .build();
         }
 
-
         return ActivityResultDto.builder()
                 .activityBalancePercent(activityBalancePercent)
                 .standingGoalMetPercent(standingGoalMetPercent)
@@ -97,6 +108,14 @@ public class ActivityCalculator {
                 .worstStandingDay(worstStandingDay)
                 .explanations(explanations)
                 .flareUpDto(flareUpDto)
+                .dailyBreakDown(dailyBreakDown)
+                .standingAvg(standingAvg)
+                .sittingAvg(sittingAvg)
+                .sedentaryAvg(sedentaryAvg)
+                .standingTrend(standingTrend)
+                .sittingTrend(sittingTrend)
+                .sedentaryTrend(sedentaryTrend)
+                .painCorrelations(painCorrelations)
                 .build();
     }
 }
