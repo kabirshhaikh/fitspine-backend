@@ -34,6 +34,9 @@ public class Feedback {
     @Column(name = "contact_requested", nullable = false)
     private Boolean contactRequested;
 
+    @Column(length = 255)
+    private String email;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
