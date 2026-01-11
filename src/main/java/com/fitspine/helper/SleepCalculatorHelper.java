@@ -360,5 +360,71 @@ public class SleepCalculatorHelper {
         return explanations;
     }
 
+    public List<SleepBreakDownDto> getDailyBreakDowns(
+            List<DailyGraphDto> allDays,
+            boolean isFitbitConnected
+    ) {
+        List<SleepBreakDownDto> list = new ArrayList<>();
+
+        if (allDays == null || allDays.isEmpty()) {
+            return list;
+        }
+
+        for (DailyGraphDto day : allDays) {
+            if (day == null) continue;
+
+            String manualSleepLabel =
+                    EnumScoreHelper.sleepDurationLabel(day.getSleepDuration());
+
+            String wakeUps =
+                    EnumScoreHelper.nightWakeUpsLabel(day.getNightWakeUps());
+
+            String timeAsleep;
+
+            if (isFitbitConnected && day.getFitbitTotalMinutesAsleep() != null) {
+                timeAsleep = String.format(
+                        "%.1f hours",
+                        day.getFitbitTotalMinutesAsleep() / 60.0
+                );
+            } else {
+                timeAsleep = manualSleepLabel;
+            }
+
+            list.add(
+                    SleepBreakDownDto.builder()
+                            .logDate(day.getDate())
+                            .timeAsleep(timeAsleep)
+                            .nightWakeUps(wakeUps)
+                            .isFitbitConnected(isFitbitConnected)
+                            .build()
+            );
+        }
+
+        return list;
+    }
+
+    public Double getAverageNightWakeUps(List<DailyGraphDto> allDays) {
+        if (allDays == null || allDays.isEmpty()) {
+            return null;
+        }
+
+        double sum = 0.0;
+        int count = 0;
+
+        for (int i = 0; i < allDays.size(); i++) {
+            DailyGraphDto day = allDays.get(i);
+            if (day == null) continue;
+
+            Integer wakeUps = day.getNightWakeUps();
+            if (wakeUps != null && wakeUps != -1) {
+                sum += wakeUps;
+                count++;
+            }
+        }
+
+        return count == 0
+                ? null
+                : Math.round((sum / count) * 10.0) / 10.0;
+    }
 
 }

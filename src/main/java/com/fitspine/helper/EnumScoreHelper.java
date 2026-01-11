@@ -153,6 +153,22 @@ public class EnumScoreHelper {
         };
     }
 
+    //Reverse mapping of sleep duration:
+    public static String sleepDurationLabel(Integer value) {
+        if (value == null || value < 0) {
+            return null;
+        }
+
+        return switch (value) {
+            case 0 -> "Less than 5 hours";
+            case 1 -> "5–6 hours";
+            case 2 -> "6–7 hours";
+            case 3 -> "7–8 hours";
+            case 4 -> "More than 8 hours";
+            default -> null;
+        };
+    }
+
     public static int nightWakeUps(NightWakeUps nightWakeUps) {
         if (nightWakeUps == null) {
             return -1;
@@ -164,6 +180,21 @@ public class EnumScoreHelper {
             case TWO -> 2;
             case THREE_OR_MORE -> 3;
             default -> -1;
+        };
+    }
+
+    //Reverse mapping of night wake ups:
+    public static String nightWakeUpsLabel(Integer value) {
+        if (value == null || value < 0) {
+            return null;
+        }
+
+        return switch (value) {
+            case 0 -> "None";
+            case 1 -> "One";
+            case 2 -> "Two";
+            case 3 -> "Three or more";
+            default -> null;
         };
     }
 

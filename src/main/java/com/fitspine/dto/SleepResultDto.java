@@ -22,4 +22,8 @@ public class SleepResultDto {
     private DaySummaryDto worstSleepDay;
 
     private List<ExplanationDto> explanations;
+
+    private List<SleepBreakDownDto> dailyBreakDowns;
+
+    private Double averageNightWakeUps;
 }

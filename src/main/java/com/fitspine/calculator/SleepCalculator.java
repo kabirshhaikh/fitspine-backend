@@ -61,6 +61,10 @@ public class SleepCalculator {
                 worstSleepDay != null ? helper.findDayByDate(allDays, worstSleepDay.getDate()) : null
         );
 
+        List<SleepBreakDownDto> dailyBreakDowns = helper.getDailyBreakDowns(allDays, dto.getIsFitbitConnected());
+
+        Double averageNightWakeUps = helper.getAverageNightWakeUps(allDays);
+
         return SleepResultDto.builder()
                 .averageSleepHours(averageSleepHours)
                 .sleepTrend(sleepTrend)
@@ -69,6 +73,8 @@ public class SleepCalculator {
                 .bestSleepDay(bestSleepDay)
                 .worstSleepDay(worstSleepDay)
                 .explanations(explanations)
+                .dailyBreakDowns(dailyBreakDowns)
+                .averageNightWakeUps(averageNightWakeUps)
                 .build();
     }
 }
