@@ -122,6 +122,22 @@ public class EnumScoreHelper {
         };
     }
 
+    //Reverse mapping for stress level:
+    public static String stressLabel(Integer value) {
+        if (value == null || value < 0) {
+            return null;
+        }
+
+        return switch (value) {
+            case 0 -> "Very Low";
+            case 1 -> "Low";
+            case 2 -> "Moderate";
+            case 3 -> "High";
+            case 4 -> "Very High";
+            default -> null;
+        };
+    }
+
     public static int sleepDuration(SleepDuration sleepDuration) {
         if (sleepDuration == null) {
             return -1;

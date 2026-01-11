@@ -27,4 +27,6 @@ public class HeartResultDto {
     private DaySummaryDto worstHeartRateDay;
 
     private List<ExplanationDto> explanations;
+
+    private List<HeartBreakDownDto> dailyBreakDown;
 }

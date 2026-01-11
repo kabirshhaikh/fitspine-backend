@@ -94,6 +94,8 @@ public class HeartCalculator {
 
         List<ExplanationDto> explanations = helper.explainWhyHeartRateChanged(bestDay, worstDay, isFitbitConnected);
 
+        List<HeartBreakDownDto> dailyBreakDown = helper.getDailyBreakDown(allDays, dto.getIsFitbitConnected());
+
         return HeartResultDto.builder()
                 .averageRestingHeartRate(averageRestingHeartRate)
                 .restingHeartRateTrend(restingHeartRateTrend)
@@ -103,6 +105,7 @@ public class HeartCalculator {
                 .bestHeartRateDay(bestHeartRateDay)
                 .worstHeartRateDay(worstHeartRateDay)
                 .explanations(explanations)
+                .dailyBreakDown(dailyBreakDown)
                 .build();
     }
 }

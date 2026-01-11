@@ -1,9 +1,6 @@
 package com.fitspine.helper;
 
-import com.fitspine.dto.DailyGraphDto;
-import com.fitspine.dto.DaySummaryDto;
-import com.fitspine.dto.ExplanationDto;
-import com.fitspine.dto.TrendResultDto;
+import com.fitspine.dto.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -351,5 +348,42 @@ public class HeartCalculatorHelper {
         }
     }
 
+    public List<HeartBreakDownDto> getDailyBreakDown(List<DailyGraphDto> allDays, boolean isFitbitConnected) {
+        List<HeartBreakDownDto> list = new ArrayList<>();
+
+        if (allDays == null || allDays.isEmpty()) {
+            return list;
+        }
+
+        for (int i = 0; i < allDays.size(); i++) {
+            DailyGraphDto day = allDays.get(i);
+
+            if (day == null) {
+                continue;
+            }
+
+            String stress = EnumScoreHelper.enumToStressLabel(day.getStressLevel() != null ? day.getStressLevel() : null);
+            Integer restingHeartRate = null;
+
+            if (isFitbitConnected) {
+                restingHeartRate = day.getFitbitRestingHeartRate() != null
+                        ? day.getFitbitRestingHeartRate()
+                        : day.getManualRestingHeartRate();
+            } else {
+                restingHeartRate = day.getManualRestingHeartRate();
+            }
+
+            list.add(
+                    HeartBreakDownDto.builder()
+                            .logDate(day.getDate())
+                            .isFitbitConnected(isFitbitConnected)
+                            .stressLevel(stress)
+                            .restingHeartRate(restingHeartRate)
+                            .build()
+            );
+        }
+
+        return list;
+    }
 
 }
