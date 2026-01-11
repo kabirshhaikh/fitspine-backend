@@ -327,6 +327,22 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(InvalidFeedbackException.class)
+    public ResponseEntity<ApiError> handleInvalidFeedback(
+            InvalidFeedbackException ex,
+            HttpServletRequest request) {
+
+        ApiError error = new ApiError(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Invalid Feedback",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
 
     //Generic exceptions:
     @ExceptionHandler(Exception.class)
