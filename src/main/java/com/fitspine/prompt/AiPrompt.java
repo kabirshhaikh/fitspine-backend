@@ -399,14 +399,21 @@ public class AiPrompt {
               "painRiskScore": number,\s
               "riskBucket": "SAFE" | "CAUTION" | "ELEVATED" | "HIGH_RISK"
               }.
+            - CRITICAL: This predicts risk for TOMORROW (next 24–48 hours), not today. Forecast future risk based on today's patterns and recent trends.
             - Both flareUpRiskScore and painRiskScore MUST be integers from 0–10, where 0 = minimal risk and 10 = highest risk.
+            - Predict tomorrow's risk by combining:
+              • Today's current state: painLevel, flareUpToday, stressLevel, morningStiffness
+              • Today's activity patterns: steps, sedentaryMinutes, activeMinutes, sittingTime, standingTime
+              • Yesterday's recovery: yesterdaySleepMinutes (or yesterdaySleepDuration), yesterdayFitbitRestingHeartRate (or yesterdayManualRestingHeartRate), yesterdayPainLevel
+              • Recent patterns: daysSinceLastFlareUp, trends in sleep quality and activity levels
+              • Recovery trajectory: averageFitbitRestingHeartRate trends, sleep efficiency patterns
+            - Consider how today's patterns and yesterday's recovery quality will impact tomorrow:
+              • Poor sleep yesterday + high activity today = higher risk tomorrow
+              • Flare-up today + poor recovery = elevated risk tomorrow
+              • Recent flare-up (daysSinceLastFlareUp is low) + current triggers = higher risk tomorrow
+              • Good sleep + balanced activity = lower risk tomorrow
             - If data are sparse (daysAvailable < 3 or many key metrics = -1),
               set riskBucket = "SAFE" and explain uncertainty in other sections.
-            - Otherwise:
-              • combine trends in painLevel, flareUpToday, steps, sedentaryMinutes, sleep
-                (including yesterdaySleepMinutes or yesterdaySleepDuration / yesterdayNightWakeUps),
-                averageFitbitRestingHeartRate or yesterdayFitbitRestingHeartRate,
-                and daysSinceLastFlareUp
               
             ---------------------------------------
             ABSOLUTE JSON SHAPE REQUIREMENTS (STRICT)
