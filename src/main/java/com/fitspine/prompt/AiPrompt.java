@@ -248,11 +248,27 @@ public class AiPrompt {
                         
             "worsened":
             - ARRAY OF STRINGS ONLY.
+            - CRITICAL: All metric names and values must be HUMAN-READABLE. Never use raw field names like "sittingTime" or "sleepDuration".
             - Each string must:
-              • name the metric,
-              • describe today's value vs the context average,
-              • explain the clinical implication
+              • Name the metric using HUMAN-READABLE field names (e.g., "Sitting time" not "sittingTime", "Sleep duration" not "sleepDuration", "Pain level" not "painLevel", "Stress level" not "stressLevel", "Morning stiffness" not "morningStiffness", "Flare-up" not "flareUpToday", "Resting heart rate" not "fitbitRestingHeartRate", "Sedentary time" not "sedentaryMinutes", "Steps" not "steps", "Active minutes" not "activeMinutes").
+              • Describe today's value vs the context average in HUMAN-READABLE format:
+                - Sleep duration: Convert minutes to hours (e.g., "3 hours" not "180 minutes", "your usual 2 hours" not "average 120 minutes")
+                - Time durations: Use "hours" or "minutes" appropriately (e.g., "2 hours" for sitting/standing, "30 minutes" for active time)
+                - Pain/stiffness/stress: Use descriptive terms (e.g., "moderate pain" instead of "pain level 2", "mild stiffness" instead of "stiffness level 1")
+                - Steps: Use plain numbers with "steps" (e.g., "5000 steps")
+                - Heart rate: Use "bpm" (e.g., "72 bpm")
+                - Sedentary time: Convert minutes to hours (e.g., "about 11 hours" not "660 minutes")
+                - Never use "average" - use "your usual" or "compared to your usual"
+                - Never show raw decimals or technical units
+              • Explain the clinical implication
                 (e.g., increased nociceptive signaling, elevated sympathetic tone, disturbed sleep-driven repair, higher spinal loading).
+            - Format: "Metric name: Today's value vs your usual value; clinical implication explanation."
+            - Format examples:
+              • "Sleep duration: 3 hours today vs your usual 2 hours; reduced sleep duration can heighten sensitivity and inflammation."
+              • "Sitting time: 2 hours today vs your usual 1 hour; increased sitting time may elevate spinal loading at L5–S1 and aggravate disc irritation."
+              • "Flare-up: Flare-up today correlates with lifting strain; this likely increased discomfort and inflammation."
+              • "Pain level: Moderate pain today vs your usual mild pain; increased pain may indicate heightened tissue sensitivity or mechanical stress."
+              • "Sedentary time: About 11 hours today vs your usual 8 hours; prolonged inactivity can increase disc pressure and reduce circulation."
 
             "todaysInsight":
             - 2–4 sentences.
@@ -272,12 +288,42 @@ public class AiPrompt {
             "possibleCauses":
             - ARRAY OF STRINGS ONLY.
             - 2–4 items.
-            - Each item must:
-              • describe WHAT changed,
-              • explain WHY it likely changed (today vs baseline),
-              • state the underlying mechanism using the word "because"
-                (e.g., "because you slept less than usual, your tissues may not have fully recovered").
-            - Must be concrete and tied directly to supplied metrics (no vague or generic causes).
+            - MUST ALWAYS generate correlations (cannot be empty).
+            - Each item must state a CORRELATION between TODAY's metrics compared to the 7-day baseline.
+            - Focus on identifying which metrics changed today and how they correlate with each other or with symptoms.
+            - CRITICAL: All metrics must be expressed in HUMAN-READABLE format. Never use raw numbers, minutes, or technical units that users won't understand.
+            - Metric formatting rules:
+              • Sleep duration: Convert minutes to hours (e.g., "448 minutes" → "about 7.5 hours" or "7 hours", "339 minutes" → "about 5.5 hours" or "5–6 hours"). Use "hours" not "hrs".
+              • Steps: Use plain numbers with "steps" (e.g., "3200 steps", "5800 steps")
+              • Heart rate: Use "bpm" (e.g., "72 bpm", "68 bpm")
+              • Time durations: Use "hours" for longer periods, "minutes" only for short durations (e.g., "2 hours", "30 minutes")
+              • Pain/stiffness/stress levels: Use descriptive terms (e.g., "mild pain" instead of "pain level 1", "moderate pain" instead of "pain level 2", "severe pain" instead of "pain level 3")
+              • Sedentary time: Convert minutes to hours (e.g., "660 minutes" → "about 11 hours")
+              • Activity minutes: Use "minutes" for active time (e.g., "45 minutes of activity")
+              • Calories: Use plain numbers (e.g., "2200 calories")
+              • Never show decimal averages that don't make sense (e.g., "1.4 average" → use "mild to moderate" or "around 1–2")
+            - Each correlation must:
+              • Identify the metric(s) that changed today vs baseline average,
+              • Compare today's value to the baseline average in HUMAN-READABLE format,
+              • Explain how this change correlates with other metrics or symptoms observed today,
+              • State the biomechanical/physiological relationship using the word "because"
+                (e.g., "because reduced sleep increases inflammation and reduces tissue recovery").
+            - Must be concrete and tied directly to today's data vs baseline comparison (no vague correlations).
+            - Analyze correlations between any meaningful metrics including:
+              • Symptoms: painLevel, morningStiffness, stressLevel, flareUpToday, numbnessTingling
+              • Activity metrics: sittingTime, standingTime, sedentaryMinutes, steps, activeMinutes, caloriesOut
+              • Sleep metrics: totalMinutesAsleep (or sleepDuration), efficiency, nightWakeUps, yesterdaySleepMinutes, yesterdaySleepDuration
+              • Recovery metrics: fitbitRestingHeartRate (or manualRestingHeartRate), yesterdayFitbitRestingHeartRate, yesterdayManualRestingHeartRate
+              • Lifestyle factors: liftingOrStrain, stretchingDone
+            - Compare today's values to baseline averages and identify correlations:
+              • How today's metric changes relate to symptom changes (e.g., "Today's higher pain correlates with reduced sleep yesterday")
+              • How multiple metric changes relate to each other (e.g., "Today's increased sedentary time and reduced steps correlate with higher stiffness")
+              • How yesterday's recovery metrics correlate with today's symptoms (e.g., "Yesterday's reduced sleep correlates with today's increased pain")
+            - Format examples:
+              • "Today's moderate pain (compared to your usual mild pain) correlates with reduced sleep yesterday (about 5.5 hours vs your usual 7–8 hours), because insufficient sleep reduces tissue recovery and increases inflammation"
+              • "Today's higher stress level correlates with increased sitting time (about 8 hours vs your usual 5–6 hours), because prolonged sitting and psychological stress amplify each other's impact on spinal tension"
+              • "Today's elevated morning stiffness correlates with reduced steps yesterday (about 3200 steps vs your usual 6000 steps), because decreased movement leads to tissue dehydration and increased stiffness"
+              • "Your flare-up today correlates with less sleep yesterday (about 6 hours vs your usual 7–8 hours), because insufficient restorative sleep can heighten sensitivity and inflammation"
 
             "actionableAdvice":
             - ARRAY OF STRINGS ONLY.
@@ -291,25 +337,42 @@ public class AiPrompt {
 
             "flareUpTriggers":
             - ARRAY of objects with fields { metric, value, impact }.
-            - Use both deviation from average and variability (standard deviation) wherever available:
-              • Prefer triggers where today's value is clearly above or below the 7-day pattern.
-            - Examples of patterns:
-              • sudden extra sitting with lumbar disc issues,
-              • reduced sleep compared with usual,
-              • a spike in steps or activeMinutes after a quiet week,
-              • higher averageFitbitRestingHeartRate with higher stressLevel.
-            - "value": MUST be a single plain string formatted EXACTLY as:
-              "{todayValue} today | {baselineValue} typical | {deltaValue}"
-              where:
-                  • todayValue = today's metric value
-                  • baselineValue = the 7-day average for the same metric
-                  • deltaValue = todayValue − baselineValue (use a "+" sign for positive numbers or use "-" sign for negative number)
-              NO sentences, NO extra text, NO units, NO explanations, NO trailing periods.
-                  • Only the three values separated by " | " exactly as shown.
-                  • Example: "798 today | 618 typical | +180" (Do not use example as the value)
-              
-            - "impact": explain the biomechanical or physiological consequence
-              (e.g., "likely increased disc compression at L5–S1" or "reduced overnight tissue recovery").
+            - MUST ALWAYS generate flare-up triggers (cannot be empty). Generate 1–4 trigger objects based on available data.
+            - CRITICAL: All metric names and values must be HUMAN-READABLE. Never use raw field names like "liftingOrStrain" or "sittingTime".
+            - "metric": MUST use HUMAN-READABLE field names:
+              • "Lifting or strain" not "liftingOrStrain"
+              • "Sitting time" not "sittingTime"
+              • "Sleep duration" not "sleepDuration" or "totalMinutesAsleep"
+              • "Sedentary time" not "sedentaryMinutes"
+              • "Steps" not "steps"
+              • "Resting heart rate" not "fitbitRestingHeartRate"
+              • "Active minutes" not "activeMinutes"
+              • "Stress level" not "stressLevel"
+              • "Pain level" not "painLevel"
+            - "value": MUST be a HUMAN-READABLE comparison in plain language:
+              • For boolean values (liftingOrStrain, flareUpToday, stretchingDone): Use natural phrasing like "Occurred today (not typical)" or "Present today (not typical)" - avoid "Yes" or "true"
+              • For time durations: Convert to hours/minutes (e.g., "about 11 hours today vs your usual 8 hours", "30 minutes today vs your usual 45 minutes")
+              • For sleep: Convert minutes to hours (e.g., "about 5.5 hours today vs your usual 7–8 hours")
+              • For steps: Use plain numbers (e.g., "3200 steps today vs your usual 6000 steps")
+              • For pain/stiffness/stress levels: Use descriptive terms (e.g., "moderate pain today vs your usual mild pain")
+              • For heart rate: Use bpm (e.g., "72 bpm today vs your usual 68 bpm")
+              • Format: Use natural language comparisons (e.g., "About 11 hours today vs your usual 8 hours", "Occurred today (not typical)", "Moderate pain today vs your usual mild pain")
+              • Never use the format "X today | Y typical | Z" - use natural language comparison
+              • For boolean metrics, phrase it as an event: "Occurred today (not typical)" or simply "Present today (not typical)"
+            - "impact": Explain the biomechanical or physiological consequence in clear, user-friendly language
+              (e.g., "This can increase disc compression at L5–S1 and cause irritation", "This reduces overnight tissue recovery and increases inflammation", "This may have triggered mechanical stress in your spine").
+            - Identify triggers where today's values are clearly different from baseline patterns:
+              • Sudden increases in sitting time or sedentary activity
+              • Reduced sleep compared to usual
+              • Spikes or drops in steps/activity after quiet periods
+              • Higher stress levels with elevated heart rate
+              • Lifting or strain events
+              • Significantly reduced sleep duration or efficiency
+            - Format examples:
+              • { "metric": "Lifting or strain", "value": "Occurred today (not typical)", "impact": "This may have triggered mechanical stress at your L5–S1 segment, increasing discomfort and inflammation." }
+              • { "metric": "Sleep duration", "value": "About 5.5 hours today vs your usual 7–8 hours", "impact": "Insufficient sleep reduces tissue recovery and increases inflammation, which can heighten sensitivity." }
+              • { "metric": "Sitting time", "value": "About 11 hours today vs your usual 8 hours", "impact": "Prolonged sitting increases disc pressure and can aggravate disc irritation." }
+              • { "metric": "Steps", "value": "12000 steps today vs your usual 5000 steps", "impact": "A sudden spike in activity after a quiet period can overload tissues and trigger a flare-up." }
 
             "discProtectionScore":
             - Start conceptually at 70 and adjust in steps of about 5 up or down based on:
@@ -367,16 +430,13 @@ public class AiPrompt {
               "No metrics worsened today compared to your usual baseline; your spinal load and recovery markers remained stable."
                         
             - flareUpTriggers:
-              If no triggers exist, return one object:
-                {
-                  "metric": "none_detected",
-                  "value": "0 today | 0 typical | 0",
-                  "impact": "No specific flare-up triggers were identified based on today's activity and recovery patterns."
-                }
+              MUST ALWAYS generate 1–4 trigger objects based on available data patterns.
+              If data is very limited, focus on the most obvious triggers (e.g., sleep patterns, activity levels, sitting time, stress levels, lifting events).
+              Always use human-readable metric names and values as specified in the flareUpTriggers section rules.
                         
             - possibleCauses:
-              If no causes exist, return one item:
-              "Your symptoms today are consistent with your baseline patterns, with no clear contributing factors."
+              MUST ALWAYS generate 2–4 correlation items based on today's metrics compared to baseline.
+              If data is very limited, focus on the most obvious correlations between available metrics (e.g., pain vs sleep, activity vs stiffness, stress vs recovery metrics).
                         
             - actionableAdvice:
               Always return exactly 3 items.
