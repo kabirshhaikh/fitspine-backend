@@ -245,6 +245,8 @@ public class AiPrompt {
             ---------------------------------------
             SECTION-SPECIFIC RULES
             ---------------------------------------
+            CRITICAL: ALL sections must use HUMAN-READABLE metrics. Never use raw numbers ("stress level 3", "pain level 2") or field names ("sittingTime", "sleepDuration"). Use descriptive terms for pain/stiffness/stress levels, convert minutes to hours for sleep/time durations, use plain numbers with units for steps/calories/heart rate, use human-readable field names throughout.
+                        
                         
             "worsened":
             - ARRAY OF STRINGS ONLY.
@@ -272,6 +274,7 @@ public class AiPrompt {
 
             "todaysInsight":
             - 2–4 sentences.
+            - CRITICAL: Use HUMAN-READABLE metrics only. Use descriptive terms for pain/stiffness/stress levels, convert minutes to hours for sleep/time, use plain numbers with units for steps/calories/heart rate, use human-readable field names.
             - Focus on the most clinically meaningful patterns for THIS day (not a generic summary).
             - Must interpret at least one of:
               • inflammation,
@@ -282,6 +285,7 @@ public class AiPrompt {
 
             "recoveryInsights":
             - 2–4 sentences.
+            - CRITICAL: Use HUMAN-READABLE metrics only. Use descriptive terms for pain/stiffness/stress levels, convert minutes to hours for sleep/time, use plain numbers with units for steps/calories/heart rate, use human-readable field names.
             - Explain what today suggests about the user's ongoing recovery trajectory using the rolling window (windowDays, daysAvailable).
             - Mention whether the day is safer, neutral, or riskier than typical in terms of disc load and nerve irritation.
 
@@ -291,13 +295,13 @@ public class AiPrompt {
             - MUST ALWAYS generate correlations (cannot be empty).
             - Each item must state a CORRELATION between TODAY's metrics compared to the 7-day baseline.
             - Focus on identifying which metrics changed today and how they correlate with each other or with symptoms.
-            - CRITICAL: All metrics must be expressed in HUMAN-READABLE format. Never use raw numbers, minutes, or technical units that users won't understand.
+            - CRITICAL: All metrics must be HUMAN-READABLE. Never use numbers like "stress level 3" or "pain level 2". Use descriptive terms: "high stress", "low stress", "moderate stress", "mild pain", "moderate pain", "severe pain".
             - Metric formatting rules:
               • Sleep duration: Convert minutes to hours (e.g., "448 minutes" → "about 7.5 hours" or "7 hours", "339 minutes" → "about 5.5 hours" or "5–6 hours"). Use "hours" not "hrs".
               • Steps: Use plain numbers with "steps" (e.g., "3200 steps", "5800 steps")
               • Heart rate: Use "bpm" (e.g., "72 bpm", "68 bpm")
               • Time durations: Use "hours" for longer periods, "minutes" only for short durations (e.g., "2 hours", "30 minutes")
-              • Pain/stiffness/stress levels: Use descriptive terms (e.g., "mild pain" instead of "pain level 1", "moderate pain" instead of "pain level 2", "severe pain" instead of "pain level 3")
+              • Pain/stiffness/stress levels: Use descriptive terms ("mild pain", "moderate pain", "severe pain", "high stress", "low stress", "moderate stress") - NEVER numbers like "stress level 3" or "pain level 2"
               • Sedentary time: Convert minutes to hours (e.g., "660 minutes" → "about 11 hours")
               • Activity minutes: Use "minutes" for active time (e.g., "45 minutes of activity")
               • Calories: Use plain numbers (e.g., "2200 calories")
@@ -320,18 +324,18 @@ public class AiPrompt {
               • How multiple metric changes relate to each other (e.g., "Today's increased sedentary time and reduced steps correlate with higher stiffness")
               • How yesterday's recovery metrics correlate with today's symptoms (e.g., "Yesterday's reduced sleep correlates with today's increased pain")
             - Format examples:
-              • "Today's moderate pain (compared to your usual mild pain) correlates with reduced sleep yesterday (about 5.5 hours vs your usual 7–8 hours), because insufficient sleep reduces tissue recovery and increases inflammation"
-              • "Today's higher stress level correlates with increased sitting time (about 8 hours vs your usual 5–6 hours), because prolonged sitting and psychological stress amplify each other's impact on spinal tension"
-              • "Today's elevated morning stiffness correlates with reduced steps yesterday (about 3200 steps vs your usual 6000 steps), because decreased movement leads to tissue dehydration and increased stiffness"
-              • "Your flare-up today correlates with less sleep yesterday (about 6 hours vs your usual 7–8 hours), because insufficient restorative sleep can heighten sensitivity and inflammation"
+              • "Today's severe pain (compared to your usual mild pain) correlates with standing for extended periods (4 hours today vs your usual 2 hours), because prolonged standing can increase strain on your lumbar spine."
+              • "Today's flare-up correlates with high stress (compared to your usual low stress), because heightened stress can amplify muscle tension and pain perception."
+              • "Today's elevated morning stiffness correlates with reduced steps yesterday (about 3200 steps vs your usual 6000 steps), because decreased movement leads to tissue dehydration."
 
             "actionableAdvice":
             - ARRAY OF STRINGS ONLY.
             - Exactly 3 items.
+            - CRITICAL: Use HUMAN-READABLE metrics only. Use descriptive terms for pain/stiffness/stress levels, convert minutes to hours for sleep/time, use plain numbers with units for steps/calories/heart rate, use human-readable field names.
             - Must focus on CURRENT-DAY issues (metrics that worsened or are clearly unsafe).
             - Each item must include:
               • WHAT to do,
-              • HOW LONG / HOW MUCH / WHEN,
+              • HOW LONG / HOW MUCH / WHEN (use human-readable format),
               • WHY (physiological rationale: disc decompression, neural calming, circulation, gentle mobility, etc.).
             - Must respect disc levels and surgery history (no heavy lifting, twisting, or extreme flexion).
 
@@ -354,7 +358,7 @@ public class AiPrompt {
               • For time durations: Convert to hours/minutes (e.g., "about 11 hours today vs your usual 8 hours", "30 minutes today vs your usual 45 minutes")
               • For sleep: Convert minutes to hours (e.g., "about 5.5 hours today vs your usual 7–8 hours")
               • For steps: Use plain numbers (e.g., "3200 steps today vs your usual 6000 steps")
-              • For pain/stiffness/stress levels: Use descriptive terms (e.g., "moderate pain today vs your usual mild pain")
+              • For pain/stiffness/stress levels: Use descriptive terms ("mild pain", "moderate pain", "severe pain", "high stress", "low stress", "moderate stress") - NEVER numbers like "stress level 3" or "pain level 2"
               • For heart rate: Use bpm (e.g., "72 bpm today vs your usual 68 bpm")
               • Format: Use natural language comparisons (e.g., "About 11 hours today vs your usual 8 hours", "Occurred today (not typical)", "Moderate pain today vs your usual mild pain")
               • Never use the format "X today | Y typical | Z" - use natural language comparison
@@ -386,11 +390,13 @@ public class AiPrompt {
 
             "discScoreExplanation":
             - 2–4 clear clinician-style sentences in a SINGLE STRING.
-            - Explain the main positive and negative contributors to the score using specific metrics.
+            - CRITICAL: Use HUMAN-READABLE metrics only. Use descriptive terms for pain/stiffness/stress levels, convert minutes to hours for sleep/time, use plain numbers with units for steps/calories/heart rate, use human-readable field names.
+            - Explain the main positive and negative contributors to the score using specific metrics in human-readable format.
 
             "interventionsToday":
             - ARRAY OF STRINGS ONLY.
             - 2–3 short, spine-safe, medical-grade actions tailored to TODAY.
+            - CRITICAL: Use HUMAN-READABLE metrics only. Use descriptive terms for pain/stiffness/stress levels, convert minutes to hours for sleep/time, use plain numbers with units for steps/calories/heart rate, use human-readable field names.
             - Each must include a rationale grounded in disc mechanics or neural recovery.
 
             "riskForecast":
