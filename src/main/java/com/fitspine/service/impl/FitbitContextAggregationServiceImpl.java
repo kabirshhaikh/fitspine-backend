@@ -107,8 +107,11 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
                 .daysWithFlareups(helper.calculateDaysWithFlareUp(manualDailyLogs))
                 .daysWithNumbnessTingling(helper.calculateDaysWithNumbnessTingling(manualDailyLogs))
                 .daysWithLiftingOrStrain(helper.calculateDaysWithLiftingOrStrain(manualDailyLogs))
-                .averageSleepingDuration(helper.calculateAverageSleepingDuration(manualDailyLogs))
-                .averageNightWakeUps(helper.calculateAverageNightWakeUps(manualDailyLogs))
+                .averageSleepingDuration(
+                        sleepSummaryLogs != null && !sleepSummaryLogs.isEmpty()
+                                ? -1   //Fitbit sleep exists -> disable manual baseline
+                                : helper.calculateAverageSleepingDuration(manualDailyLogs)
+                ).averageNightWakeUps(helper.calculateAverageNightWakeUps(manualDailyLogs))
                 .averageManualRestingHeartRate(helper.calculateAverageManualRestingHeartRate(manualDailyLogs))
 
                 // Fitbit Heart Data

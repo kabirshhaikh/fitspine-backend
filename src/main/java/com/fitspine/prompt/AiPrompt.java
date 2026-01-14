@@ -128,8 +128,16 @@ public class AiPrompt {
               • Prefer yesterdayFitbitRestingHeartRate for physiological analysis.
               • Use yesterdayManualRestingHeartRate only when Fitbit data is unavailable,
                 and interpret it conservatively.
+            CRITICAL OVERRIDE RULE – SLEEP SEMANTICS:
+            - sleepDuration and averageSleepingDuration are ordinal PERCEPTION scores, NOT time durations.
+            - NEVER convert sleepDuration or averageSleepingDuration into hours.
+            - ONLY totalMinutesAsleep may be converted into hours and described as sleep duration.
+            - When Fitbit sleep data exists (totalMinutesAsleep != -1):
+              • Do NOT describe sleep duration using sleepDuration or averageSleepingDuration.
+              • Use Fitbit sleep metrics (totalMinutesAsleep, efficiency, yesterdaySleepMinutes) for recovery assessment.
+            - sleepDuration may ONLY be used to explain perception mismatches
+              (e.g., “felt poorly rested despite adequate objective sleep”).  
             """;
-
 
     public static final String FITBIT_SYSTEM_PROMPT = String.format("""
             You are FitSpine AI, an advanced spine health and recovery intelligence system built to think like a cautious spine surgeon plus a specialist physiotherapist.

@@ -192,8 +192,13 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
                 .stressLevel(manualDailyLog.getStressLevel() != null ? EnumScoreHelper.stressLevel(manualDailyLog.getStressLevel()) : -1)
                 .liftingOrStrain(manualDailyLog.getLiftingOrStrain())
                 .notes(notes)
-                .sleepDuration(manualDailyLog.getSleepDuration() != null ? EnumScoreHelper.sleepDuration(manualDailyLog.getSleepDuration()) : -1)
-                .nightWakeUps(manualDailyLog.getNightWakeUps() != null ? EnumScoreHelper.nightWakeUps(manualDailyLog.getNightWakeUps()) : -1)
+                .sleepDuration(
+                        sleepSummaryLog != null
+                                ? -1   //Fitbit present -> disable manual sleep duration
+                                : (manualDailyLog.getSleepDuration() != null
+                                ? EnumScoreHelper.sleepDuration(manualDailyLog.getSleepDuration())
+                                : -1)
+                ).nightWakeUps(manualDailyLog.getNightWakeUps() != null ? EnumScoreHelper.nightWakeUps(manualDailyLog.getNightWakeUps()) : -1)
                 .manualRestingHeartRate(manualDailyLog.getRestingHeartRate() != null ? manualDailyLog.getRestingHeartRate() : -1)
 
                 // Heart
