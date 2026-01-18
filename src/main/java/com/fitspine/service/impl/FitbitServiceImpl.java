@@ -18,6 +18,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -149,10 +151,14 @@ public class FitbitServiceImpl implements WearableService {
 
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token.getAccessToken());
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            headers.setBearerAuth(token.getAccessToken());
 
-            HttpEntity<Void> request = new HttpEntity<>(headers);
+            MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+            body.add("token", token.getAccessToken());
+
+            HttpEntity<MultiValueMap<String, String>> request =
+                    new HttpEntity<>(body, headers);
 
             restTemplate.postForEntity(
                     "https://api.fitbit.com/oauth2/revoke",
