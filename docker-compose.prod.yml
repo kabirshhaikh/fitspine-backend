@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7.4-alpine
+    container_name: fitspine-redis
+    restart: always
+    command: >
+      redis-server
+      --appendonly yes
+      --save 60 1000
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - fitspine-network
+
+  backend:
+    image: fitspine-backend:latest
+    container_name: fitspine-backend
+    restart: always
+    ports:
+      - "80:8080"
+    env_file:
+      - .env.prod
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    depends_on:
+      - redis
+    networks:
+      - fitspine-network
+
+volumes:
+  redis-data:
+
+networks:
+  fitspine-network:
+    driver: bridge
