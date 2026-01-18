@@ -5,7 +5,7 @@ services:
     image: mysql:8.0
     container_name: fitspine-sql
     ports:
-      - "3307:3306"
+      - "3307:3306"   # laptop -> container
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -32,6 +32,56 @@ services:
     networks:
       - fitspine-network
 
+  backend:
+    build: .
+    container_name: fitspine-backend
+    ports:
+      - "8000:8080"
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      # ---- Spring ----
+      SPRING_PROFILES_ACTIVE: dev
+
+      # ---- Database (override localhost) ----
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?allowPublicKeyRetrieval=true
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      # ---- Redis (override localhost) ----
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+
+      # ---- JWT ----
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+
+      # ---- AWS S3 ----
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      AWS_BUCKET_NAME: ${AWS_BUCKET_NAME}
+
+      # ---- Fitbit ----
+      FITBIT_CLIENT_ID: ${FITBIT_CLIENT_ID}
+      FITBIT_CLIENT_SECRET: ${FITBIT_CLIENT_SECRET}
+      FITBIT_REDIRECT_URL: ${FITBIT_REDIRECT_URL}
+      FITBIT_AUTHORIZATION_URI: ${FITBIT_AUTHORIZATION_URI}
+      FITBIT_ACCESS_REFRESH_URI: ${FITBIT_ACCESS_REFRESH_URI}
+
+      # ---- Email ----
+      EMAIL_USERNAME: ${EMAIL_USERNAME}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+
+      # ---- OpenAI ----
+      OPEN_AI_API_KEY: ${OPEN_AI_API_KEY}
+
+      # ---- Frontend URL ----
+      FRONTEND_EMAIL_DEV_URL: ${FRONTEND_EMAIL_DEV_URL}
+
+    networks:
+      - fitspine-network
 
 volumes:
   mysql-data:
