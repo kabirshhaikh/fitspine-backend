@@ -39,6 +39,9 @@ public class UserRegisterDto {
     @NotNull(message = "Research Opt is required")
     private Boolean isResearchOpt;
 
+    @NotNull(message = "You must accept the Terms and Privacy Policy")
+    private Boolean acceptedTerms;
+
     private List<UserInjuryDto> userInjuries;
 
     private List<UserSurgeryDto> userSurgeries;

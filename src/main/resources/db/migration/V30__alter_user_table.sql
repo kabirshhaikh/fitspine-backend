@@ -1,0 +1,5 @@
+ALTER TABLE users
+    ADD COLUMN terms_accepted_at DATETIME(6) DEFAULT NULL,
+    ADD COLUMN privacy_accepted_at DATETIME(6) DEFAULT NULL,
+    ADD COLUMN terms_version VARCHAR(20) DEFAULT NULL,
+    ADD COLUMN privacy_version VARCHAR(20) DEFAULT NULL;

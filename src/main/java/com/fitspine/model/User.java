@@ -72,6 +72,18 @@ public class User {
     @Column(name = "role")
     private Role role;
 
+    @Column(name = "terms_accepted_at")
+    private LocalDateTime termsAcceptedAt;
+
+    @Column(name = "privacy_accepted_at")
+    private LocalDateTime privacyAcceptedAt;
+
+    @Column(name = "terms_version", length = 20)
+    private String termsVersion;
+
+    @Column(name = "privacy_version", length = 20)
+    private String privacyVersion;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserInjury> userInjuryList = new ArrayList<>();
 

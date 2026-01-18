@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -97,6 +98,12 @@ public class UserServiceImp implements UserService {
             throw new InvalidUserRegistrationException("Surgery details must be provided when surgery history is true");
         }
 
+        if (!Boolean.TRUE.equals(dto.getAcceptedTerms())) {
+            throw new InvalidUserRegistrationException(
+                    "You must accept the Terms of Service and Privacy Policy"
+            );
+        }
+
         //Build and save user:
         User user = User.builder()
                 .fullName(dto.getFullName())
@@ -109,6 +116,10 @@ public class UserServiceImp implements UserService {
                 .isWearableConnected(false)
                 .wearableType(null)
                 .role(Role.USER)
+                .termsAcceptedAt(LocalDateTime.now())
+                .privacyAcceptedAt(LocalDateTime.now())
+                .termsVersion("v1.0")
+                .privacyVersion("v1.0")
                 .build();
 
         User savedUser = userRepository.save(user);
