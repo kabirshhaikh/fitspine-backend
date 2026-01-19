@@ -47,7 +47,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.addAllowedOrigin("http://localhost:5173");
         configuration.addAllowedOrigin("http://127.0.0.1:5173");
-        configuration.addAllowedOrigin("https://future-production-url.com");
+        configuration.addAllowedOrigin("https://sphinic.com");
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);
