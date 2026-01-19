@@ -2,6 +2,7 @@ package com.fitspine.controller;
 
 import com.fitspine.service.WearableService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,6 +19,9 @@ public class OauthCallBackController {
 
     private final WearableService wearableService;
 
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
     public OauthCallBackController(WearableService wearableService) {
         this.wearableService = wearableService;
     }
@@ -27,7 +31,7 @@ public class OauthCallBackController {
         wearableService.exchangeCodeForToken(code, userId);
         //Hardcoding this for now, later add env variable with prod url:
         return ResponseEntity.status(HttpStatus.FOUND)
-                .header("Location", "http://localhost:5173/dashboard?fitbit=connected")
+                .header("Location", frontendUrl + "/dashboard?fitbit=connected")
                 .build();
     }
 
