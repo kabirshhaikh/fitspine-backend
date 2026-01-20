@@ -17,7 +17,7 @@ services:
       - fitspine-network
 
   backend:
-    image: fitspine-backend:latest
+    image: kabirshhaikh/fitspine-backend:latest
     container_name: fitspine-backend
     restart: always
     ports:
