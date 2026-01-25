@@ -84,6 +84,9 @@ public class User {
     @Column(name = "privacy_version", length = 20)
     private String privacyVersion;
 
+    @Column(name = "has_on_boarding_completed", nullable = false)
+    private boolean hasOnBoardingCompleted;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserInjury> userInjuryList = new ArrayList<>();
 
