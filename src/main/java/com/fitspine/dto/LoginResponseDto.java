@@ -13,5 +13,6 @@ public class LoginResponseDto {
     private String profilePicture;
     private Boolean isWearableConnected;
     private WearableType wearableType;
+    private boolean hasOnBoardingCompleted;
     private Long id;
 }

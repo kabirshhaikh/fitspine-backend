@@ -79,6 +79,7 @@ public class UserServiceImp implements UserService {
                 .id(user.getId())
                 .isWearableConnected(user.getIsWearableConnected())
                 .wearableType(user.getWearableType())
+                .hasOnBoardingCompleted(user.isHasOnBoardingCompleted())
                 .build();
     }
 
@@ -89,6 +90,7 @@ public class UserServiceImp implements UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
         if (!user.isHasOnBoardingCompleted()) {
+            log.info("Completing user's {} on-boarding", user.getPublicId());
             user.setHasOnBoardingCompleted(true);
         }
 
