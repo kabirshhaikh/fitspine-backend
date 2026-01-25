@@ -22,6 +22,7 @@ public class UserResponseDto {
     private Boolean isWearableConnected;
     private WearableType wearableType;
     private Role role;
+    private boolean hasOnBoardingCompleted;
 
     private List<UserInjuryDto> userInjuries;
     private List<UserSurgeryDto> userSurgeries;
