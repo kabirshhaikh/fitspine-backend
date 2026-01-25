@@ -375,6 +375,7 @@ public class UserServiceImp implements UserService {
                 .surgeryHistory(user.getSurgeryHistory())
                 .isResearchOpt(user.getIsResearchOpt())
                 .isWearableConnected(user.getIsWearableConnected())
+                .hasOnBoardingCompleted(user.isHasOnBoardingCompleted())
                 .wearableType(user.getWearableType())
                 .userSurgeries(userSurgeriesDto)
                 .userInjuries(userInjuriesDto)

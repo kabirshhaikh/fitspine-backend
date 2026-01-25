@@ -20,6 +20,7 @@ public class UserProfileDto {
     private Boolean isResearchOpt;
     private Boolean isWearableConnected;
     private WearableType wearableType;
+    private boolean hasOnBoardingCompleted;
 
     private List<UserInjuryDto> userInjuries;
     private List<UserSurgeryDto> userSurgeries;
