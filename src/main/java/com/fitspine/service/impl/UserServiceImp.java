@@ -84,6 +84,19 @@ public class UserServiceImp implements UserService {
 
     @Transactional
     @Override
+    public void markOnboardingCompleted(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        if (!user.isHasOnBoardingCompleted()) {
+            user.setHasOnBoardingCompleted(true);
+        }
+
+        userRepository.save(user);
+    }
+
+    @Transactional
+    @Override
     public UserResponseDto registerUser(UserRegisterDto dto) {
         //Check if email already exists:
         if (userRepository.existsByEmail(dto.getEmail())) {

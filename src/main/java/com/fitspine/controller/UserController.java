@@ -67,4 +67,12 @@ public class UserController {
         emailSenderService.resetPassword(dto);
         return ResponseEntity.ok("Password has been reset successfully");
     }
+
+    @PatchMapping(value = "/onboarding-complete")
+    public ResponseEntity<Void> completeOnboarding() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        userService.markOnboardingCompleted(email);
+        return ResponseEntity.noContent().build();
+    }
 }

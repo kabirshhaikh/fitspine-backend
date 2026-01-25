@@ -10,4 +10,6 @@ public interface UserService {
     LoginResponseDto loginUser(LoginRequestDto request);
 
     UserProfileDto userProfile(String email);
+
+    void markOnboardingCompleted(String email);
 }
