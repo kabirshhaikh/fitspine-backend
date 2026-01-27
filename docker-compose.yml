@@ -33,23 +33,28 @@ services:
       - fitspine-network
 
   backend:
-    build: .
+    image: eclipse-temurin:17-jdk
     container_name: fitspine-backend
+    working_dir: /app
     ports:
       - "8000:8080"
     depends_on:
       - mysql
       - redis
+    volumes:
+      - .:/app                 # mount your source code
+      - ~/.m2:/root/.m2        # reuse local Maven cache
+    command: ./mvnw spring-boot:run
     environment:
       # ---- Spring ----
       SPRING_PROFILES_ACTIVE: dev
 
-      # ---- Database (override localhost) ----
+      # ---- Database ----
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?allowPublicKeyRetrieval=true
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
 
-      # ---- Redis (override localhost) ----
+      # ---- Redis ----
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
 
@@ -77,7 +82,7 @@ services:
       # ---- OpenAI ----
       OPEN_AI_API_KEY: ${OPEN_AI_API_KEY}
 
-      # ---- Frontend URL ----
+      # ---- Frontend ----
       FRONTEND_EMAIL_DEV_URL: ${FRONTEND_EMAIL_DEV_URL}
 
     networks:

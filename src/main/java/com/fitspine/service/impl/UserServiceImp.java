@@ -1,6 +1,7 @@
 package com.fitspine.service.impl;
 
 import com.fitspine.dto.*;
+import com.fitspine.enums.AuthProvider;
 import com.fitspine.enums.Role;
 import com.fitspine.exception.InvalidUserRegistrationException;
 import com.fitspine.exception.UserAlreadyExistsException;
@@ -135,6 +136,8 @@ public class UserServiceImp implements UserService {
                 .privacyAcceptedAt(LocalDateTime.now())
                 .termsVersion("v1.0")
                 .privacyVersion("v1.0")
+                .authProvider(AuthProvider.LOCAL)
+                .providerId(null)
                 .build();
 
         User savedUser = userRepository.save(user);
