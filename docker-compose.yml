@@ -85,6 +85,9 @@ services:
       # ---- Frontend ----
       FRONTEND_EMAIL_DEV_URL: ${FRONTEND_EMAIL_DEV_URL}
 
+      # ---- Google client id ----
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+
     networks:
       - fitspine-network
 
