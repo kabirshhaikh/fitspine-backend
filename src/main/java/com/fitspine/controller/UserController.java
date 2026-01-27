@@ -2,8 +2,10 @@ package com.fitspine.controller;
 
 import com.fitspine.dto.*;
 import com.fitspine.service.EmailSenderService;
+import com.fitspine.service.GoogleTokenVerificationService;
 import com.fitspine.service.JwtService;
 import com.fitspine.service.UserService;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -21,11 +23,13 @@ import java.util.Optional;
 public class UserController {
     private final UserService userService;
     private final EmailSenderService emailSenderService;
+    private final GoogleTokenVerificationService googleTokenVerificationService;
 
 
-    public UserController(UserService userService, EmailSenderService emailSenderService) {
+    public UserController(UserService userService, EmailSenderService emailSenderService, GoogleTokenVerificationService googleTokenVerificationService) {
         this.userService = userService;
         this.emailSenderService = emailSenderService;
+        this.googleTokenVerificationService = googleTokenVerificationService;
     }
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -75,4 +79,18 @@ public class UserController {
         userService.markOnboardingCompleted(email);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/auth/google/register")
+    public ResponseEntity<?> registerWithGoogle(@RequestBody GoogleRegisterRequestDto dto) {
+        GoogleIdToken.Payload payload = googleTokenVerificationService.verifyAndGetPayload(dto.getIdToken());
+        String email = payload.getEmail();
+        String providerId = payload.getSubject();
+        String fullName = payload.get("name").toString();
+
+        return ResponseEntity.ok(
+                userService.registerOrLoginGoogleUser(email, providerId, fullName)
+        );
+    }
+
+
 }

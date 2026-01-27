@@ -14,5 +14,6 @@ public class LoginResponseDto {
     private Boolean isWearableConnected;
     private WearableType wearableType;
     private boolean hasOnBoardingCompleted;
+    private boolean needsProfileCompletion;
     private Long id;
 }

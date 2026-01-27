@@ -343,6 +343,25 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    //Google auth exception:
+    @ExceptionHandler(GoogleAuthException.class)
+    public ResponseEntity<ApiError> handleGoogleAuthException(
+            GoogleAuthException ex,
+            HttpServletRequest request
+    ) {
+        ApiError error = new ApiError(
+                LocalDateTime.now(),
+                HttpStatus.UNAUTHORIZED.value(),
+                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(error);
+    }
+
 
     //Generic exceptions:
     @ExceptionHandler(Exception.class)

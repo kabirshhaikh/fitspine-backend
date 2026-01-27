@@ -2,6 +2,7 @@ package com.fitspine.service.impl;
 
 import com.fitspine.dto.*;
 import com.fitspine.enums.AuthProvider;
+import com.fitspine.enums.Gender;
 import com.fitspine.enums.Role;
 import com.fitspine.exception.InvalidUserRegistrationException;
 import com.fitspine.exception.UserAlreadyExistsException;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -81,6 +83,81 @@ public class UserServiceImp implements UserService {
                 .isWearableConnected(user.getIsWearableConnected())
                 .wearableType(user.getWearableType())
                 .hasOnBoardingCompleted(user.isHasOnBoardingCompleted())
+                .needsProfileCompletion(false)
+                .build();
+    }
+
+    @Transactional
+    @Override
+    public LoginResponseDto registerOrLoginGoogleUser(String email, String providerId, String fullName) {
+        Optional<User> optionalUser =
+                userRepository.findByAuthProviderAndProviderId(
+                        AuthProvider.GOOGLE,
+                        providerId
+                );
+
+        User user;
+
+        boolean needsProfileCompletion = false;
+
+        if (optionalUser.isPresent()) {
+            //user is present:
+            user = optionalUser.get();
+            needsProfileCompletion = false;
+        } else {
+            //check for same email existence:
+            if (userRepository.existsByEmail(email)) {
+                throw new InvalidUserRegistrationException(
+                        "This email is already registered using a different login method"
+                );
+            }
+
+            needsProfileCompletion = true;
+
+            //create partial user:
+            // STEP 4: CREATE PARTIAL USER (FIRST-TIME GOOGLE LOGIN)
+            user = User.builder()
+                    .email(email)
+                    .fullName(fullName)
+                    .password(null)
+                    .age(0)//dummy placeholder for now
+                    .gender(Gender.OTHER)// placeholder for now
+                    .profilePicture(null)
+                    .surgeryHistory(false)//placeholder
+                    .isResearchOpt(false)//placeholder
+                    .isWearableConnected(false)//this user will do on the dashboard
+                    .wearableType(null)
+                    .authProvider(AuthProvider.GOOGLE)
+                    .providerId(providerId)
+                    .role(Role.USER)
+                    .termsAcceptedAt(LocalDateTime.now())
+                    .privacyAcceptedAt(LocalDateTime.now())
+                    .termsVersion("v1.0")
+                    .privacyVersion("v1.0")
+                    .hasOnBoardingCompleted(false)
+                    .build();
+
+            user = userRepository.save(user);
+        }
+
+        String jwtToken = jwtService.generateToken(user);
+
+        String preSignedProfilePictureUrl = null;
+        if (user.getProfilePicture() != null) {
+            preSignedProfilePictureUrl =
+                    s3Service.generatePreSignedUrl(user.getProfilePicture());
+        }
+
+        return LoginResponseDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .token(jwtToken)
+                .profilePicture(preSignedProfilePictureUrl)
+                .isWearableConnected(user.getIsWearableConnected())
+                .wearableType(user.getWearableType())
+                .hasOnBoardingCompleted(user.isHasOnBoardingCompleted())
+                .needsProfileCompletion(needsProfileCompletion)
                 .build();
     }
 

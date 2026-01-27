@@ -1,5 +1,6 @@
 package com.fitspine.repository;
 
+import com.fitspine.enums.AuthProvider;
 import com.fitspine.model.User;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,4 +21,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u.publicId FROM User u WHERE u.id = :id")
     Optional<String> findPublicIdById(@Param("id") Long id);
+
+    Optional<User> findByAuthProviderAndProviderId(
+            AuthProvider authProvider,
+            String providerId
+    );
 }
