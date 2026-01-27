@@ -1,5 +1,6 @@
 package com.fitspine.model;
 
+import com.fitspine.enums.AuthProvider;
 import com.fitspine.enums.Gender;
 import com.fitspine.enums.Role;
 import com.fitspine.enums.WearableType;
@@ -33,7 +34,7 @@ public class User {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password", nullable = false, length = 100)
+    @Column(name = "password", nullable = true, length = 100)
     private String password;
 
     @Column(name = "age", nullable = false)
@@ -61,6 +62,13 @@ public class User {
 
     @Column(name = "public_id", nullable = false, unique = true, updatable = false)
     private String publicId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider", nullable = false)
+    private AuthProvider authProvider;
+
+    @Column(name = "provider_id", unique = true)
+    private String providerId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
