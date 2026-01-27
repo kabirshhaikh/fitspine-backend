@@ -1,0 +1,2 @@
+ALTER TABLE users
+ADD COLUMN provider_id VARCHAR(255) UNIQUE;

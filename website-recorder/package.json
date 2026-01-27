@@ -1,0 +1,12 @@
+{
+  "name": "website-recorder",
+  "version": "1.0.0",
+  "description": "Record a video of a website using Playwright",
+  "scripts": {
+    "record": "node record-website.js",
+    "start": "node record-website.js"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  }
+}
