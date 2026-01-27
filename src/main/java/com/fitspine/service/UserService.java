@@ -14,4 +14,6 @@ public interface UserService {
     void markOnboardingCompleted(String email);
 
     LoginResponseDto registerOrLoginGoogleUser(String email, String providerId, String fullName);
+
+    LoginResponseDto registerPartialUser(RegisterPartialUserDto dto, String email);
 }

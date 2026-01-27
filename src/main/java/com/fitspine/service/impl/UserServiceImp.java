@@ -177,6 +177,106 @@ public class UserServiceImp implements UserService {
 
     @Transactional
     @Override
+    public LoginResponseDto registerPartialUser(RegisterPartialUserDto dto, String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        if (user.getAuthProvider() != AuthProvider.GOOGLE) {
+            throw new InvalidUserRegistrationException(
+                    "Partial registration is only allowed for Google users"
+            );
+        }
+
+        if (user.getAge() != 0 && user.getGender() != Gender.OTHER) {
+            throw new InvalidUserRegistrationException(
+                    "Profile is already completed"
+            );
+        }
+
+        if (!Boolean.TRUE.equals(dto.getSurgeryHistory()) && dto.getUserSurgeries() != null && !dto.getUserSurgeries().isEmpty()) {
+            throw new InvalidUserRegistrationException("Surgery details cannot be provided when surgery history checkbox is checked");
+        }
+
+        if (Boolean.TRUE.equals(dto.getSurgeryHistory()) && (dto.getUserSurgeries() == null || dto.getUserSurgeries().isEmpty())) {
+            throw new InvalidUserRegistrationException("Surgery details must be provided when surgery history is true");
+        }
+
+        if (!Boolean.TRUE.equals(dto.getAcceptedTerms())) {
+            throw new InvalidUserRegistrationException(
+                    "You must accept the Terms of Service and Privacy Policy"
+            );
+        }
+
+        user.setAge(dto.getAge());
+        user.setGender(dto.getGender());
+        user.setSurgeryHistory(dto.getSurgeryHistory());
+        user.setIsResearchOpt(dto.getIsResearchOpt());
+
+        user.setTermsAcceptedAt(LocalDateTime.now());
+        user.setPrivacyAcceptedAt(LocalDateTime.now());
+        user.setTermsVersion("v1.0");
+        user.setPrivacyVersion("v1.0");
+
+        if (dto.getProfilePicture() != null && !dto.getProfilePicture().isEmpty()) {
+            if (user.getProfilePicture() != null) {
+                s3Service.deleteFile(user.getProfilePicture());
+            }
+
+            String fileName =
+                    userHelper.returnProfilePictureFileName(
+                            user.getId(),
+                            dto.getProfilePicture().getOriginalFilename()
+                    );
+
+            String path = s3Service.uploadFile(dto.getProfilePicture(), fileName);
+            user.setProfilePicture(path);
+        }
+
+        userRepository.save(user);
+
+        userInjuryRepository.deleteAllByUserId(user.getId());
+        userSurgeryRepository.deleteAllByUserId(user.getId());
+        userDiscIssueRepository.deleteAllByUserId(user.getId());
+
+        if (dto.getUserInjuries() != null) {
+            userInjuryRepository.saveAll(
+                    userHelper.returnUserInjuryList(dto.getUserInjuries(), user)
+            );
+        }
+
+        if (dto.getUserSurgeries() != null) {
+            userSurgeryRepository.saveAll(
+                    userHelper.returnUserSurgeryList(dto.getUserSurgeries(), user)
+            );
+        }
+
+        if (dto.getUserDiscIssues() != null) {
+            userDiscIssueRepository.saveAll(
+                    userHelper.returnUserDiscIssueList(dto.getUserDiscIssues(), user)
+            );
+        }
+
+        String preSignedProfilePictureUrl = null;
+        if (user.getProfilePicture() != null) {
+            preSignedProfilePictureUrl = s3Service.generatePreSignedUrl(user.getProfilePicture());
+        }
+
+        String jwtToken = jwtService.generateToken(user);
+
+        return LoginResponseDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .token(jwtToken)
+                .profilePicture(preSignedProfilePictureUrl)
+                .isWearableConnected(user.getIsWearableConnected())
+                .wearableType(user.getWearableType())
+                .hasOnBoardingCompleted(user.isHasOnBoardingCompleted())
+                .needsProfileCompletion(false)
+                .build();
+    }
+
+    @Transactional
+    @Override
     public UserResponseDto registerUser(UserRegisterDto dto) {
         //Check if email already exists:
         if (userRepository.existsByEmail(dto.getEmail())) {

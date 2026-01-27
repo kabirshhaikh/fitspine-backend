@@ -92,5 +92,13 @@ public class UserController {
         );
     }
 
+    @PostMapping(value = "/auth/google/register-partial-user", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<LoginResponseDto> registerPartialUser(@ModelAttribute @Valid RegisterPartialUserDto dto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        LoginResponseDto userResponse = userService.registerPartialUser(dto, email);
+        return ResponseEntity.ok(userResponse);
+    }
+
 
 }
