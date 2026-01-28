@@ -4,10 +4,12 @@ import com.fitspine.enums.AuthProvider;
 import com.fitspine.model.User;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -25,5 +27,20 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByAuthProviderAndProviderId(
             AuthProvider authProvider,
             String providerId
+    );
+
+    @Modifying
+    @Query(
+            value = """
+                        DELETE FROM users
+                        WHERE auth_provider = :provider
+                          AND age = 0
+                          AND gender = :gender
+                    """,
+            nativeQuery = true
+    )
+    int deleteAbandonedGoogleUsersNative(
+            @Param("provider") String provider,
+            @Param("gender") String gender
     );
 }
