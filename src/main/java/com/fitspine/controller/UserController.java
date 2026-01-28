@@ -33,8 +33,8 @@ public class UserController {
     }
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<UserResponseDto> registerUser(@ModelAttribute @Valid UserRegisterDto userRegisterDto) {
-        UserResponseDto userResponse = userService.registerUser(userRegisterDto);
+    public ResponseEntity<LoginResponseDto> registerUser(@ModelAttribute @Valid UserRegisterDto userRegisterDto) {
+        LoginResponseDto userResponse = userService.registerUser(userRegisterDto);
         return ResponseEntity.ok(userResponse);
     }
 

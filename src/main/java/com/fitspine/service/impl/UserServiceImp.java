@@ -277,7 +277,7 @@ public class UserServiceImp implements UserService {
 
     @Transactional
     @Override
-    public UserResponseDto registerUser(UserRegisterDto dto) {
+    public LoginResponseDto registerUser(UserRegisterDto dto) {
         //Check if email already exists:
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new UserAlreadyExistsException("User already exists with email: " + dto.getEmail());
@@ -350,22 +350,18 @@ public class UserServiceImp implements UserService {
             preSignedProfilePictureUrl = s3Service.generatePreSignedUrl(savedUser.getProfilePicture());
         }
 
-        //Return response:
-        return UserResponseDto.builder()
+        String jwtToken = jwtService.generateToken(savedUser);
+
+        return LoginResponseDto.builder()
                 .id(savedUser.getId())
-                .fullName(savedUser.getFullName())
                 .email(savedUser.getEmail())
-                .age(savedUser.getAge())
-                .gender(savedUser.getGender())
+                .fullName(savedUser.getFullName())
+                .token(jwtToken)
                 .profilePicture(preSignedProfilePictureUrl)
-                .isResearchOpt(savedUser.getIsResearchOpt())
                 .isWearableConnected(savedUser.getIsWearableConnected())
                 .wearableType(savedUser.getWearableType())
-                .role(savedUser.getRole())
-                .hasOnBoardingCompleted(false)
-                .userInjuries(userHelper.returnMappedUserInjuryListDto(userInjuryList))
-                .userSurgeries(userHelper.returnMappedUserSurgeryListDto(userSurgeryList))
-                .userDiscIssues(userHelper.returnMappedUserDiscIssueDto(userDiscIssueList))
+                .hasOnBoardingCompleted(savedUser.isHasOnBoardingCompleted())
+                .needsProfileCompletion(false)
                 .build();
     }
 
