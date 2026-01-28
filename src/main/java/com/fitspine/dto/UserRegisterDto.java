@@ -25,7 +25,7 @@ public class UserRegisterDto {
     private String password;
 
     @NotNull(message = "Age is required")
-    @Min(value = 0, message = "Age must be non-negative")
+    @Min(value = 18, message = "Age must be 18 or greater")
     private Integer age;
 
     @NotNull(message = "Gender is required")
