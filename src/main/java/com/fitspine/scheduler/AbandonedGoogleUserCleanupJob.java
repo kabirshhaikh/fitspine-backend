@@ -18,7 +18,7 @@ public class AbandonedGoogleUserCleanupJob {
     }
 
     @Transactional
-    @Scheduled(cron = "0 0 * * * *") // every hour
+    @Scheduled(cron = "0 */10 * * * *") // every 10 minutes
     public void cleanup() {
 
         int deleted = userRepository.deleteAbandonedGoogleUsersNative(
