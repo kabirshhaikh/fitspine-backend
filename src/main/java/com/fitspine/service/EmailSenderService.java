@@ -23,17 +23,19 @@ import java.time.Duration;
 public class EmailSenderService {
     @Value("${app.frontend.url}")
     private String frontEndBaseUrl;
-    private final JavaMailSender mailSender;
     private final RedisTemplate<String, String> redis;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public EmailSenderService(JavaMailSender mailSender,
-                              RedisTemplate<String, String> redis,
-                              UserRepository userRepository,
-                              PasswordEncoder passwordEncoder
+    private final GraphEmailSender graphEmailSender;
+
+    public EmailSenderService(
+            GraphEmailSender graphEmailSender,
+            RedisTemplate<String, String> redis,
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder
     ) {
-        this.mailSender = mailSender;
+        this.graphEmailSender = graphEmailSender;
         this.redis = redis;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -49,14 +51,14 @@ public class EmailSenderService {
         String normalizedEmail = user.getEmail().trim().toLowerCase();
         String resetLink = frontEndBaseUrl + "/reset-password?email=" + normalizedEmail;
         String token = generateNumericToken();
-        String subject = "FitSpine - Reset Your Password";
+        String subject = "Sphinic - Reset Your Password";
         String message = String.format(
                 "Hi,\n\nClick the link below to reset your password:\n%s\n\n" +
                         "Once the page opens, enter this security code:\n\n" +
                         "%s\n\n" +
                         "This link and code will expire in 15 minutes.\n\n" +
                         "If you didn’t request this, please ignore this email.\n\n" +
-                        "— FitSpine Team",
+                        "— Sphinic Team",
                 resetLink,
                 token
         );
@@ -65,13 +67,7 @@ public class EmailSenderService {
         redis.opsForValue().set(key, token, Duration.ofMinutes(15));
         log.info("Stored password reset token for {} (expires in 15 minutes)", normalizedEmail);
 
-        SimpleMailMessage email = new SimpleMailMessage();
-        email.setTo(toEmail);
-        email.setSubject(subject);
-        email.setText(message);
-        email.setFrom("no-reply@fit-spine.app");
-
-        mailSender.send(email);
+        graphEmailSender.sendPlainTextEmail(toEmail, subject, message);
     }
 
     public void resetPassword(ForgotPasswordResponseDto dto) {
