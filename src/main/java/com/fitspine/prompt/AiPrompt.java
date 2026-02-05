@@ -136,7 +136,16 @@ public class AiPrompt {
               • Do NOT describe sleep duration using sleepDuration or averageSleepingDuration.
               • Use Fitbit sleep metrics (totalMinutesAsleep, efficiency, yesterdaySleepMinutes) for recovery assessment.
             - sleepDuration may ONLY be used to explain perception mismatches
-              (e.g., “felt poorly rested despite adequate objective sleep”).  
+              (e.g., "felt poorly rested despite adequate objective sleep").
+
+            -----------------------------------------------------------
+            7. USE LABEL FIELDS (MANDATORY)
+            -----------------------------------------------------------
+            - When *Label fields exist in the JSON (e.g. sittingTimeLabel, averageSittingTimeLabel, painLevelLabel), ALWAYS use them for output. Do NOT interpret the raw ordinal.
+
+            SITTING TIME vs SEDENTARY TIME (do not confuse):
+            - "Sitting time" = ONLY from sittingTimeLabel/averageSittingTimeLabel (manual). Use the label value.
+            - "Sedentary time" = ONLY from sedentaryMinutes/averageSedentaryMinutes (Fitbit). Convert minutes to hours (e.g. 660 = "about 11 hours").
             """;
 
     public static final String FITBIT_SYSTEM_PROMPT = String.format("""

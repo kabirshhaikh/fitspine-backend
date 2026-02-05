@@ -4,6 +4,7 @@ import com.fitspine.dto.*;
 
 import com.fitspine.exception.UserNotFoundException;
 import com.fitspine.helper.DeIdentificationHelper;
+import com.fitspine.helper.EnumScoreHelper;
 import com.fitspine.helper.FitbitContextAggregationHelper;
 import com.fitspine.model.*;
 import com.fitspine.repository.*;
@@ -89,6 +90,17 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
         String startDateContext = deIdentificationHelper.sanitizeTheDateForContextBuilding(startDate, "start");
         String endDateContext = deIdentificationHelper.sanitizeTheDateForContextBuilding(endDate, "end");
 
+        // Compute average ordinals for labels
+        int avgPainLevel = helper.calculateAveragePainLevel(manualDailyLogs);
+        int avgSittingTime = helper.calculateAverageSittingTime(manualDailyLogs);
+        int avgStandingTime = helper.calculateAverageStandingTime(manualDailyLogs);
+        int avgMorningStiffness = helper.calculateAverageMorningStiffness(manualDailyLogs);
+        int avgStressLevel = helper.calculateAverageStressLevel(manualDailyLogs);
+        int avgSleepingDuration = (sleepSummaryLogs != null && !sleepSummaryLogs.isEmpty())
+                ? -1
+                : helper.calculateAverageSleepingDuration(manualDailyLogs);
+        int avgNightWakeUps = helper.calculateAverageNightWakeUps(manualDailyLogs);
+
         FitbitAiContextInsightDto dto = FitbitAiContextInsightDto.builder()
                 // Metadata
                 .windowDays(7)
@@ -98,20 +110,24 @@ public class FitbitContextAggregationServiceImpl implements FitbitContextAggrega
                 .computedContext(computedContext)
 
                 // Manual Log Aggregates
-                .averagePainLevel(helper.calculateAveragePainLevel(manualDailyLogs))
-                .averageSittingTime(helper.calculateAverageSittingTime(manualDailyLogs))
-                .averageStandingTime(helper.calculateAverageStandingTime(manualDailyLogs))
-                .averageMorningStiffness(helper.calculateAverageMorningStiffness(manualDailyLogs))
-                .averageStressLevel(helper.calculateAverageStressLevel(manualDailyLogs))
+                .averagePainLevel(avgPainLevel)
+                .averagePainLevelLabel(avgPainLevel >= 0 ? EnumScoreHelper.painLabel(avgPainLevel) : null)
+                .averageSittingTime(avgSittingTime)
+                .averageSittingTimeLabel(avgSittingTime >= 0 ? EnumScoreHelper.timeDurationLabel(avgSittingTime) : null)
+                .averageStandingTime(avgStandingTime)
+                .averageStandingTimeLabel(avgStandingTime >= 0 ? EnumScoreHelper.timeDurationLabel(avgStandingTime) : null)
+                .averageMorningStiffness(avgMorningStiffness)
+                .averageMorningStiffnessLabel(avgMorningStiffness >= 0 ? EnumScoreHelper.morningStiffnessLabel(avgMorningStiffness) : null)
+                .averageStressLevel(avgStressLevel)
+                .averageStressLevelLabel(avgStressLevel >= 0 ? EnumScoreHelper.stressLabel(avgStressLevel) : null)
                 .daysWithStretching(helper.calculateDaysWithStretching(manualDailyLogs))
                 .daysWithFlareups(helper.calculateDaysWithFlareUp(manualDailyLogs))
                 .daysWithNumbnessTingling(helper.calculateDaysWithNumbnessTingling(manualDailyLogs))
                 .daysWithLiftingOrStrain(helper.calculateDaysWithLiftingOrStrain(manualDailyLogs))
-                .averageSleepingDuration(
-                        sleepSummaryLogs != null && !sleepSummaryLogs.isEmpty()
-                                ? -1   //Fitbit sleep exists -> disable manual baseline
-                                : helper.calculateAverageSleepingDuration(manualDailyLogs)
-                ).averageNightWakeUps(helper.calculateAverageNightWakeUps(manualDailyLogs))
+                .averageSleepingDuration(avgSleepingDuration)
+                .averageSleepingDurationLabel(avgSleepingDuration >= 0 ? EnumScoreHelper.sleepDurationLabel(avgSleepingDuration) : null)
+                .averageNightWakeUps(avgNightWakeUps)
+                .averageNightWakeUpsLabel(avgNightWakeUps >= 0 ? EnumScoreHelper.nightWakeUpsLabel(avgNightWakeUps) : null)
                 .averageManualRestingHeartRate(helper.calculateAverageManualRestingHeartRate(manualDailyLogs))
 
                 // Fitbit Heart Data

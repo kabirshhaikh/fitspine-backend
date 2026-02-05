@@ -22,16 +22,30 @@ public class FitbitAiContextInsightDto {
 
     //Manual log fields:
     private Integer averagePainLevel; //From ManualDailyLog
+    private String averagePainLevelLabel;
+
     private Integer averageSittingTime;
+    private String averageSittingTimeLabel;
+
     private Integer averageStandingTime;
+    private String averageStandingTimeLabel;
+
     private Integer averageMorningStiffness;
+    private String averageMorningStiffnessLabel;
+
     private Integer averageStressLevel;
+    private String averageStressLevelLabel;
+
     private Integer daysWithStretching;
     private Integer daysWithFlareups;
     private Integer daysWithNumbnessTingling;
     private Integer daysWithLiftingOrStrain;
     private Integer averageSleepingDuration;
+    private String averageSleepingDurationLabel;
+
     private Integer averageNightWakeUps;
+    private String averageNightWakeUpsLabel;
+
     private Integer averageManualRestingHeartRate;
 
     //Fitbit Integration Data:

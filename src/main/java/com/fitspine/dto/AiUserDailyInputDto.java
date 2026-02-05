@@ -23,17 +23,32 @@ public class AiUserDailyInputDto {
 
     //Manual log fields:
     private Integer painLevel; //From ManualDailyLog
+    private String painLevelLabel;
+
     private Boolean flareUpToday;
     private Boolean numbnessTingling;
+
     private Integer sittingTime;
+    private String sittingTimeLabel;
+
     private Integer standingTime;
+    private String standingTimeLabel;
+
     private Boolean stretchingDone;
     private Integer morningStiffness;
+    private String morningStiffnessLabel;
+
     private Integer stressLevel;
+    private String stressLevelLabel;
+
     private Boolean liftingOrStrain;
     private String notes;
     private Integer sleepDuration;
+    private String sleepDurationLabel;
+
     private Integer nightWakeUps;
+    private String nightWakeUpsLabel;
+
     private Integer manualRestingHeartRate;
 
     //Fitbit Integration Data:

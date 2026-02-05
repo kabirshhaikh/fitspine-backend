@@ -170,6 +170,15 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
         HashMap<String, Integer> activityMap = helper.getActivityLogMap(activitiesLog);
         String humanReadableDescription = helper.getHumanReadableDescription(activityMap);
 
+        //Extract ordinals for labels (use -1 when null/missing)
+        int painLevel = manualDailyLog.getPainLevel() != null ? EnumScoreHelper.pain(manualDailyLog.getPainLevel()) : -1;
+        int sittingTime = manualDailyLog.getSittingTime() != null ? EnumScoreHelper.sittingTime(manualDailyLog.getSittingTime()) : -1;
+        int standingTime = manualDailyLog.getStandingTime() != null ? EnumScoreHelper.standingTime(manualDailyLog.getStandingTime()) : -1;
+        int morningStiffness = manualDailyLog.getMorningStiffness() != null ? EnumScoreHelper.morningStiffness(manualDailyLog.getMorningStiffness()) : -1;
+        int stressLevel = manualDailyLog.getStressLevel() != null ? EnumScoreHelper.stressLevel(manualDailyLog.getStressLevel()) : -1;
+        int sleepDuration = sleepSummaryLog != null ? -1 : (manualDailyLog.getSleepDuration() != null ? EnumScoreHelper.sleepDuration(manualDailyLog.getSleepDuration()) : -1);
+        int nightWakeUps = manualDailyLog.getNightWakeUps() != null ? EnumScoreHelper.nightWakeUps(manualDailyLog.getNightWakeUps()) : -1;
+
         return AiUserDailyInputDto.builder()
                 .dayContext(dayContext)
 
@@ -182,26 +191,28 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
                 .discLevels(discLevels)
 
                 // Manual
-                .painLevel(manualDailyLog.getPainLevel() != null ? EnumScoreHelper.pain(manualDailyLog.getPainLevel()) : -1)
+                .painLevel(painLevel)
+                .painLevelLabel(painLevel >= 0 ? EnumScoreHelper.painLabel(painLevel) : null)
                 .flareUpToday(manualDailyLog.getFlareUpToday())
                 .numbnessTingling(manualDailyLog.getNumbnessTingling())
-                .sittingTime(manualDailyLog.getSittingTime() != null ? EnumScoreHelper.sittingTime(manualDailyLog.getSittingTime()) : -1)
-                .standingTime(manualDailyLog.getStandingTime() != null ? EnumScoreHelper.standingTime(manualDailyLog.getStandingTime()) : -1)
+                .sittingTime(sittingTime)
+                .sittingTimeLabel(sittingTime >= 0 ? EnumScoreHelper.timeDurationLabel(sittingTime) : null)
+                .standingTime(standingTime)
+                .standingTimeLabel(standingTime >= 0 ? EnumScoreHelper.timeDurationLabel(standingTime) : null)
                 .stretchingDone(manualDailyLog.getStretchingDone())
-                .morningStiffness(manualDailyLog.getMorningStiffness() != null ? EnumScoreHelper.morningStiffness(manualDailyLog.getMorningStiffness()) : -1)
-                .stressLevel(manualDailyLog.getStressLevel() != null ? EnumScoreHelper.stressLevel(manualDailyLog.getStressLevel()) : -1)
+                .morningStiffness(morningStiffness)
+                .morningStiffnessLabel(morningStiffness >= 0 ? EnumScoreHelper.morningStiffnessLabel(morningStiffness) : null)
+                .stressLevel(stressLevel)
+                .stressLevelLabel(stressLevel >= 0 ? EnumScoreHelper.stressLabel(stressLevel) : null)
                 .liftingOrStrain(manualDailyLog.getLiftingOrStrain())
                 .notes(notes)
-                .sleepDuration(
-                        sleepSummaryLog != null
-                                ? -1   //Fitbit present -> disable manual sleep duration
-                                : (manualDailyLog.getSleepDuration() != null
-                                ? EnumScoreHelper.sleepDuration(manualDailyLog.getSleepDuration())
-                                : -1)
-                ).nightWakeUps(manualDailyLog.getNightWakeUps() != null ? EnumScoreHelper.nightWakeUps(manualDailyLog.getNightWakeUps()) : -1)
+                .sleepDuration(sleepDuration)
+                .sleepDurationLabel(sleepDuration >= 0 ? EnumScoreHelper.sleepDurationLabel(sleepDuration) : null)
+                .nightWakeUps(nightWakeUps)
+                .nightWakeUpsLabel(nightWakeUps >= 0 ? EnumScoreHelper.nightWakeUpsLabel(nightWakeUps) : null)
                 .manualRestingHeartRate(manualDailyLog.getRestingHeartRate() != null ? manualDailyLog.getRestingHeartRate() : -1)
 
-                // Heart
+                //Heart
                 .fitbitRestingHeartRate(restingHeartRate)
 
                 // Activity summary
@@ -215,19 +226,19 @@ public class FitbitAiDailyAggregationServiceImpl implements FitbitAiDailyAggrega
                 .veryActiveMinutes(activitySummariesLog != null ? activitySummariesLog.getVeryActiveMinutes() : -1)
                 .marginalCalories(activitySummariesLog != null ? activitySummariesLog.getMarginalCalories() : -1)
 
-                // Goals
+                //Goals
                 .floors(activityGoalsLog != null ? activityGoalsLog.getFloors() : -1)
                 .activeMinutes(activityGoalsLog != null ? activityGoalsLog.getActiveMinutes() : -1)
 
-                // Activities
+                //Activities
                 .description(humanReadableDescription)
 
-                // Sleep summary
+                //Sleep summary
                 .totalMinutesAsleep(sleepSummaryLog != null ? sleepSummaryLog.getTotalMinutesAsleep() : -1)
                 .totalSleepRecords(sleepSummaryLog != null ? sleepSummaryLog.getTotalSleepRecords() : -1)
                 .totalTimeInBed(sleepSummaryLog != null ? sleepSummaryLog.getTotalTimeInBed() : -1)
 
-                // Sleep log
+                //Sleep log
                 .efficiency(sleepLog != null ? sleepLog.getEfficiency() : -1)
                 .startTime(sleepLog != null ? sleepLog.getStartTime() : null)
                 .endTime(sleepLog != null ? sleepLog.getEndTime() : null)
