@@ -169,8 +169,13 @@ public class AiInsightServiceImpl implements AiInsightService {
             //If HASH is different then generate new insights:
             log.info("HASH IS DIFFERENT, generating new AI insights for the user {} on date {}", user.getPublicId(), logDate);
 
+            String systemPrompt =
+                    contextDto.getDaysAvailable() < 3
+                            ? AiPrompt.FITBIT_SYSTEM_PROMPT_SPARSE
+                            : AiPrompt.FITBIT_SYSTEM_PROMPT;
+
             //Make call to open ai and get the response:
-            String responseBody = aiHelper.callOpenAi(todayJson, contextJson, AiPrompt.FITBIT_SYSTEM_PROMPT, apiKey, OPENAI_URL);
+            String responseBody = aiHelper.callOpenAi(todayJson, contextJson, systemPrompt, apiKey, OPENAI_URL);
             log.info("AI response: {}", responseBody);
 
             //Save the data using helper function:
