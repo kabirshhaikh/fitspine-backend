@@ -48,17 +48,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
     );
 
     @Query("""
-             SELECT 
-                 u.id AS id,
-                 u.email AS email,
-                 u.fullName AS fullName
-             FROM User u
-             WHERE NOT EXISTS (
-                 SELECT 1
-                 FROM ManualDailyLog l
-                 WHERE l.user.id = u.id
-                   AND l.logDate = :date
-             )
+                SELECT 
+                    u.id AS id,
+                    u.email AS email,
+                    u.fullName AS fullName
+                FROM User u
+                WHERE u.emailRemindersEnabled = true
+                  AND u.email IS NOT NULL
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM ManualDailyLog l
+                      WHERE l.user.id = u.id
+                        AND l.logDate = :date
+                  )
             """)
     List<UserIdEmailProjection> findUsersWithoutManualLog(
             @Param("date") LocalDate date
