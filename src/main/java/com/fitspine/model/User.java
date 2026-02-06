@@ -34,6 +34,10 @@ public class User {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
+    @Builder.Default
+    @Column(name = "email_reminders_enabled", nullable = false)
+    private boolean emailRemindersEnabled = true;
+
     @Column(name = "password", nullable = true, length = 100)
     private String password;
 
