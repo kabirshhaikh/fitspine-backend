@@ -1,0 +1,2 @@
+ALTER TABLE users
+ADD COLUMN email_reminders_enabled BOOLEAN NOT NULL DEFAULT TRUE;
