@@ -24,11 +24,7 @@ public class DailyReminderEmail {
         this.emailService = emailService;
     }
 
-    //    @Scheduled(cron = "0 0 20 * * ?") // 8 PM daily
-    @Scheduled(
-            cron = "0 14 1 * * ?",
-            zone = "America/New_York"
-    )
+    @Scheduled(cron = "0 0 20 * * ?") // 8 PM daily
     public void sendDailyReminderEmails() {
         int emailsSent = 0;
         LocalDate today = LocalDate.now();
