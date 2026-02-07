@@ -1,10 +1,7 @@
 package com.fitspine.controller;
 
 import com.fitspine.dto.*;
-import com.fitspine.service.EmailSenderService;
-import com.fitspine.service.GoogleTokenVerificationService;
-import com.fitspine.service.JwtService;
-import com.fitspine.service.UserService;
+import com.fitspine.service.*;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -24,12 +21,14 @@ public class UserController {
     private final UserService userService;
     private final EmailSenderService emailSenderService;
     private final GoogleTokenVerificationService googleTokenVerificationService;
+    private final DailyReminderEmailService dailyReminderEmailService;
 
 
-    public UserController(UserService userService, EmailSenderService emailSenderService, GoogleTokenVerificationService googleTokenVerificationService) {
+    public UserController(UserService userService, EmailSenderService emailSenderService, GoogleTokenVerificationService googleTokenVerificationService, DailyReminderEmailService dailyReminderEmailService) {
         this.userService = userService;
         this.emailSenderService = emailSenderService;
         this.googleTokenVerificationService = googleTokenVerificationService;
+        this.dailyReminderEmailService = dailyReminderEmailService;
     }
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -100,5 +99,10 @@ public class UserController {
         return ResponseEntity.ok(userResponse);
     }
 
+    @PostMapping("/unsubscribe")
+    public ResponseEntity<Void> unsubscribeUser(@RequestParam String token) {
+        dailyReminderEmailService.unsubscribeUser(token);
+        return ResponseEntity.noContent().build();
+    }
 
 }

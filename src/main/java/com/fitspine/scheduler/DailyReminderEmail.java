@@ -24,7 +24,11 @@ public class DailyReminderEmail {
         this.emailService = emailService;
     }
 
-    @Scheduled(cron = "0 0 20 * * ?") // 8 PM daily
+    //    @Scheduled(cron = "0 0 20 * * ?") // 8 PM daily
+    @Scheduled(
+            cron = "0 14 1 * * ?",
+            zone = "America/New_York"
+    )
     public void sendDailyReminderEmails() {
         int emailsSent = 0;
         LocalDate today = LocalDate.now();
@@ -33,6 +37,7 @@ public class DailyReminderEmail {
         for (int i = 0; i < users.size(); i++) {
             String email = users.get(i).getEmail();
             String fullName = users.get(i).getFullName();
+            String publicId = users.get(i).getPublicId();
 
             if (email == null) {
                 log.warn(
@@ -42,7 +47,7 @@ public class DailyReminderEmail {
                 continue;
             } else {
                 log.info("Sending daily reminder email to user:: {} on date: {}", fullName, today);
-                emailService.sendDailyReminderEmail(fullName, email);
+                emailService.sendDailyReminderEmail(fullName, email, publicId);
                 emailsSent++;
             }
         }

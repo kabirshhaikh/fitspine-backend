@@ -6,4 +6,6 @@ public interface UserIdEmailProjection {
     String getEmail();
 
     String getFullName();
+
+    String getPublicId();
 }

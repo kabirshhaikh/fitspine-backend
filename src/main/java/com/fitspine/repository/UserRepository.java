@@ -51,7 +51,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
                 SELECT 
                     u.id AS id,
                     u.email AS email,
-                    u.fullName AS fullName
+                    u.fullName AS fullName,
+                    u.publicId AS publicId
                 FROM User u
                 WHERE u.emailRemindersEnabled = true
                   AND u.email IS NOT NULL
@@ -65,4 +66,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<UserIdEmailProjection> findUsersWithoutManualLog(
             @Param("date") LocalDate date
     );
+
+    Optional<User> findByPublicId(String publicId);
 }
